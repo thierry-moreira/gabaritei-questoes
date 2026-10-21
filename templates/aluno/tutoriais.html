@@ -1,0 +1,570 @@
+{% extends 'base_aluno.html' %}
+
+{% block content %}
+<style>
+    :root {
+        --accent-simulados: #3b82f6;
+        --accent-edital: #10b981;
+        --accent-analise: #f59e0b;
+    }
+
+    .hero-modern {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-modern::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+    }
+
+    .tutorial-card {
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-color) !important;
+        background-color: var(--card-bg);
+    }
+
+    .tutorial-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2) !important;
+        border-color: var(--primary-color) !important;
+    }
+
+    .feature-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+    }
+
+    .nav-pills .nav-link {
+        color: var(--text-secondary);
+        border: 1px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .nav-pills .nav-link.active {
+        background-color: var(--primary-color) !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .step-number {
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .faq-accordion .accordion-item {
+        background-color: var(--card-bg) !important;
+        border: 1px solid var(--border-color) !important;
+        margin-bottom: 1rem;
+        border-radius: 12px !important;
+        overflow: hidden;
+    }
+
+    .faq-accordion .accordion-button {
+        background-color: var(--card-bg) !important;
+        color: var(--text-primary) !important;
+        font-weight: 600;
+        box-shadow: none !important;
+    }
+
+    .faq-accordion .accordion-button:not(.collapsed) {
+        color: var(--primary-color) !important;
+    }
+
+    .badge-status {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+</style>
+
+<div class="container mt-4 mb-5" style="max-width: 1000px;">
+    
+    <!-- HERO SECTION -->
+    <div class="mb-5 py-5 px-4 text-center text-white rounded-5 shadow-lg hero-modern">
+        <div class="py-3">
+            <span class="badge bg-white text-primary mb-3 px-3 py-2 rounded-pill fw-bold" style="font-size: 0.8rem;">GUIA DE ESTUDOS 2026</span>
+            <h1 class="display-5 fw-bold mb-3">Sua Jornada para a Aprovação</h1>
+            <p class="fs-5 opacity-75 mx-auto mb-4" style="max-width: 650px;">Aprenda a extrair o máximo potencial das ferramentas de inteligência do Gabaritei e acelere seus resultados.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="#comecar" class="btn btn-light btn-lg px-4 fw-bold text-primary shadow-sm">
+                    Explorar Recursos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRILHA DE SUCESSO -->
+    <div class="row mb-5 g-4" id="comecar">
+        <div class="col-md-4">
+            <div class="card h-100 p-4 tutorial-card rounded-4">
+                <div class="feature-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="bi bi-search fs-4"></i>
+                </div>
+                <span class="step-number">Passo 01</span>
+                <h5 class="fw-bold">Localização Inteligente</h5>
+                <p class="text-secondary small mb-0">Utilize nossos filtros avançados para encontrar exatamente as questões que caem no seu concurso, separadas por disciplina e assunto.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-4 tutorial-card rounded-4">
+                <div class="feature-icon bg-success bg-opacity-10 text-success">
+                    <i class="bi bi-lightning-charge fs-4"></i>
+                </div>
+                <span class="step-number">Passo 02</span>
+                <h5 class="fw-bold">Prática Deliberada</h5>
+                <p class="text-secondary small mb-0">Resolva simulados personalizados. Treine com o tempo real de prova e aprenda com o erro através dos comentários da nossa IA.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-4 tutorial-card rounded-4">
+                <div class="feature-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="bi bi-graph-up-arrow fs-4"></i>
+                </div>
+                <span class="step-number">Passo 03</span>
+                <h5 class="fw-bold">Análise de Dados</h5>
+                <p class="text-secondary small mb-0">Use o Raio-X para identificar seus pontos cegos. O sistema mostra onde você precisa reforçar a teoria para não perder pontos.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ABAS DE CONTEÚDO -->
+    <ul class="nav nav-pills mb-4 p-2 rounded-4 justify-content-center border" id="pills-tab" role="tablist" style="background-color: var(--main-bg); border-color: var(--border-color) !important;">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold px-4 py-2 rounded-3" id="tab-simulados" data-bs-toggle="pill" data-bs-target="#content-simulados" type="button" role="tab">
+                <i class="bi bi-layers-half me-2"></i> Simulados
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold px-4 py-2 rounded-3" id="tab-edital" data-bs-toggle="pill" data-bs-target="#content-edital" type="button" role="tab">
+                <i class="bi bi-bullseye me-2"></i> Edital em Questão
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold px-4 py-2 rounded-3" id="tab-manual" data-bs-toggle="pill" data-bs-target="#content-manual" type="button" role="tab">
+                <i class="bi bi-journal-text me-2"></i> Guia do Edital
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold px-4 py-2 rounded-3" id="tab-ia" data-bs-toggle="pill" data-bs-target="#content-ia" type="button" role="tab">
+                <i class="bi bi-robot me-2"></i> Inteligência Artificial
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="pills-tabContent">
+        
+        <!-- ABA: SIMULADOS -->
+        <div class="tab-pane fade show active" id="content-simulados" role="tabpanel">
+            <div class="row g-4">
+                <div class="col-md-12">
+                    <div class="p-5 rounded-4 border shadow-sm" style="background-color: var(--card-bg); border-color: var(--border-color) !important;">
+                        <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-cpu me-2"></i> Tecnologia de Simulação Inteligente</h4>
+                        
+                        <div class="row g-4 mb-5">
+                            <!-- Coluna 1: Personalização -->
+                            <div class="col-lg-4">
+                                <div class="p-4 rounded-4 h-100 bg-light bg-opacity-10 border">
+                                    <div class="feature-icon bg-primary bg-opacity-20 text-primary mb-3" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-filter-right"></i>
+                                    </div>
+                                    <h6 class="fw-bold">1. Personalização Total</h6>
+                                    <p class="small text-secondary">Crie provas sob medida filtrando por:</p>
+                                    <ul class="small text-secondary ps-3">
+                                        <li>Bancas e Órgãos específicos.</li>
+                                        <li>Nível de escolaridade e cargos.</li>
+                                        <li>Anos (ex: apenas questões de 2024).</li>
+                                        <li>Múltiplas matérias em uma só prova.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Coluna 2: Modos de Prova -->
+                            <div class="col-lg-4">
+                                <div class="p-4 rounded-4 h-100 bg-light bg-opacity-10 border">
+                                    <div class="feature-icon bg-success bg-opacity-20 text-success mb-3" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-laptop"></i>
+                                    </div>
+                                    <h6 class="fw-bold">2. Estude Onde Quiser</h6>
+                                    <p class="small text-secondary">Você decide como quer praticar:</p>
+                                    <ul class="small text-secondary ps-3">
+                                        <li class="mb-2"><b>Simulado Online:</b> Interface de prova real com correção instantânea ao finalizar.</li>
+                                        <li><b>Exportar PDF:</b> Baixe a prova formatada para imprimir e treinar o preenchimento do gabarito físico.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Coluna 3: Ranking -->
+                            <div class="col-lg-4">
+                                <div class="p-4 rounded-4 h-100 bg-light bg-opacity-10 border">
+                                    <div class="feature-icon bg-warning bg-opacity-20 text-warning mb-3" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-trophy-fill"></i>
+                                    </div>
+                                    <h6 class="fw-bold">3. Ranking da Comunidade</h6>
+                                    <p class="small text-secondary">Ao criar um simulado <b>Público</b>:</p>
+                                    <ul class="small text-secondary ps-3">
+                                        <li class="mb-2">Sua prova fica disponível para todos os alunos.</li>
+                                        <li>O sistema gera um ranking automático com as notas de quem participou.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="p-4 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-20">
+                                    <h6 class="fw-bold"><i class="bi bi-scissors text-danger me-2"></i> Ferramenta de Descarte</h6>
+                                    <p class="text-secondary small mb-0">
+                                        Durante a prova online, use o ícone da tesoura para "riscar" alternativas que você sabe que estão erradas. Isso reduz o ruído visual e te ajuda a focar na resposta correta.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-4 rounded-4 bg-success bg-opacity-10 border border-success border-opacity-20">
+                                    <h6 class="fw-bold"><i class="bi bi-check-circle-fill text-success me-2"></i> Resultado Detalhado</h6>
+                                    <p class="text-secondary small mb-0">
+                                        Após finalizar, receba uma nota de 0 a 10 e veja exatamente quais questões acertou ou errou, com acesso direto aos comentários dos professores e da comunidade.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: EDITAL EM QUESTÃO -->
+        <div class="tab-pane fade" id="content-edital" role="tabpanel">
+            <div class="row g-4">
+                <div class="col-md-12">
+                    <div class="p-5 rounded-4 border shadow-sm" style="background-color: var(--card-bg); border-color: var(--border-color) !important;">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6">
+                                <span class="badge bg-success mb-3 py-2 px-3 rounded-pill fw-bold" style="font-size: 0.7rem;">MÉTODO PROGRESSIVO</span>
+                                <h4 class="fw-bold">Domine o Edital por Completo</h4>
+                                <p class="text-secondary">O <b>Edital em Questão</b> transforma o documento burocrático do concurso em um plano de ação dinâmico.</p>
+                                <ul class="list-unstyled mt-4">
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 28px; height: 28px; flex-shrink: 0; font-size: 0.8rem;">1</div>
+                                        <p class="text-secondary small mb-0"><b>Mapeamento:</b> O sistema identifica cada tópico do edital e vincula às questões correspondentes.</p>
+                                    </li>
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 28px; height: 28px; flex-shrink: 0; font-size: 0.8rem;">2</div>
+                                        <p class="text-secondary small mb-0"><b>Evolução:</b> Conforme você resolve questões, a barra de progresso do tópico avança.</p>
+                                    </li>
+                                    <li class="d-flex align-items-start">
+                                        <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 28px; height: 28px; flex-shrink: 0; font-size: 0.8rem;">3</div>
+                                        <p class="text-secondary small mb-0"><b>Alerta de Revisão:</b> Se seu desempenho cair em um tópico, o sistema sugere que você retorne a ele antes de avançar.</p>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-lg-6 mt-4 mt-lg-0">
+                                <div class="bg-dark bg-opacity-25 p-4 rounded-4 border border-secondary border-opacity-25">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <h6 class="fw-bold mb-0">Seu Progresso Atual</h6>
+                                        <i class="bi bi-stars text-warning"></i>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between small mb-1">
+                                            <span>Direito Administrativo</span>
+                                            <span class="fw-bold text-success">85%</span>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-success" style="width: 85%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between small mb-1">
+                                            <span>Língua Portuguesa</span>
+                                            <span class="fw-bold text-warning">42%</span>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-warning" style="width: 42%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 bg-white bg-opacity-5 rounded-3 border border-white border-opacity-10">
+                                        <p class="small text-secondary mb-0"><i class="bi bi-lightbulb-fill text-warning me-2"></i> O sistema recomenda focar em <b>Sintaxe</b> hoje para equilibrar seu desempenho.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: GUIA DO EDITAL -->
+        <div class="tab-pane fade" id="content-manual" role="tabpanel">
+            <div class="row g-4">
+                <div class="col-md-12">
+                    <div class="p-5 rounded-4 border shadow-sm" style="background-color: var(--card-bg); border-color: var(--border-color) !important;">
+                        <h4 class="fw-bold mb-4 text-primary"><i class="bi bi-book me-2"></i> Como Funciona o Seu Ciclo de Estudos</h4>
+                        
+                        <div class="row g-4">
+                            <!-- Coluna 1: Seleção de Matérias -->
+                            <div class="col-lg-4">
+                                <div class="p-4 rounded-4 h-100 bg-light bg-opacity-10 border">
+                                    <div class="feature-icon bg-primary bg-opacity-20 text-primary mb-3" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-diagram-3-fill"></i>
+                                    </div>
+                                    <h6 class="fw-bold">1. Seleção de Matérias</h6>
+                                    <p class="small text-secondary">O sistema utiliza um algoritmo de roleta viciada para escolher a próxima disciplina:</p>
+                                    <ul class="small text-secondary ps-3">
+                                        <li class="mb-2"><b>Foco no Pior:</b> Matérias onde você tem menor taxa de acerto têm maior probabilidade de aparecer.</li>
+                                        <li><b>Variedade:</b> Matérias boas ainda aparecem ocasionalmente para manter o conhecimento fresco.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Coluna 2: Prioridade de Tópicos -->
+                            <div class="col-lg-4">
+                                <div class="p-4 rounded-4 h-100 bg-light bg-opacity-10 border">
+                                    <div class="feature-icon bg-success bg-opacity-20 text-success mb-3" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-sort-numeric-down"></i>
+                                    </div>
+                                    <h6 class="fw-bold">2. Ordem dos Assuntos</h6>
+                                    <p class="small text-secondary">Dentro da matéria escolhida, o próximo tópico é definido por:</p>
+                                    <ul class="small text-secondary ps-3">
+                                        <li class="mb-2"><b>Desempenho:</b> Assuntos difíceis sobem na fila.</li>
+                                        <li class="mb-2"><b>Recência:</b> Evita repetir o mesmo assunto seguidamente.</li>
+                                        <li><b>Novidade:</b> Tópicos nunca estudados ganham prioridade para cobrir o edital.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Coluna 3: Metas Dinâmicas -->
+                            <div class="col-lg-4">
+                                <div class="p-4 rounded-4 h-100 bg-light bg-opacity-10 border">
+                                    <div class="feature-icon bg-warning bg-opacity-20 text-warning mb-3" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-lightning-fill"></i>
+                                    </div>
+                                    <h6 class="fw-bold">3. Metas Inteligentes</h6>
+                                    <p class="small text-secondary">A quantidade de questões não é fixa, ela se adapta a você:</p>
+                                    <ul class="small text-secondary ps-3">
+                                        <li class="mb-2"><b>Mais Prática:</b> Tópicos ruins exigem mais questões (até 30) para fixação.</li>
+                                        <li><b>Manutenção:</b> Tópicos dominados pedem poucas questões (mínimo 5) apenas para revisão.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 p-4 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-20">
+                            <h6 class="fw-bold"><i class="bi bi-lightbulb-fill text-warning me-2"></i> Dica de Especialista: Como estudar?</h6>
+                            <p class="text-secondary small mb-0">
+                                O ciclo adaptativo elimina a necessidade de você planejar o que estudar. O sistema garante que você passe por todo o edital dando mais atenção onde você tem mais dificuldade.
+                                Se você sentir que já domina um assunto ou quer focar em outro no momento, use o botão <b>"Pular Tópico"</b> no ambiente de estudo para avançar o ciclo manualmente.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABA: INTELIGÊNCIA ARTIFICIAL -->
+        <div class="tab-pane fade" id="content-ia" role="tabpanel">
+            <div class="row g-4">
+                <div class="col-md-12">
+                    <div class="p-5 rounded-4 border shadow-sm" style="background-color: var(--card-bg); border-color: var(--border-color) !important;">
+                        <div class="text-center mb-5">
+                            <h4 class="fw-bold"><i class="bi bi-stars text-warning me-2"></i> Seu Tutor Particular 24h</h4>
+                            <p class="text-secondary mx-auto" style="max-width: 700px;">Nossa IA não apenas dá respostas, ela ensina você a pensar. Conheça as ferramentas que automatizam seu aprendizado.</p>
+                        </div>
+
+                        <div class="row g-4 mb-5">
+                            <!-- Recurso 1: IA Explica -->
+                            <div class="col-lg-4">
+                                <div class="p-4 rounded-4 h-100 bg-light bg-opacity-10 border border-primary border-opacity-10">
+                                    <div class="feature-icon bg-primary bg-opacity-20 text-primary mb-3" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-chat-dots-fill"></i>
+                                    </div>
+                                    <h6 class="fw-bold">IA Explica</h6>
+                                    <p class="small text-secondary mb-3">Disponível em cada questão, esta ferramenta desdobra o conteúdo:</p>
+                                    <ul class="small text-secondary ps-3">
+                                        <li class="mb-1">Análise de cada alternativa.</li>
+                                        <li class="mb-1">Identificação de pegadinhas comuns.</li>
+                                        <li>Embasamento legal atualizado.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Recurso 2: Gerador de Resumos -->
+                            <div class="col-lg-4">
+                                <div class="p-4 rounded-4 h-100 bg-light bg-opacity-10 border border-success border-opacity-10">
+                                    <div class="feature-icon bg-success bg-opacity-20 text-success mb-3" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-journal-richtext"></i>
+                                    </div>
+                                    <h6 class="fw-bold">Resumos Teóricos</h6>
+                                    <p class="small text-secondary mb-3">Transforme qualquer questão em uma aula teórica para seu caderno:</p>
+                                    <ul class="small text-secondary ps-3">
+                                        <li class="mb-1">Mapeamento do assunto central.</li>
+                                        <li class="mb-1">Organização em tópicos curtos.</li>
+                                        <li>Fórmulas matemáticas em LaTeX.</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Recurso 3: Flashcards IA -->
+                            <div class="col-lg-4">
+                                <div class="p-4 rounded-4 h-100 bg-light bg-opacity-10 border border-info border-opacity-10">
+                                    <div class="feature-icon bg-info bg-opacity-20 text-info mb-3" style="width: 40px; height: 40px;">
+                                        <i class="bi bi-stack"></i>
+                                    </div>
+                                    <h6 class="fw-bold">Flashcards Automáticos</h6>
+                                    <p class="small text-secondary mb-3">A IA cria o par Pergunta/Resposta ideal para sua memória:</p>
+                                    <ul class="small text-secondary ps-3">
+                                        <li class="mb-1">Foco no ponto crucial do erro.</li>
+                                        <li class="mb-1">Formatação otimizada para SRS.</li>
+                                        <li>Integração direta com o sistema de revisão.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detalhe Técnico: LaTeX e Precisão -->
+                        <div class="row g-4 align-items-center">
+                            <div class="col-md-7">
+                                <div class="p-4 rounded-4 border h-100" style="background-color: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.1) !important;">
+                                    <h6 class="fw-bold mb-3"><i class="bi bi-braces text-primary me-2"></i> Precisão Técnica e Fórmulas</h6>
+                                    <p class="small text-secondary">
+                                        Nossa inteligência é treinada especificamente para concursos brasileiros. Ela reconhece e renderiza fórmulas complexas de Raciocínio Lógico e Matemática usando <b>LaTeX</b>, garantindo que você visualize cálculos como se estivessem em um livro físico.
+                                    </p>
+                                    <div class="mt-3 p-3 bg-dark bg-opacity-25 rounded border border-white border-opacity-10 text-center">
+                                        <div class="latex-render">
+                                            $$ P(A \cup B) = P(A) + P(B) - P(A \cap B) $$
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="p-4 rounded-4 border h-100" style="background-color: rgba(255, 193, 7, 0.1); border-color: rgba(255, 193, 7, 0.2) !important;">
+                                    <h6 class="fw-bold mb-2 text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i> Anti-Alucinação</h6>
+                                    <p class="small text-secondary mb-0">
+                                        Implementamos filtros que impedem a IA de "inventar" leis. Se um assunto estiver desatualizado no banco de dados, a IA emitirá um alerta de segurança legislativa para você.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO FAQ (DÚVIDAS FREQUENTES) -->
+    <div class="mt-5 pt-5 pb-4">
+        <h3 class="fw-bold text-center mb-4"><i class="bi bi-patch-question text-primary me-2"></i> Perguntas Frequentes</h3>
+        <div class="accordion faq-accordion" id="accordionFAQ">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed py-4" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                        Meu histórico de questões é salvo automaticamente?
+                    </button>
+                </h2>
+                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+                    <div class="accordion-body text-secondary pt-0 pb-4">
+                        Com certeza. Cada clique e resposta é armazenado em seu perfil. Você pode acessar o menu <b>Histórico</b> a qualquer momento para refazer questões que errou ou revisar seus comentários salvos.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed py-4" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                        O que acontece se eu perder minha "Ofensiva"?
+                    </button>
+                </h2>
+                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+                    <div class="accordion-body text-secondary pt-0 pb-4">
+                        A ofensiva (streak) mede sua constância. Se você não resolver nenhuma questão em um dia, o contador volta a zero. Manter a ofensiva alta aumenta sua pontuação no ranking da comunidade!
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed py-4" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                        Posso estudar offline ou imprimir os simulados?
+                    </button>
+                </h2>
+                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+                    <div class="accordion-body text-secondary pt-0 pb-4">
+                        Sim. No final da geração de qualquer simulado, você verá a opção de "Exportar para PDF". O documento virá formatado com espaço para rascunho e o gabarito no final.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOX DE AJUDA -->
+    <div class="card mt-5 border-0 shadow-sm rounded-4 overflow-hidden" style="background-color: var(--card-bg);">
+        <div class="row g-0">
+            <div class="col-md-1 bg-primary d-none d-md-block"></div>
+            <div class="col-md-11">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-4">
+                        <i class="bi bi-headset text-primary fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Ainda precisa de suporte?</h6>
+                        <p class="small mb-0 opacity-75">
+                            Nossa equipe de suporte pedagógico e técnico está pronta para te ajudar. Abra um ticket pelo painel e ela entrará em contato com você.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Lógica para abrir a aba correta se houver um hash na URL
+        const hash = window.location.hash;
+        if (hash) {
+            const targetTab = document.querySelector(`button[data-bs-target="${hash}"]`);
+            if (targetTab) {
+                bootstrap.Tab.getOrCreateInstance(targetTab).show();
+            }
+        }
+
+        // Re-renderizar KaTeX quando a aba de IA for mostrada (garante que fórmulas em áreas ocultas carreguem)
+        const iaTab = document.getElementById('pills-ia-tab');
+        if (iaTab) {
+            iaTab.addEventListener('shown.bs.tab', function () {
+                const iaContent = document.getElementById('content-ia');
+                if (iaContent && typeof renderMathInElement === 'function') {
+                    renderMathInElement(iaContent, {
+                        delimiters: [
+                            { left: '$$', right: '$$', display: true },
+                            { left: '$', right: '$', display: false },
+                            { left: '\\(', right: '\\)', display: false },
+                            { left: '\\[', right: '\\]', display: true }
+                        ],
+                        throwOnError: false,
+                        strict: "ignore"
+                    });
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

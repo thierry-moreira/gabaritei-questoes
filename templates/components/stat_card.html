@@ -1,0 +1,50 @@
+{# 
+    Componente: Stat Card Premium
+    Versão: 1.2
+    Descrição: Renderiza cards de estatísticas com variantes.
+#}
+
+{% macro render_stat_card(variant='count', title='', value='', icon='bi-check2-circle', badge=None, p_label=None, percentage=None, description=None) %}
+<div class="col-12 col-md-6 col-lg-4">
+    {% if variant == 'count' %}
+        <div class="stat-card-premium">
+            {% if badge %}
+                <div class="badge-today">{{ badge }}</div>
+            {% endif %}
+            <div class="stat-icon-wrapper">
+                <i class="bi {{ icon }} text-primary opacity-75 fs-3"></i>
+            </div>
+            <div class="stat-label">{{ title }}</div>
+            <div class="stat-value">{{ value }}</div>
+        </div>
+
+    {% elif variant == 'progress' %}
+        <div class="stat-card-premium">
+            <div class="d-flex align-items-center gap-4 stat-progress-wrapper">
+                <div class="circular-progress-mini" style="--progress-percent: {{ percentage|default(0) }}%;">
+                    {{ percentage|default(0) }}%
+                </div>
+                <div>
+                    <div class="stat-label mb-1">{{ title }}</div>
+                    {% if p_label %}
+                        <span class="performance-label">{{ p_label }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    {% elif variant == 'streak' %}
+        <div class="stat-card-premium stat-card-streak">
+            {% if icon %}
+                <i class="bi {{ icon }} fire-watermark"></i>
+            {% endif %}
+            <div class="stat-label">{{ title | upper }}</div>
+            <div class="stat-value">{{ value }}</div>
+            {% if description %}
+                <p class="mb-0 opacity-75">{{ description }}</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endmacro %}
+

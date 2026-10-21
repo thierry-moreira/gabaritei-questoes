@@ -1,0 +1,74 @@
+{% extends "base_aluno.html" %}
+{% import 'components/card_questao.html' as cq with context %}
+{% import 'components/pagination.html' as p with context %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/aluno_questoes.css') }}">
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex align-items-center mb-4 mt-3">
+            <a href="/aluno/meus_cadernos" class="btn btn-outline-secondary me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h2 class="fw-bold mb-0 text-white">{{ nome_caderno }}</h2>
+                <span class="badge bg-primary">{{ questoes|length }} Questões nesta página</span>
+            </div>
+        </div>
+
+        {% for q in questoes %}
+            {{ cq.render_questao(q, is_premium, ids_acertos, ids_erros, context='caderno', id_caderno=id_caderno) }}
+        {% endfor %}
+
+        {{ p.render_pagination(pagina_atual, tem_anterior, tem_proxima, 'caderno.visualizar_caderno', {'id_caderno': id_caderno}) }}
+
+    </div>
+</div>
+{% include 'components/modais_questao.html' %}
+{% endblock %}
+
+{% block scripts %}
+{# Lógica comum (Componentizada) #}
+<script src="{{ url_for('static', filename='js/questoes_common.js') }}"></script>
+
+<script>
+// Lógica específica desta página (Remoção do caderno)
+function removerDoCaderno(idQuestao, idCaderno) {
+    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+
+    Swal.fire({
+        title: 'Remover Questão?',
+        text: "Tem certeza que deseja remover esta questão do caderno?",
+        icon: 'question',
+        showCancelButton: true,
+        background: isDark ? '#1e1e2d' : '#fff',
+        color: isDark ? '#f8f9fa' : '#212529',
+        confirmButtonColor: '#6366f1',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sim, remover',
+        cancelButtonText: 'Cancelar',
+        customClass: {
+            popup: 'premium-popup-radius'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/api/cadernos/remover_questao', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_caderno: idCaderno, id_questao: idQuestao })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    location.reload(); 
+                } else {
+                    Swal.fire('Erro', data.error, 'error');
+                }
+            })
+            .catch(err => Swal.fire('Erro', 'Erro na conexão.', 'error'));
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-br"
+    data-bs-theme="{{ current_user.tema if current_user.is_authenticated else 'light' }}">
+
+<head>
+    <meta charset="UTF-8">
+    <script>
+        // BLOQUEIO DE FOUC (Flash of Unstyled Content) E SINCRONIZAÇÃO
+        (function () {
+            // Se o Jinja já fixou um tema na tag HTML (ex: usuário anônimo → sempre 'light'),
+            // respeitamos ele e NÃO sobrescrevemos com cookie/localStorage.
+            const serverTheme = document.documentElement.getAttribute('data-bs-theme');
+            const isAnon = (serverTheme === 'light' && !document.cookie.includes('session='));
+
+            let theme;
+            if (isAnon) {
+                // Visitante não autenticado: força light independente de cookie ou localStorage
+                theme = 'light';
+            } else {
+                // Usuário logado: respeita cookie > localStorage > atributo Jinja
+                const cookieTheme = document.cookie.match(/theme=([^;]+)/)?.[1];
+                const localTheme = localStorage.getItem('theme');
+                theme = cookieTheme || localTheme || serverTheme || 'light';
+            }
+
+            // Aplica imediatamente para evitar flash
+            document.documentElement.setAttribute('data-bs-theme', theme);
+
+            // Estilos de emergência para o fundo antes do CSS carregar
+            const bgColor = theme === 'dark' ? '#0d1117' : '#f1f5f9';
+            const textColor = theme === 'dark' ? '#e6edf3' : '#1e293b';
+
+            const style = document.createElement('style');
+            style.id = 'theme-emergency-style';
+            style.innerHTML = `
+                html, body { background-color: ${bgColor} !important; color: ${textColor} !important; }
+                .main-wrapper { background-color: ${bgColor} !important; }
+            `;
+            document.head.appendChild(style);
+
+            // Sincroniza localStorage (só para logados)
+            if (!isAnon && localStorage.getItem('theme') !== theme) localStorage.setItem('theme', theme);
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Correção de font-display: swap para Bootstrap Icons -->
+    <style>
+    @font-face {
+      font-display: swap;
+      font-family: "bootstrap-icons-swap";
+      src: url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff2?2820a3852bdb9a5832199cc61cec4e65") format("woff2"),
+           url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff?2820a3852bdb9a5832199cc61cec4e65") format("woff");
+    }
+
+    body .bi::before,
+    body [class^="bi-"]::before,
+    body [class*=" bi-"]::before {
+      font-family: bootstrap-icons-swap !important;
+    }
+    </style>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script>
+        // Estado de Autenticação Global para o JS
+        window.GABARITEI_AUTH = {
+            isAuthenticated: ("{{ 'true' if current_user.is_authenticated else 'false' }}" === "true"),
+            isPremium: ("{{ 'true' if is_premium|default(false) else 'false' }}" === "true")
+        };
+    </script>
+    <title>{% block title %}Gabaritei - Sistema de Questões{% endblock %}</title>
+    {% block meta %}{% endblock %}
+    <link rel="shortcut icon" href="{{ url_for('static', filename='icone.webp') }}" type="image/webp">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff2?2820a3852bdb9a5832199cc61cec4e65" as="font" type="font/woff2" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" media="print" onload="this.media='all'">
+
+    <!-- Componentes Globais -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base_aluno_layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/shared_premium.css') }}">
+    {% block extra_css %}{% endblock %}
+
+    <!-- SweetAlert2 para Notificações Modernas -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.1" defer></script>
+    <!-- Marked.js para renderizar Markdown da IA -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js" defer></script>
+
+    <!-- KaTeX para formulas matemáticas (Premium) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" media="print" onload="this.media='all'">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" defer></script>
+</head>
+
+<body>
+
+    {% if current_user.is_authenticated and request.endpoint not in ['auth.login_aluno'] %}
+    <!-- Sidebar Desktop -->
+    <aside class="sidebar d-none d-md-flex text-center">
+        <div class="mt-4"></div> <!-- Espaçador no topo -->
+
+        <nav class="nav flex-column mt-3 position-relative text-center">
+            <a class="nav-link {{ 'active' if request.path == '/aluno/painel' }}" href="/aluno/painel" title="Painel">
+                <i class="bi bi-grid-1x2"></i> <span>Painel</span>
+            </a>
+            <a class="nav-link {{ 'active' if request.path == '/aluno/questoes' }}" href="/aluno/questoes"
+                title="Questões">
+                <i class="bi bi-pencil-square"></i> <span>Questões</span>
+            </a>
+            <a class="nav-link {{ 'active' if request.path == '/aluno/meus_cadernos' }}" href="/aluno/meus_cadernos"
+                title="Meus Cadernos">
+                <i class="bi bi-journal-bookmark"></i> <span>Cadernos</span>
+            </a>
+            <a class="nav-link {{ 'active' if '/aluno/flashcards' in request.path }}" href="/aluno/flashcards"
+                title="Flashcards">
+                <i class="bi bi-stack"></i> <span>Flashcards</span>
+                {% if global_flashcards_revisar > 0 %}
+                <span class="badge rounded-pill bg-danger ms-2" style="font-size: 0.65rem;">{{ global_flashcards_revisar
+                    }}</span>
+                {% endif %}
+            </a>
+            <a class="nav-link {{ 'active' if '/aluno/resumos' in request.path }}" href="/aluno/resumos"
+                title="Caderno de Resumos">
+                <i class="bi bi-journal-text"></i> <span>Resumos</span>
+            </a>
+            <a class="nav-link {{ 'active' if '/aluno/simulados' in request.path }}" href="/aluno/simulados"
+                title="Simulados">
+                <i class="bi bi-card-checklist"></i> <span>Simulados</span>
+            </a>
+
+            <a class="nav-link {{ 'active' if '/aluno/editais' in request.path }}" href="/aluno/editais"
+                title="Edital em Questão">
+                <i class="bi bi-bullseye"></i> <span>Edital em Questão</span>
+            </a>
+            <a class="nav-link {{ 'active' if '/aluno/tutoriais' in request.path }}" href="/aluno/tutoriais"
+                title="Tutoriais">
+                <i class="bi bi-mortarboard"></i> <span>Tutoriais</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Sidebar Mobile (Offcanvas) -->
+    <div class="offcanvas offcanvas-start mobile-sidebar" tabindex="-1" id="offcanvasSidebar"
+        aria-labelledby="offcanvasSidebarLabel">
+        <div class="offcanvas-header border-bottom">
+            <img src="{{ url_for('static', filename='logo.webp') }}" alt="Gabaritei" style="max-height: 25px;">
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <nav class="nav flex-column mt-3">
+                <a class="nav-link {{ 'active' if request.path == '/aluno/painel' }}" href="/aluno/painel">
+                    <i class="bi bi-grid-1x2 me-3"></i> <span>Painel</span>
+                </a>
+                <a class="nav-link {{ 'active' if request.path == '/aluno/questoes' }}" href="/aluno/questoes">
+                    <i class="bi bi-pencil-square me-3"></i> <span>Questões</span>
+                </a>
+                <a class="nav-link {{ 'active' if request.path == '/aluno/meus_cadernos' }}"
+                    href="/aluno/meus_cadernos">
+                    <i class="bi bi-journal-bookmark me-3"></i> <span>Meus Cadernos</span>
+                </a>
+                <a class="nav-link {{ 'active' if '/aluno/flashcards' in request.path }}" href="/aluno/flashcards">
+                    <i class="bi bi-stack me-3"></i> <span>Flashcards</span>
+                    {% if global_flashcards_revisar > 0 %}
+                    <span class="badge rounded-pill bg-danger ms-2">{{ global_flashcards_revisar }}</span>
+                    {% endif %}
+                </a>
+                <a class="nav-link {{ 'active' if '/aluno/resumos' in request.path }}" href="/aluno/resumos">
+                    <i class="bi bi-journal-text me-3"></i> <span>Caderno de Resumos</span>
+                </a>
+                <a class="nav-link {{ 'active' if '/aluno/simulados' in request.path }}" href="/aluno/simulados">
+                    <i class="bi bi-card-checklist me-3"></i> <span>Simulados</span>
+                </a>
+                <a class="nav-link {{ 'active' if '/aluno/editais' in request.path }}" href="/aluno/editais">
+                    <i class="bi bi-bullseye me-3"></i> <span>Edital em Questão</span>
+                </a>
+                <a class="nav-link {{ 'active' if '/aluno/tutoriais' in request.path }}" href="/aluno/tutoriais">
+                    <i class="bi bi-mortarboard me-3"></i> <span>Tutoriais</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+
+    <main class="main-wrapper {{ 'auth-layout' if not current_user.is_authenticated }}">
+
+        {% if current_user.is_authenticated and request.endpoint not in ['auth.login_aluno'] %}
+        <header class="app-header shadow-sm px-3 px-md-4 d-flex align-items-center justify-content-between">
+
+            <div class="d-flex align-items-center gap-2 gap-md-4">
+                <button class="btn btn-link text-dark d-md-none p-0 me-2" type="button" data-bs-toggle="offcanvas"
+                    data-bs-target="#offcanvasSidebar">
+                    <i class="bi bi-list fs-2"></i>
+                </button>
+
+                <a href="/aluno/painel" class="d-flex align-items-center">
+                    <img src="{{ url_for('static', filename='logo.webp') }}" alt="Gabaritei" class="header-logo">
+                </a>
+
+                {% if current_user.is_authenticated %}
+                <div class="streak-badge">
+                    <i class="bi bi-fire fs-5 text-warning"></i>
+                    <span class="fw-bold" style="color: var(--texto-principal);">
+                        {{ global_streak or 0 }} {{ 'Dia' if (global_streak or 0) == 1 else 'Dias' }}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-outline-secondary btn-sm border-0 bg-transparent" id="btn-theme-toggle"
+                    style="width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:50%;">
+                    <i class="bi bi-moon-stars-fill fs-5" id="theme-icon"></i>
+                </button>
+
+                <div class="dropdown">
+                    <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle user-menu-link"
+                        id="menuUsuario" data-bs-toggle="dropdown" aria-expanded="false">
+
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                            style="width: 34px; height: 34px; background-color: var(--primary-color) !important; border: 1px solid var(--border-color);">
+                            <span class="fs-6 fw-bold">{{ current_user.username[0].upper() }}</span>
+                        </div>
+                        <span class="d-none d-sm-inline fw-semibold mx-2" style="color: var(--texto-principal);">{{
+                            current_user.username }}</span>
+
+                        <i class="bi bi-chevron-down small opacity-50 ms-1" style="color: var(--texto-secundario);"></i>
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 dropdown-menu-premium"
+                        aria-labelledby="menuUsuario">
+                        <div class="dropdown-user-details d-flex align-items-center">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3"
+                                style="width: 42px; height: 42px; background: linear-gradient(135deg, var(--primary-color), #4f46e5);">
+                                <span class="fs-5 fw-bold">{{ current_user.username[0].upper() }}</span>
+                            </div>
+                            <div style="min-width: 0;">
+                                <h6 class="mb-0 fw-bold text-truncate" style="color: var(--texto-principal);">{{
+                                    current_user.username }}</h6>
+                                <div class="d-flex align-items-center mt-1">
+                                    <span class="user-badge-premium">Aluno</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <li>
+                            <a class="dropdown-item-premium" href="/aluno/conta/">
+                                <i class="bi bi-person-gear"></i>
+                                Configurações da Conta
+                            </a>
+                        </li>
+
+                        <li>
+                            <hr class="dropdown-divider my-2 opacity-50">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item-premium dropdown-item-danger-premium" href="/logout?tipo=aluno">
+                                <i class="bi bi-box-arrow-right"></i>
+                                Sair da Conta
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+        {% endif %}
+
+        <div class="scroll-area">
+            <div class="content-area p-3 p-md-4 flex-grow-1">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category if category != 'danger' else 'danger' }} alert-dismissible fade show"
+                    role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
+
+                {% block content %}{% endblock %}
+            </div>
+
+            <footer class="mt-auto py-4 px-4 px-lg-5 border-top">
+                <div
+                    class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 small footer-container">
+                    <div class="text-body text-center text-md-start">
+                        <span class="fw-bold text-dark-emphasis">Gabaritei Questões</span>
+                        <span class="ms-1">© 2026. Software livre.</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+
+    <script>
+        // Esse código roda assim que a página carrega
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Ele procura aquela senha invisível que colocamos no <head>
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+            if (csrfToken) {
+                // 2. Ele "hackeia" o sistema do navegador para interceptar todos os seus botões
+                const originalFetch = window.fetch;
+
+                window.fetch = async function () {
+                    let [resource, config] = arguments;
+                    if (config === undefined) config = {};
+                    if (config.headers === undefined) config.headers = {};
+
+                    // 3. Se o botão for fazer um POST (salvar, deletar, enviar), ele cola o crachá!
+                    if (config.method && ['POST', 'PUT', 'DELETE'].includes(config.method.toUpperCase())) {
+                        config.headers['X-CSRFToken'] = csrfToken;
+                    }
+
+                    // Deixa a requisição seguir viagem normalmente
+                    return originalFetch(resource, config);
+                };
+            }
+        });
+
+
+        // --- LÓGICA DE DARK MODE ---
+        const btnTheme = document.getElementById('btn-theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const htmlTag = document.documentElement;
+
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        setTheme(currentTheme, false); // Não salva no banco no carregamento
+
+        if (btnTheme) {
+            btnTheme.addEventListener('click', () => {
+                // Adiciona transição apenas no clique para não piscar no carregamento
+                document.body.classList.add('theme-transition');
+                const newTheme = htmlTag.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+                setTheme(newTheme, true); // Salva no banco ao clicar
+            });
+        }
+
+        function setTheme(theme, saveToDb = false) {
+            htmlTag.setAttribute('data-bs-theme', theme);
+            localStorage.setItem('theme', theme);
+
+            // 1. Salva no Cookie para o servidor (Jinja2) ler na próxima requisição (Evita flash branco)
+            const d = new Date();
+            d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
+            document.cookie = `theme=${theme};expires=${d.toUTCString()};path=/;SameSite=Lax`;
+
+            // 2. Remove o estilo de emergência se existir (deixa o CSS real assumir)
+            const emergency = document.getElementById('theme-emergency-style');
+            if (emergency) emergency.remove();
+
+            // 3. Se estiver logado e solicitado, salva no banco de dados para persistência REAL
+            if (saveToDb && window.GABARITEI_AUTH && window.GABARITEI_AUTH.isAuthenticated) {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+                fetch('/api/usuario/preferencias', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ tema: theme })
+                }).catch(err => console.error('Erro ao salvar tema no banco:', err));
+            }
+
+            // Dispara um evento customizado para que gráficos (Chart.js) saibam que o tema mudou
+            window.dispatchEvent(new Event('themeChanged'));
+
+            if (themeIcon) {
+                if (theme === 'dark') {
+                    themeIcon.classList.replace('bi-moon-stars-fill', 'bi-sun-fill');
+                    btnTheme.classList.replace('btn-outline-secondary', 'btn-outline-warning');
+                } else {
+                    themeIcon.classList.replace('bi-sun-fill', 'bi-moon-stars-fill');
+                    btnTheme.classList.replace('btn-outline-warning', 'btn-outline-secondary');
+                }
+            }
+        }
+
+        // 1. Proteger Símbolos de Moeda (R$, US$, $) do KaTeX
+        // Exposto globalmente para podermos usar após chamadas AJAX da IA!
+        window.protectCurrencyKaTeX = function (element) {
+            if (!element) return;
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const nodesToReplace = [];
+            let node;
+            const currencyRegex = /(R\$|U\$|US\$|\$\s+(?=\d))/g;
+            
+            while (node = walker.nextNode()) {
+                if (currencyRegex.test(node.nodeValue)) {
+                    nodesToReplace.push(node);
+                }
+                currencyRegex.lastIndex = 0;
+            }
+            
+            nodesToReplace.forEach(n => {
+                if (n.parentNode && !['SCRIPT', 'STYLE', 'CODE', 'SPAN'].includes(n.parentNode.nodeName)) {
+                    let match;
+                    let lastIndex = 0;
+                    const frag = document.createDocumentFragment();
+                    let replaced = false;
+                    
+                    while ((match = currencyRegex.exec(n.nodeValue)) !== null) {
+                        replaced = true;
+                        if (match.index > lastIndex) {
+                            frag.appendChild(document.createTextNode(n.nodeValue.substring(lastIndex, match.index)));
+                        }
+                        const span = document.createElement('span');
+                        span.textContent = match[0];
+                        frag.appendChild(span);
+                        lastIndex = currencyRegex.lastIndex;
+                    }
+                    
+                    if (replaced) {
+                        if (lastIndex < n.nodeValue.length) {
+                            frag.appendChild(document.createTextNode(n.nodeValue.substring(lastIndex)));
+                        }
+                        n.parentNode.replaceChild(frag, n);
+                    }
+                }
+            });
+        };
+
+        // --- INICIALIZAÇÃO GLOBAL DO KATEX ---
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // Aplica a proteção em todo o corpo da página antes do KaTeX rodar
+            window.protectCurrencyKaTeX(document.body);
+
+            // 2. Renderizar KaTeX
+            if (typeof renderMathInElement === 'function') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false }, // Restaurado para a IA
+                        { left: '\\(', right: '\\)', display: false },
+                        { left: '\\[', right: '\\]', display: true }
+                    ],
+                    throwOnError: false,
+                    strict: "ignore"
+                });
+            }
+        });
+    </script>
+
+    {% block scripts %}{% endblock %}
+    <script>
+        // --- SISTEMA DE NOTIFICAÇÕES PREMIUM ---
+        // Aqui transformamos o alert "feio" do navegador em um moderno automaticamente
+
+        // --- HELPER GLOBAL PARA CONFIRMAÇÕES PREMIUM ---
+        window.alert = function (mensagem) {
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            let icon = 'info', title = 'Notificação';
+            const m = mensagem.toLowerCase();
+            if (m.includes('sucesso') || m.includes('✅')) { icon = 'success'; title = 'Sucesso!'; }
+            else if (m.includes('erro') || m.includes('❌')) { icon = 'error'; title = 'Ops...'; }
+            else if (m.includes('⚠️')) { icon = 'warning'; title = 'Atenção'; }
+
+            Swal.fire({
+                title: title, text: mensagem.replace(/✅|❌|⚠️/g, '').trim(), icon: icon,
+                background: isDark ? '#1e1e2d' : '#fff', color: isDark ? '#f8f9fa' : '#212529',
+                confirmButtonColor: '#6366f1', confirmButtonText: 'Entendido',
+                customClass: { popup: 'premium-popup-radius' }
+            });
+        };
+
+        window.confirmarAcao = function (opcoes = {}) {
+            const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+            return Swal.fire({
+                title: 'Tem certeza?', text: 'Esta ação não pode ser desfeita.', icon: 'warning',
+                showCancelButton: true, confirmButtonColor: opcoes.tipo === 'danger' ? '#ef4444' : '#6366f1',
+                cancelButtonColor: '#6c757d', confirmButtonText: 'Continuar', cancelButtonText: 'Cancelar',
+                background: isDark ? '#1e1e2d' : '#fff', color: isDark ? '#f8f9fa' : '#212529',
+                customClass: { popup: 'premium-popup-radius' },
+                ...opcoes
+            });
+        };
+    </script>
+
+</body>
+
+</html>

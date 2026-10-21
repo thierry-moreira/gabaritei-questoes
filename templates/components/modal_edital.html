@@ -1,0 +1,110 @@
+<!-- Modal Criar Edital (Componente Modular - Modo Adaptativo) -->
+<div class="modal fade" id="modalCriarEdital" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-edital-header d-flex justify-content-between align-items-center">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-gear-fill me-2"></i> Configurar Ciclo do Edital
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="POST" action="/aluno/editais/criar" id="form-criar-edital">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="modal-body p-4" style="background: var(--main-bg);">
+                    <!-- Campo Título -->
+                    <div class="mb-4">
+                        <label class="premium-label-small">NOME DO EDITAL / CONCURSO *</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0"
+                                style="border-radius: 12px 0 0 12px;">
+                                <i class="bi bi-journal-text text-primary"></i>
+                            </span>
+                            <input type="text" name="titulo" class="form-control premium-input-style border-start-0"
+                                placeholder="Ex: Polícia Federal - Agente 2026" required
+                                style="border-radius: 0 12px 12px 0 !important;">
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info border-0 rounded-3 d-flex align-items-center gap-3 mb-4"
+                        style="background: rgba(99, 102, 241, 0.08);">
+                        <i class="bi bi-cpu fs-4 text-primary"></i>
+                        <div>
+                            <strong class="text-primary">Ciclo Adaptativo Inteligente</strong>
+                            <p class="mb-0 small text-muted">
+                                O sistema gerencia automaticamente a ordem e a quantidade de questões
+                                com base no seu desempenho. Matérias e tópicos onde você for pior
+                                aparecerão com mais frequência.
+                            </p>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-collection fs-5"></i> Matérias e Assuntos do Edital
+                    </h6>
+
+                    <div id="container-materias">
+                        <!-- Bloco de Matéria (Template que será clonado) -->
+                        <div class="bloco-materia-premium align-items-center animate-fade-in">
+                            <div class="row g-3">
+                                <!-- Seleção de Matéria -->
+                                <div class="col-lg-6">
+                                    <label class="premium-label-small">MATÉRIA</label>
+                                    <select name="materias[]" class="form-select premium-input-style select-materia"
+                                        required onchange="carregarTopicosEdital(this)">
+                                        <option value="" disabled selected>Escolha uma matéria...</option>
+                                        {% for m in materias %}
+                                        <option value="{{ m.id_materia }}">{{ m.nome_materia }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <!-- Seleção de Tópicos -->
+                                <div class="col-lg-6">
+                                    <label class="premium-label-small">ASSUNTOS DO EDITAL</label>
+                                    <input type="hidden" name="topicos[]" class="hidden-topicos" value="">
+                                    <div class="dropdown">
+                                        <button
+                                            class="btn premium-input-style w-100 text-start dropdown-toggle text-truncate btn-topicos d-flex justify-content-between align-items-center"
+                                            type="button" data-bs-toggle="dropdown" disabled>
+                                            Selecione a matéria
+                                        </button>
+                                        <ul class="dropdown-menu w-100 dropdown-edital-menu menu-topicos overflow-auto"
+                                            onclick="event.stopPropagation()">
+                                            <li><span class="text-muted small px-3">Aguardando matéria...</span></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <!-- Botão Remover -->
+                                <div class="col-12 text-end mt-2">
+                                    <button type="button"
+                                        class="btn btn-sm btn-outline-danger btn-remover border-0 fw-bold" disabled
+                                        onclick="removerMateriaEdital(this)">
+                                        <i class="bi bi-trash-fill me-1"></i> Remover Matéria
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Adicionar Matéria -->
+                    <button type="button" class="btn btn-add-materia mt-2" onclick="adicionarMateriaEdital()">
+                        <i class="bi bi-plus-circle-fill me-2 fs-5"></i> Adicionar Matéria ao Ciclo
+                    </button>
+
+                </div>
+
+                <div class="modal-footer border-0 p-4 pt-0" style="background: var(--main-bg);">
+                    <button type="button" class="btn btn-link text-muted text-decoration-none fw-bold me-auto"
+                        data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-5 py-2 border-0 shadow"
+                        style="border-radius: 12px; font-weight: 700; background: var(--edital-accent);">
+                        <i class="bi bi-rocket-takeoff-fill me-2"></i> Criar Meu Ciclo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

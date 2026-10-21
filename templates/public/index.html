@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabaritei - Plataforma de Questões de Concursos com IA</title>
+    <meta name="description" content="Acelere sua aprovação com o Gabaritei: resolva questões de concursos públicos, faça simulados online, use IA e flashcards para gabaritar a prova.">
+    <meta name="keywords" content="questões de concursos, simulados online, inteligência artificial concursos, flashcards, resumos, aprovação, gabaritar">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='icone.webp') }}?v=1.1">
+    <link rel="icon" href="{{ url_for('static', filename='icone.webp') }}?v=1.1" type="image/webp">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" media="print" onload="this.media='all'">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- JS do Bootstrap (Carregamento antecipado e sem bloqueio) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+    <!-- Custom CSS Inline -->
+    <style>
+@font-face {
+  font-display: swap;
+  font-family: "bootstrap-icons-swap";
+  src: url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff2?2820a3852bdb9a5832199cc61cec4e65") format("woff2"),
+       url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/fonts/bootstrap-icons.woff?2820a3852bdb9a5832199cc61cec4e65") format("woff");
+}
+
+.bi::before,
+[class^="bi-"]::before,
+[class*=" bi-"]::before {
+  font-family: bootstrap-icons-swap !important;
+}
+
+:root {
+    /* Design System Skills - Fixed Light Mode */
+    --bg-main: #f1f5f9;
+    --bg-card: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --border-main: #e2e8f0;
+    --accent-blue: #3b82f6;
+    --accent-purple: #8b5cf6;
+    --accent-green: #10b981;
+    --font-main: 'Inter', sans-serif;
+    --radius: 8px;
+}
+
+body { 
+    font-family: var(--font-main);
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+/* Navbar */
+.navbar {
+    background-color: var(--bg-card);
+    border-bottom: 1px solid var(--border-main);
+    padding: 0.75rem 0;
+}
+
+.navbar-logo {
+    height: 50px;
+}
+
+@media (max-width: 768px) {
+    .navbar-logo {
+        height: 40px;
+    }
+}
+
+/* Hero Section */
+.hero-section {
+    background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent),
+                radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.05), transparent);
+    padding: 100px 0 60px;
+}
+
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 60px 0 40px;
+    }
+}
+
+.display-3 { font-weight: 800; letter-spacing: -0.04em; }
+.text-accent-blue { color: var(--accent-blue); }
+
+/* Componentes Premium */
+.card-feature {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-main);
+    border-radius: var(--radius);
+    padding: 2.5rem 2rem;
+    height: 100%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+}
+
+.card-feature:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    border-color: var(--accent-blue);
+}
+
+.feature-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-blue);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 1.5rem;
+    transition: transform 0.3s ease;
+}
+
+.card-feature:hover .feature-icon-wrapper {
+    transform: scale(1.1) rotate(-5deg);
+    background: var(--accent-blue);
+    color: white;
+}
+
+/* Buttons */
+.btn-premium {
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+    color: white !important;
+    border: none;
+    border-radius: var(--radius);
+    padding: 14px 32px;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+    filter: brightness(1.1);
+}
+
+.btn-premium small {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 400;
+    opacity: 0.9;
+    margin-top: -2px;
+}
+
+/* Badge Trial */
+.badge-trial {
+    display: inline-block;
+    background: rgba(16, 185, 129, 0.15);
+    color: #047857; /* Ajustado para contraste */
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    margin-bottom: 1.2rem;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.1);
+}
+
+.btn-premium-outline {
+    background: transparent;
+    color: var(--text-primary) !important;
+    border: 2px solid var(--border-main);
+    border-radius: var(--radius);
+    padding: 14px 32px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+.btn-premium-outline:hover {
+    background: var(--bg-card);
+    border-color: var(--accent-blue);
+    color: var(--accent-blue) !important;
+}
+
+/* Footer */
+footer {
+    background-color: #0F172A !important; /* Dark slate para o rodapé */
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+h2, h4 { color: var(--text-primary); }
+
+/* Browser Mockup Styling */
+.browser-mockup {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: #fff;
+    position: relative;
+}
+
+.browser-header {
+    background: #f1f3f4;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.browser-header .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dot.red { background: #ff5f56; }
+.dot.yellow { background: #ffbd2e; }
+.dot.green { background: #27c93f; }
+
+.browser-address {
+    background: #fff;
+    border-radius: 4px;
+    flex-grow: 1;
+    margin-left: 10px;
+    padding: 2px 10px;
+    font-size: 11px;
+    color: #555; /* Ajustado para contraste */
+    font-family: 'Inter', sans-serif;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.browser-mockup img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+@keyframes float-mockup {
+    0%   { transform: perspective(1200px) rotateY(-18deg) rotateX(8deg) rotateZ(-3deg) translateY(0px); }
+    50%  { transform: perspective(1200px) rotateY(-18deg) rotateX(8deg) rotateZ(-3deg) translateY(-14px); }
+    100% { transform: perspective(1200px) rotateY(-18deg) rotateX(8deg) rotateZ(-3deg) translateY(0px); }
+}
+
+.tilted-mockup {
+    animation: float-mockup 5s ease-in-out infinite;
+    box-shadow:
+        -20px 30px 60px rgba(59, 130, 246, 0.18),
+        -5px 10px 30px rgba(0, 0, 0, 0.12);
+    will-change: transform;
+    transform-style: preserve-3d;
+}
+
+.tilted-mockup:hover {
+    animation-play-state: paused;
+    transform: perspective(1200px) rotateY(-8deg) rotateX(3deg) rotateZ(-1deg) translateY(-12px) scale(1.03) !important;
+    box-shadow:
+        -25px 40px 80px rgba(59, 130, 246, 0.25),
+        -8px 15px 40px rgba(0, 0, 0, 0.15);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Feature Showcase Spacing */
+.row.align-items-center {
+    margin-bottom: 4rem;
+}
+
+@media (max-width: 991.98px) {
+    .browser-mockup {
+        margin-bottom: 2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    h2 { font-size: 1.75rem; }
+    .card-feature { padding: 2rem 1.5rem; }
+}
+    </style>
+
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <img src="{{ url_for('static', filename='logo.webp') }}" alt="Logo Gabaritei" class="navbar-logo">
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMainContent" aria-label="Alternar menu de navegação">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMainContent">
+                <div class="ms-auto d-flex flex-column flex-lg-row align-items-center gap-2 mt-3 mt-lg-0">
+                    <a href="{{ url_for('auth.login_aluno') }}" class="btn btn-link text-decoration-none fw-bold"
+                        style="color: #1E293B !important;">Entrar</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow-1">
+        <header class="hero-section">
+            <div class="container text-center text-lg-start">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <div class="badge-trial">
+                            <i class="bi bi-patch-check-fill me-1"></i> 7 Dias de Teste Grátis
+                        </div>
+                        <h1 class="display-4 display-md-3 mb-4">Plataforma de <span
+                                class="text-accent-blue">Questões de Concursos</span> com IA</h1>
+                        <p class="lead text-muted mb-5">Estude com Inteligência Artificial, resolva milhares de questões, organize seus cadernos de erros e faça simulados online. A ferramenta definitiva para gabaritar sua aprovação.</p>
+                        <div class="d-grid gap-3 d-sm-flex justify-content-sm-center justify-content-lg-start">
+                            <a href="{{ url_for('auth.login_aluno') }}" class="btn btn-premium shadow py-3">
+                                <span>Começar Agora</span>
+                                <small>Software livre e gratuito</small>
+                            </a>
+                            <a href="#funcionalidades" class="btn btn-premium-outline d-flex align-items-center justify-content-center">Ver Ferramentas</a>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 d-none d-lg-block">
+                        <div class="browser-mockup tilted-mockup shadow-lg">
+                            <div class="browser-header">
+                                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                                <div class="browser-address">painel.gabaritei.com.br</div>
+                            </div>
+                            <img src="{{ url_for('static', filename='imagens/index/painel_aluno_fiel.webp') }}" alt="Painel do Aluno - Gabaritei Questões" class="img-fluid">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <section class="py-5" id="funcionalidades">
+            <div class="container py-5">
+                <div class="text-center mb-5">
+                    <h2 class="fw-bold">Por que estudar com o Gabaritei?</h2>
+                    <p class="text-muted">Ferramentas pensadas para o máximo desempenho.</p>
+                </div>
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="card-feature">
+                            <div class="feature-icon-wrapper">
+                                <i class="bi bi-robot"></i>
+                            </div>
+                            <h3 class="fw-bold mb-3">Gabaritos com IA</h3>
+                            <p class="text-muted mb-0">Inteligência Artificial que explica detalhadamente cada alternativa de questões de concursos. Entenda a lógica da banca e aprenda com seus erros.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card-feature">
+                            <div class="feature-icon-wrapper"
+                                style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple);">
+                                <i class="bi bi-journal-bookmark"></i>
+                            </div>
+                            <h3 class="fw-bold mb-3">Cadernos de Questões</h3>
+                            <p class="text-muted mb-0">Organize seu estudo por matéria e assunto. Crie cadernos personalizados com questões favoritas e filtros avançados focados no seu edital.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card-feature">
+                            <div class="feature-icon-wrapper"
+                                style="background: rgba(16, 185, 129, 0.1); color: var(--accent-green);">
+                                <i class="bi bi-stopwatch"></i>
+                            </div>
+                            <h3 class="fw-bold mb-3">Simulados Online</h3>
+                            <p class="text-muted mb-0">Prepare-se com simulados cronometrados e questões reais. Treine a gestão de tempo e sinta a experiência real da prova do seu concurso.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card-feature">
+                            <div class="feature-icon-wrapper"
+                                style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                                <i class="bi bi-card-text"></i>
+                            </div>
+                            <h3 class="fw-bold mb-3">Flashcards SRS</h3>
+                            <p class="text-muted mb-0">Memorização acelerada com Repetição Espaçada. Fixe conteúdos de concursos públicos e nunca mais esqueça o que estudou.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card-feature">
+                            <div class="feature-icon-wrapper"
+                                style="background: rgba(59, 130, 246, 0.1); color: var(--accent-blue);">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </div>
+                            <h3 class="fw-bold mb-3">Resumos Estratégicos</h3>
+                            <p class="text-muted mb-0">Organize seus próprios resumos por matéria. Tenha um material de revisão poderoso e sempre à mão para as provas.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card-feature">
+                            <div class="feature-icon-wrapper"
+                                style="background: rgba(139, 92, 246, 0.1); color: var(--accent-purple);">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <h4 class="fw-bold mb-3">Análise de Desempenho</h4>
+                            <p class="text-muted mb-0">Acompanhe sua evolução com estatísticas detalhadas. Identifique pontos fracos e bata suas metas de aprovação diárias.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção de Showcase (Prints Reais) -->
+        <section class="py-5 bg-white overflow-hidden">
+            <div class="container py-5">
+                <div class="text-center mb-5">
+                    <h2 class="fw-bold h1">Tecnologia que <span class="text-accent-blue">Acelera sua Aprovação</span></h2>
+                    <p class="text-muted lead">Veja como o Gabaritei transforma sua rotina de estudos por dentro.</p>
+                </div>
+
+                <!-- Feature 1: IA Explica -->
+                <div class="row align-items-center mb-5 pb-5">
+                    <div class="col-lg-6 order-lg-2 mb-5 mb-lg-0">
+                        <div class="browser-mockup shadow-lg">
+                            <div class="browser-header">
+                                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                                <div class="browser-address">ia-explica.gabaritei.com.br</div>
+                            </div>
+                            <img src="{{ url_for('static', filename='imagens/index/Captura de tela 2026-04-30 170952.webp') }}" alt="IA Explica - Gabarito Comentado com Inteligência Artificial" class="img-fluid" loading="lazy">
+                        </div>
+                    </div>
+                    <div class="col-lg-6 order-lg-1">
+                        <div class="pe-lg-5">
+                            <div class="badge-trial mb-3">Diferencial Exclusivo</div>
+                            <h3 class="fw-bold h2 mb-4">A IA que ensina você a pensar como a banca</h3>
+                            <p class="text-muted lead mb-4">Chega de gabaritos secos. Nossa Inteligência Artificial analisa cada alternativa, explica por que está certa ou errada e ainda alerta sobre as <strong>pegadinhas mais comuns</strong>.</p>
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-3 d-flex align-items-center"><i class="bi bi-check-circle-fill text-primary me-3 fs-5"></i> <span>Explicação detalhada passo a passo</span></li>
+                                <li class="mb-3 d-flex align-items-center"><i class="bi bi-check-circle-fill text-primary me-3 fs-5"></i> <span>Identificação proativa de "pegadinhas"</span></li>
+                                <li class="mb-3 d-flex align-items-center"><i class="bi bi-check-circle-fill text-primary me-3 fs-5"></i> <span>Linguagem acessível e didática</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Resumos -->
+                <div class="row align-items-center mb-5 pb-5">
+                    <div class="col-lg-6 mb-5 mb-lg-0">
+                        <div class="browser-mockup shadow-lg">
+                            <div class="browser-header">
+                                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                                <div class="browser-address">resumos.gabaritei.com.br</div>
+                            </div>
+                            <img src="{{ url_for('static', filename='imagens/index/Captura de tela 2026-04-30 171642.webp') }}" alt="Resumos Estratégicos Gerados por IA" class="img-fluid" loading="lazy">
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="ps-lg-5">
+                            <div class="badge-trial mb-3" style="background: rgba(139, 92, 246, 0.1); color: #5b21b6; border-color: rgba(139, 92, 246, 0.2);">Estudo Memorável</div>
+                            <h3 class="fw-bold h2 mb-4">Resumos estruturados em segundos</h3>
+                            <p class="text-muted lead mb-4">Transforme qualquer questão ou conteúdo em um resumo estratégico pronto para revisão. Organizado, visual e focado no que realmente cai na prova.</p>
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-3 d-flex align-items-center"><i class="bi bi-check-circle-fill me-3 fs-5" style="color: #8b5cf6;"></i> <span>Exportação em PDF com visual Premium</span></li>
+                                <li class="mb-3 d-flex align-items-center"><i class="bi bi-check-circle-fill me-3 fs-5" style="color: #8b5cf6;"></i> <span>Organização inteligente por tópicos</span></li>
+                                <li class="mb-3 d-flex align-items-center"><i class="bi bi-check-circle-fill me-3 fs-5" style="color: #8b5cf6;"></i> <span>Foco absoluto em memorização de longo prazo</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 3: Banco de Questões -->
+                <div class="row align-items-center">
+                    <div class="col-lg-6 order-lg-2 mb-5 mb-lg-0">
+                        <div class="browser-mockup shadow-lg">
+                            <div class="browser-header">
+                                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                                <div class="browser-address">questoes.gabaritei.com.br</div>
+                            </div>
+                            <img src="{{ url_for('static', filename='imagens/index/Captura de tela 2026-04-30 171726.webp') }}" alt="Banco de Questões e Filtros Avançados" class="img-fluid" loading="lazy">
+                        </div>
+                    </div>
+                    <div class="col-lg-6 order-lg-1">
+                        <div class="pe-lg-5">
+                            <div class="badge-trial mb-3" style="background: rgba(59, 130, 246, 0.1); color: #1d4ed8; border-color: rgba(59, 130, 246, 0.2);">Ecossistema Integrado</div>
+                            <h3 class="fw-bold h2 mb-4">Crie Flashcards e Resumos em um clique</h3>
+                            <p class="text-muted lead mb-4">Não perca tempo copiando e colando. Nossa Inteligência Artificial lê a questão e gera automaticamente <strong>Flashcards e Resumos Estratégicos</strong> focados no que você acabou de resolver.</p>
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-3 d-flex align-items-center"><i class="bi bi-magic text-primary me-3 fs-5"></i> <span>Geração de Flashcards via IA</span></li>
+                                <li class="mb-3 d-flex align-items-center"><i class="bi bi-magic text-primary me-3 fs-5"></i> <span>Resumos automáticos da questão</span></li>
+                                <li class="mb-3 d-flex align-items-center"><i class="bi bi-magic text-primary me-3 fs-5"></i> <span>Organização em cadernos inteligentes</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                <!-- Feature 4: Flashcards -->
+                <div class="row align-items-center mt-5 pt-5">
+                    <div class="col-lg-6 mb-5 mb-lg-0">
+                        <div class="browser-mockup shadow-lg">
+                            <div class="browser-header">
+                                <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+                                <div class="browser-address">flashcards.gabaritei.com.br</div>
+                            </div>
+                            <img src="{{ url_for('static', filename='imagens/index/flashcards.webp') }}" alt="Flashcards com Repetição Espaçada" class="img-fluid" loading="lazy">
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="ps-lg-5">
+                            <div class="badge-trial mb-3" style="background: rgba(16, 185, 129, 0.1); color: #047857; border-color: rgba(16, 185, 129, 0.2);">Memorização</div>
+                            <h3 class="fw-bold h2 mb-4">Flashcards com Repetição Espaçada (SRS)</h3>
+                            <p class="text-muted lead mb-4">Nunca mais esqueça o que estudou. Nossa plataforma utiliza algoritmos de ciência cognitiva para agendar suas revisões no momento exato.</p>
+                            <ul class="list-unstyled mb-4">
+                                <li class="mb-3 d-flex align-items-center"><i class="bi bi-check-circle-fill me-3 fs-5" style="color: #10b981;"></i> <span>Organização inteligente por disciplinas</span></li>
+                                <li class="mb-3 d-flex align-items-center"><i class="bi bi-check-circle-fill me-3 fs-5" style="color: #10b981;"></i> <span>Sistema de cores intuitivo para revisão</span></li>
+                                <li class="mb-3 d-flex align-items-center"><i class="bi bi-check-circle-fill me-3 fs-5" style="color: #10b981;"></i> <span>Foco total em produtividade e fixação</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Seção de Garantia/Trial -->
+        <section class="py-5 bg-light">
+            <div class="container py-4">
+                <div class="row align-items-center justify-content-center">
+                    <div class="col-lg-8 text-center">
+                        <div class="card border-0 shadow-sm p-4 p-md-5" style="border-radius: 24px; background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);">
+                            <div class="mb-4">
+                                <i class="bi bi-shield-check text-success" style="font-size: 4rem;"></i>
+                            </div>
+                            <h2 class="fw-bold mb-3">Teste Tudo por 7 Dias: Compromisso Zero</h2>
+                            <p class="lead text-muted mb-4">
+                                Experimente a plataforma completa por <strong>7 dias</strong>. Tenha acesso às funcionalidades do plano <strong>Premium</strong>, incluindo IA e Simulados. Se você não se adaptar, pode cancelar sem complicações.
+                            </p>
+                            <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+                                <a href="{{ url_for('auth.login_aluno') }}" class="btn btn-premium px-5 py-3">
+                                    <span>Entrar na plataforma</span>
+                                    <small>Gratuito, sem assinaturas</small>
+                                </a>
+                            </div>
+                            <p class="mt-4 small text-muted">
+                                <i class="bi bi-lock-fill me-1"></i> Acesso imediato após o cadastro.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-dark text-white py-4 mt-auto">
+        <div class="container text-center">
+            <p class="mb-2">&copy; 2026 Gabaritei - Todos os direitos reservados.</p>
+            <div class="mb-2">
+                <small class="text-white-50">Domine as questões, conquiste a vaga.</small>
+            </div>
+            <div style="font-size: 0.7rem; max-width: 600px; margin: 0 auto; line-height: 1.2;" class="text-white">
+                *O plano gratuito permite a resolução de até 50 questões por dia, criação de até 3 cadernos e salvamento de até 3 filtros. O acesso ilimitado e as ferramentas de Inteligência Artificial são exclusivos para assinantes do plano Premium.
+            </div>
+        </div>
+    </footer>
+
+
+</body>
+
+</html>

@@ -1,0 +1,72 @@
+/* 
+   Gabaritei - Cadernos Specific Styles
+   Apenas ajustes exclusivos para a visualização de pastas digitais.
+*/
+
+:root {
+    --caderno-accent: var(--accent-color);
+}
+
+/* Folder Icon Design */
+.folder-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    background: var(--premium-accent-soft);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: var(--premium-accent);
+    transition: all 0.3s;
+}
+
+.premium-card:hover .folder-icon-wrapper {
+    transform: scale(1.1) rotate(-5deg);
+    background: var(--premium-accent);
+    color: white;
+}
+
+/* Botões do Caderno */
+.btn-caderno-open {
+    background: var(--premium-accent);
+    color: white !important;
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.btn-caderno-open:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+}
+
+/* Modal e Input Styles */
+.modal-caderno-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+}
+
+.premium-input-group {
+    position: relative;
+}
+
+.premium-input-group i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--texto-secundario);
+}
+
+.premium-input-group input {
+    padding-left: 45px !important;
+    height: 50px;
+    border-radius: 12px !important;
+    border: 1px solid var(--border-color);
+    background: rgba(var(--bs-body-bg-rgb), 0.5);
+}

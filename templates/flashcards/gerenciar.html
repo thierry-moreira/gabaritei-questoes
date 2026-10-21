@@ -1,0 +1,166 @@
+{% extends "base_aluno.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flashcards.css') }}">
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        
+        <div class="d-flex align-items-center mb-4 mt-3">
+            <a href="{{ url_for('flashcards.index') }}" class="btn btn-outline-secondary me-3 rounded-circle" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h2 class="fw-bold mb-0 text-white">{{ categoria.nome_categoria }}</h2>
+                <p class="text-muted mb-0 small">{{ cards|length }} Cards criados</p>
+            </div>
+            <button class="btn btn-primary ms-auto rounded-3 px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoCard">
+                <i class="bi bi-plus-lg me-2"></i> Criar Novo Card
+            </button>
+        </div>
+
+        <!-- Cards List -->
+        <div class="row g-3">
+            {% if not cards %}
+            <div class="col-12 text-center py-5">
+                <p class="text-muted">Nenhum card nesta categoria ainda.</p>
+            </div>
+            {% endif %}
+
+            {% for card in cards %}
+            <div class="col-12">
+                <div class="stat-card d-flex justify-content-between align-items-center py-3">
+                    <div class="flex-grow-1 me-4">
+                        <div class="small fw-bold text-primary mb-1">FRENTE:</div>
+                        <div class="text-dark-emphasis mb-2 markdown-text">{{ card.frente|safe }}</div>
+                        <hr class="my-2 opacity-10">
+                        <div class="small fw-bold text-success mb-1">VERSO:</div>
+                        <div class="text-muted small markdown-text">{{ card.verso|safe }}</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-light text-danger border-0" onclick="excluirCard('{{ card.id_flashcard }}')">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal Novo Card -->
+<div class="modal fade" id="modalNovoCard" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Criar Flashcard Manual</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4">
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-muted d-flex justify-content-between">
+                        Frente do Card (Pergunta/Conceito)
+                        <button type="button" class="btn btn-sm btn-link p-0 text-primary" onclick="wrapHighlight('frente')"><i class="bi bi-highlighter"></i> Destacar Seleção</button>
+                    </label>
+                    <textarea id="frente" class="form-control rounded-3" rows="3" placeholder="O que você quer memorizar?"></textarea>
+                    <div class="form-text small">Use o botão acima para destacar partes importantes.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted d-flex justify-content-between">
+                        Verso do Card (Resposta/Explicação)
+                        <button type="button" class="btn btn-sm btn-link p-0 text-primary" onclick="wrapHighlight('verso')"><i class="bi bi-highlighter"></i> Destacar Seleção</button>
+                    </label>
+                    <textarea id="verso" class="form-control rounded-3" rows="4" placeholder="A explicação do card..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary rounded-3 px-4" onclick="salvarCard()">Salvar Flashcard <i class="bi bi-check-lg ms-1"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function wrapHighlight(fieldId) {
+    const el = document.getElementById(fieldId);
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const text = el.value;
+    
+    if (start === end) return; // Nada selecionado
+
+    const selected = text.substring(start, end);
+    const before = text.substring(0, start);
+    const after = text.substring(end);
+
+    el.value = before + '<mark>' + selected + '</mark>' + after;
+    el.focus();
+}
+
+function salvarCard() {
+    const frente = document.getElementById('frente').value;
+    const verso = document.getElementById('verso').value;
+
+    if(!frente || !verso) return alert("Preencha frente e verso!");
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    fetch('/api/flashcards/criar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({
+            id_categoria: '{{ categoria.id_categoria }}',
+            frente: frente,
+            verso: verso
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            location.reload();
+        } else {
+            alert("Erro ao salvar: " + data.error);
+        }
+    });
+}
+
+function excluirCard(id) {
+    confirmarAcao({
+        title: 'Excluir Flashcard?',
+        text: "Tem certeza que deseja apagar este card permanentemente?",
+        tipo: 'danger',
+        confirmButtonText: 'Sim, excluir'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/api/flashcards/excluir/${id}`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    location.reload();
+                }
+            });
+        }
+    });
+}
+
+function formatarMarkdown(texto) {
+    if (!texto) return "";
+    return texto.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+}
+
+// Formatar cards existentes ao carregar a página
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.markdown-text').forEach(el => {
+        el.innerHTML = formatarMarkdown(el.innerHTML);
+    });
+});
+</script>
+{% endblock %}

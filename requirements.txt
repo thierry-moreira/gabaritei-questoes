@@ -1,0 +1,16 @@
+Flask
+Flask-Login
+Flask-WTF
+Werkzeug
+Flask-Limiter
+flask-talisman
+supabase
+python-dotenv
+postgrest
+openai
+typing-extensions
+email-validator
+weasyprint
+requests
+pillow
+Flask-Compress

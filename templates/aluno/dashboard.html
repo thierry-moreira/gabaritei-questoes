@@ -1,0 +1,263 @@
+{% extends 'base_aluno.html' %}
+{% import 'components/stat_card.html' as sc %}
+
+{% block content %}
+<style>
+    .commander-header {
+        margin-bottom: 2.5rem;
+        padding: 0 1rem;
+    }
+
+    .greeting-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        letter-spacing: -0.025em;
+        margin-bottom: 0.25rem;
+    }
+
+    @media (max-width: 768px) {
+        .greeting-title {
+            font-size: 1.6rem;
+        }
+    }
+
+    .evolution-text {
+        color: var(--texto-secundario);
+        font-size: 1.1rem;
+    }
+
+    .streak-badge-top {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0.5rem 1.25rem;
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .profile-circle {
+        width: 45px;
+        height: 45px;
+        background: linear-gradient(45deg, #4f46e5, #06b6d4);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Accuracy Circular Visual */
+    .circular-progress-mini {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        color: var(--texto-principal);
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+    }
+
+    /* Estilo para a caixa de seleção (Select) */
+    .premium-select {
+        background-color: var(--card-bg) !important;
+        color: var(--texto-principal) !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 10px !important;
+        padding-right: 2.5rem !important;
+        cursor: pointer;
+    }
+
+    .premium-select option {
+        background-color: var(--card-bg);
+        color: var(--texto-principal);
+    }
+
+    /* Botoes Premium */
+    .btn-premium-indigo {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white !important;
+        border: none;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    .btn-premium-indigo:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+        filter: brightness(1.1);
+    }
+
+    .btn-outline-premium-secondary {
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+        background: var(--card-bg);
+        color: var(--texto-principal);
+        transition: all 0.2s ease;
+    }
+    .btn-outline-premium-secondary:hover {
+        background: var(--primary-soft);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+</style>
+
+<div class="commander-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
+    <div>
+        <h1 class="greeting-title">Olá, {{ current_user.username }}!</h1>
+        <p class="evolution-text mb-0">
+            Seu volume de estudos está <span class="fw-bold" style="color: var(--primary-color);">{{ evolucao_percentual }}% maior</span> que na semana passada.
+        </p>
+    </div>
+    <div class="d-flex flex-column flex-sm-row gap-2 gap-md-3 w-100 w-md-auto">
+        <a href="/aluno/dashboard_detalhado" class="btn btn-premium-indigo px-4 py-3 py-md-2 fw-bold d-flex align-items-center justify-content-center shadow-lg flex-grow-1">
+            <i class="bi bi-bar-chart-line me-2"></i> Raio-X Completo
+        </a>
+        <a href="/aluno/questoes" class="btn btn-outline-premium-secondary px-4 py-3 py-md-2 fw-bold d-flex align-items-center justify-content-center flex-grow-1">
+            <i class="bi bi-pencil-square me-2 text-primary"></i> Resolver Questões
+        </a>
+    </div>
+</div>
+
+
+<div class="row g-4 mb-5">
+    {{ sc.render_stat_card(variant='count', title='Questões Resolvidas', value=total_resolvidas, icon='bi-check2-circle', badge='+' ~ hoje_resolvidas ~ ' hoje') }}
+    {{ sc.render_stat_card(variant='progress', title='Taxa de Acerto', percentage=taxa_acerto, p_label=performance_nivel) }}
+    {{ sc.render_stat_card(variant='streak', title='OFENSIVA ATIVA', value=streak_count, icon='bi-fire', description='Dias de estudo constante') }}
+</div>
+
+<div class="row px-1">
+    <div class="col-12">
+        <div class="card shadow-sm border-0" style="border-radius: 20px;">
+            <div class="card-header bg-transparent border-0 p-4 pb-0 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                <h5 class="fw-bold mb-0 text-nowrap">Frequência de Estudos</h5>
+                <select class="form-select form-select-sm w-auto fw-bold premium-select" id="filtroDias" onchange="atualizarFiltroDias()">
+                    <option value="7" selected>Últimos 7 dias</option>
+                    <option value="15">Últimos 15 dias</option>
+                    <option value="30">Último Mês</option>
+                </select>
+            </div>
+            <div class="card-body p-4">
+                <div style="position: relative; height: 300px; width: 100%;">
+                    <canvas id="graficoDesempenho"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const labelsCompletos = JSON.parse('{{ labels_grafico | tojson | safe }}');
+    const acertosCompletos = JSON.parse('{{ dados_acertos | tojson | safe }}');
+    const errosCompletos = JSON.parse('{{ dados_erros | tojson | safe }}');
+
+    function pegarUltimosDias(array, dias) {
+        return array.slice(-dias);
+    }
+
+    const canvasElement = document.getElementById('graficoDesempenho');
+    if (canvasElement) {
+        let ctx = canvasElement.getContext('2d');
+        
+        const isDarkMode = () => document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        const getChartColors = () => ({
+            grid: isDarkMode() ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+            ticks: isDarkMode() ? '#94a3b8' : '#64748b',
+            tooltipBg: isDarkMode() ? '#1e293b' : '#ffffff',
+            tooltipText: isDarkMode() ? '#f8fafc' : '#1e293b',
+            tooltipBorder: isDarkMode() ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+        });
+
+        let colors = getChartColors();
+        
+        let meuGrafico = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: pegarUltimosDias(labelsCompletos, 7),
+                datasets: [
+                    {
+                        label: 'Questões Resolvidas',
+                        data: pegarUltimosDias(acertosCompletos.map((a, i) => a + errosCompletos[i]), 7),
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#6366f1',
+                        pointBorderColor: isDarkMode() ? '#1e293b' : '#fff',
+                        pointBorderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false, 
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: { 
+                        backgroundColor: colors.tooltipBg,
+                        titleColor: colors.tooltipText,
+                        bodyColor: colors.tooltipText,
+                        borderColor: colors.tooltipBorder,
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.parsed.y} questões`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        grid: { color: colors.grid, drawBorder: false },
+                        ticks: { color: colors.ticks, font: { size: 11 }, stepSize: 2 }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: colors.ticks, font: { size: 11 } }
+                    }
+                }
+            }
+        });
+
+        // Observer para mudanças de tema
+        const observer = new MutationObserver(() => {
+            const newColors = getChartColors();
+            meuGrafico.options.scales.y.grid.color = newColors.grid;
+            meuGrafico.options.scales.y.ticks.color = newColors.ticks;
+            meuGrafico.options.scales.x.ticks.color = newColors.ticks;
+            meuGrafico.options.plugins.tooltip.backgroundColor = newColors.tooltipBg;
+            meuGrafico.options.plugins.tooltip.titleColor = newColors.tooltipText;
+            meuGrafico.options.plugins.tooltip.bodyColor = newColors.tooltipText;
+            meuGrafico.options.plugins.tooltip.borderColor = newColors.tooltipBorder;
+            meuGrafico.data.datasets[0].pointBorderColor = isDarkMode() ? '#1e293b' : '#fff';
+            meuGrafico.update();
+        });
+
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme'] });
+
+        window.atualizarFiltroDias = function() {
+            let dias = parseInt(document.getElementById('filtroDias').value);
+            meuGrafico.data.labels = pegarUltimosDias(labelsCompletos, dias);
+            meuGrafico.data.datasets[0].data = pegarUltimosDias(acertosCompletos.map((a, i) => a + errosCompletos[i]), dias);
+            meuGrafico.update();
+        }
+    }
+</script>
+{% endblock %}

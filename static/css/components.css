@@ -1,0 +1,243 @@
+/* 
+   ESTILOS DE COMPONENTES REUTILIZÁVEIS
+   Centralizamos aqui o CSS de macros e elementos compartilhados.
+*/
+
+/* 1. STAT CARDS (Cards de Estatística) */
+.stat-card-premium {
+    background: var(--card-bg);
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    padding: 1.75rem;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    color: var(--texto-principal);
+}
+
+.stat-card-premium:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    border-color: var(--primary-color);
+}
+
+.stat-card-premium:not(.stat-card-streak):hover {
+    background: var(--primary-soft);
+}
+
+.stat-card-streak {
+    background: linear-gradient(135deg, #059669 0%, #064e3b 100%);
+    color: white !important;
+}
+
+[data-bs-theme="light"] .stat-card-streak {
+    background: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%);
+}
+
+.stat-card-streak:hover {
+    filter: brightness(1.1);
+}
+
+.stat-card-streak .stat-label, 
+.stat-card-streak .stat-value,
+.stat-card-streak p {
+    color: white !important;
+}
+
+.stat-card-streak .stat-value {
+    font-size: 3.5rem;
+    margin-bottom: -5px;
+}
+
+.stat-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(99, 102, 241, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.stat-label {
+    color: #94a3b8;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2.8rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--texto-principal);
+}
+
+@media (max-width: 576px) {
+    .stat-value {
+        font-size: 2rem;
+    }
+    .stat-card-streak .stat-value {
+        font-size: 2.5rem;
+    }
+}
+
+.fire-watermark {
+    position: absolute;
+    right: -5%;
+    bottom: -15%;
+    font-size: 12rem;
+    opacity: 0.2;
+    color: rgba(0, 0, 0, 0.4);
+    transform: rotate(-5deg);
+    pointer-events: none;
+}
+
+.badge-today {
+    position: absolute;
+    top: 1.75rem;
+    right: 1.75rem;
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.circular-progress-mini {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    color: var(--texto-principal);
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    background: radial-gradient(closest-side, var(--card-bg) 79%, transparent 80% 100%), 
+                conic-gradient(var(--primary-color) var(--progress-percent, 0%), var(--border-color) 0);
+    flex-shrink: 0;
+}
+
+@media (max-width: 1200px) {
+    .stat-progress-wrapper {
+        gap: 1rem !important;
+    }
+}
+
+@media (max-width: 991px) {
+    .stat-card-premium {
+        padding: 1.25rem;
+    }
+}
+
+/* 2. PERFORMANCE ACCORDION (Desempenho por Matéria) */
+.performance-accordion-card {
+    background-color: var(--card-bg) !important;
+    border-radius: 20px !important;
+}
+
+.accordion-button::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236b7280'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+
+[data-bs-theme="dark"] .accordion-button::after {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%238b949e'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+}
+
+[data-bs-theme="dark"] .bg-light.bg-opacity-10 {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+.accordion-button:not(.collapsed) {
+    box-shadow: none;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+.performance-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 50px;
+}
+
+/* 3. COMPONENTE DE IMAGEM COM ZOOM (Premium) */
+.questao-imagem-wrapper {
+    position: relative;
+    overflow: hidden !important; /* Essencial para o efeito de "lupa" dentro do quadro */
+    cursor: zoom-in;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    background: #fff;
+}
+
+.questao-img {
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    transform-origin: center center;
+}
+
+.questao-imagem-wrapper:hover .questao-img {
+    transform: scale(1.18); /* Zoom elegante sem pixelar demais */
+}
+
+.questao-imagem-wrapper:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12) !important;
+    border-color: var(--primary-color) !important;
+    transform: translateY(-2px);
+}
+
+/* Transição do Badge de Instrução */
+.questao-imagem-wrapper .badge {
+    transition: all 0.3s ease;
+}
+
+.questao-imagem-wrapper:hover .badge {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+    opacity: 1 !important;
+}
+
+[data-bs-theme="dark"] .questao-imagem-wrapper {
+    background: #161b22;
+}
+
+/* 4. SUPORTE PARA IMAGENS DO CKEDITOR (Centralização e Alinhamento) */
+figure.image {
+    display: table;
+    clear: both;
+    text-align: center;
+    margin: 1rem auto; /* Centralizado por padrão */
+    max-width: 100%;
+}
+
+figure.image img {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+}
+
+/* Alinhamento Específico gerado pelo CKEditor */
+figure.image.image-style-align-left,
+figure.image.image-style-block-align-left {
+    margin-left: 0;
+    margin-right: auto;
+    text-align: left;
+}
+
+figure.image.image-style-align-center,
+figure.image.image-style-block-align-center {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+figure.image.image-style-align-right,
+figure.image.image-style-block-align-right {
+    margin-right: 0;
+    margin-left: auto;
+    text-align: right;
+}

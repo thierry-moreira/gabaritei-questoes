@@ -1,0 +1,118 @@
+{% extends 'base_aluno.html' %}
+
+{% import 'components/ai_atoms.html' as ai %}
+{% import 'components/question_atoms.html' as atoms with context %}
+{% import 'components/edital_components.html' as edital_comp %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/aluno_questoes.css') }}">
+
+<div class="container mt-4">
+    
+    {# HEADER DE ESTUDO (Componentizado) #}
+    {{ edital_comp.render_study_header(materia, topico, feitas, meta) }}
+
+    {% if questao %}
+        <div class="card shadow-sm border-0 mb-4 rounded-4" id="card-questao-{{ questao.id_questao }}">
+            <div class="card-body p-4">
+                
+                <div class="d-flex align-items-center mb-3 pb-1 border-bottom small w-100 gap-2">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fw-bold">
+                        Questão #{{ questao.id_questao }}
+                    </span>
+                    
+                    <span class="badge bg-dark-subtle text-dark border border-secondary-subtle">
+                        {{ questao.nome_materia if questao.nome_materia else 'Geral' }}
+                    </span>
+
+                    <div class="ms-auto text-muted text-nowrap text-end d-none d-md-block">
+                        {{ questao.nome_banca }} - {{ questao.nome_orgao }} 
+                        ({{ questao.ano }})
+                    </div>
+                </div>
+
+                    {# TEXTO DE APOIO (Componentizado) #}
+                    {{ atoms.render_support_text(questao.id_questao, questao.texto_base, questao.titulo_referencia, start_expanded=True) }}
+
+                <div class="enunciado-texto fs-5 mb-4 text-dark" style="line-height: 1.6; white-space: pre-wrap;">
+                    {{ questao.enunciado | safe }}
+                </div>
+
+                    {# IMAGEM DA QUESTÃO (Componentizado) #}
+                    {{ atoms.render_question_image(questao.url_imagem) }}
+
+                <form class="form-resposta" id="formQuestao" data-id-edital="{{ id_edital }}" data-csrf-token="{{ csrf_token() }}">
+                    <input type="hidden" name="id_questao" value="{{ questao.id_questao }}">
+                    {# GRUPO DE ALTERNATIVAS (Componentizado) #}
+                    {{ atoms.render_alternatives_group(questao.id_questao, questao.alternativas_questao, input_name='res', mode='estudo') }}
+                    
+                    <div class="mt-4 d-flex justify-content-between align-items-center">
+                         <div class="d-flex gap-2">
+                             <button type="button" class="btn-premium-outline py-2 px-3" data-bs-toggle="collapse" data-bs-target="#comentarios-{{ questao.id_questao }}" style="font-size: 0.85rem; border: 1.5px solid var(--border-color); border-radius: 12px; background: var(--card-bg);">
+                                <i class="bi bi-chat-text"></i> Comentários <span class="badge bg-secondary ms-1">0</span>
+                            </button>
+
+                            <button class="btn-ai-premium" 
+                                    onclick="chamarIA(this)"
+                                    data-id="{{ questao.id_questao }}"
+                                    data-materia="{{ questao.id_materia }}"
+                                    data-enunciado="{{ questao.enunciado | striptags }}"
+                                    data-correta="{{ questao.resposta_correta }}"
+                                    data-texto="{{ questao.conteudo_texto if questao.conteudo_texto else '' }}">
+                                <i class="bi bi-robot"></i> IA Explica 
+                            </button>
+                        </div>
+
+                        <button type="button" class="btn btn-premium px-5 py-2 shadow-lg" id="btnResponder">
+                            <i class="bi bi-check2-circle me-1"></i> Responder e Avançar
+                        </button>
+                    </div>
+
+                    {# CONTAINER DA IA (Componentizado) #}
+                    {{ ai.render_ai_container(questao.id_questao) }}
+
+                    {# SEÇÃO DE COMENTÁRIOS (Componentizado) #}
+                    {{ atoms.render_comments_section(questao) }}
+
+                    <div id="feedback-resposta" class="mt-4 p-4 rounded-4 d-none border shadow-sm">
+                        <h5 id="feedback-titulo" class="fw-bold mb-3"></h5>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-dark fw-bold flex-grow-1 py-2 shadow" id="btnProximaQuestao">
+                                <i class="bi bi-arrow-right-circle me-1"></i> Próxima Questão do Ciclo
+                            </button>
+                            <button type="button" class="btn btn-outline-danger px-4" data-bs-toggle="modal" data-bs-target="#modalFeedback" onclick="prepararFeedback('{{ questao.id_questao }}')">
+                                <i class="bi bi-flag"></i> Reportar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-warning shadow-sm border-0 p-5 rounded-4 text-center">
+            <i class="bi bi-emoji-frown display-4 mb-3 d-block"></i>
+            <h4 class="fw-bold">Poxa, acabaram as questões!</h4>
+            <p>Não encontramos mais questões inéditas no banco para o tópico <b>{{ topico }}</b>.</p>
+            
+            <form method="POST" action="/aluno/editais/pular/{{ id_edital }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-dark mt-3 fw-bold px-4 py-2">
+                    <i class="bi bi-skip-forward-fill me-2"></i> Pular para o próximo Assunto
+                </button>
+            </form>
+        </div>
+    {% endif %}
+
+    <div class="text-center mt-4 mb-5">
+        <a href="/aluno/editais" class="btn btn-outline-secondary fw-bold"><i class="bi bi-arrow-left"></i> Voltar ao Painel de Editais</a>
+    </div>
+</div>
+
+{% include 'components/modais_questao.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="{{ url_for('static', filename='js/questoes_common.js') }}"></script>
+<script src="{{ url_for('static', filename='js/aluno_estudar_edital.js') }}"></script>
+{% endblock %}

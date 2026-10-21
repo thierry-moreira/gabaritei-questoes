@@ -1,0 +1,168 @@
+{% extends 'base_aluno.html' %}
+{% import 'components/edital_components.html' as edital_comp %}
+{% block content %}
+<div class="container mt-4 mb-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0"><i class="bi bi-pie-chart-fill text-primary me-2"></i> Raio-X do Edital</h2>
+            <p class="text-muted">{{ edital.titulo }}</p>
+        </div>
+        <a href="/aluno/editais" class="btn btn-outline-secondary fw-bold shadow-sm"><i class="bi bi-arrow-left"></i>
+            Voltar</a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 text-white h-100 rounded-4" style="background: linear-gradient(135deg, #0ea5e9, #0284c7) !important;">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="bg-white bg-opacity-10 p-3 rounded-circle me-3">
+                        <i class="bi bi-bullseye fs-1 text-white"></i>
+                    </div>
+                    <div>
+                        <p class="small text-white-50 mb-0 fw-bold">TAXA DE ACERTO GLOBAL</p>
+                        <h1 class="fw-bold mb-0 display-5">{{ desempenho_geral }}%</h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 text-white h-100 rounded-4" style="background: linear-gradient(135deg, #10b981, #059669) !important;">
+                <div class="card-body p-4 d-flex align-items-center">
+                    <div class="bg-white bg-opacity-10 p-3 rounded-circle me-3">
+                        <i class="bi bi-ui-checks fs-1 text-white"></i>
+                    </div>
+                    <div>
+                        <p class="small text-white-50 mb-0 fw-bold">QUESTÕES RESOLVIDAS</p>
+                        <h1 class="fw-bold mb-0 display-5">{{ total_resolvidas }}</h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100 rounded-4"
+                style="background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;">
+                <div class="card-body p-4 d-flex align-items-center text-white">
+                    <div class="bg-white bg-opacity-10 p-3 rounded-circle me-3">
+                        <i class="bi bi-cpu fs-1 text-white"></i>
+                    </div>
+                    <div>
+                        <p class="small text-white-50 mb-0 fw-bold">MODO CICLO</p>
+                        <h5 class="fw-bold mb-0">Adaptativo</h5>
+                        <small class="opacity-75">Gerido por IA</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if topicos_prioridade %}
+    <div class="card shadow-sm border-0 mb-4 rounded-4">
+        <div class="card-header bg-white border-0 pt-4 px-4">
+            <h5 class="fw-bold mb-0"><i class="bi bi-sort-numeric-down text-primary me-2"></i>Ranking de Prioridades do
+                Algoritmo</h5>
+            <small class="text-muted">O que o sistema vai priorizar no seu próximo ciclo</small>
+        </div>
+        <div class="card-body px-4 pb-4">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-primary bg-opacity-10">
+                        <tr>
+                            <th>#</th>
+                            <th>Matéria</th>
+                            <th>Tópico</th>
+                            <th>Taxa Acerto</th>
+                            <th>Prioridade</th>
+                            <th>Meta Próx. Ciclo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in topicos_prioridade[:10] %}
+                        {% set m_nome = '' %}
+                        {% for m in materias %}
+                        {% for tm in m.editais_topicos %}
+                        {% if tm.id_edital_topico == t.id_edital_topico %}
+                        {% set m_nome = m.nome %}
+                        {% endif %}
+                        {% endfor %}
+                        {% endfor %}
+                        <tr>
+                            <td class="fw-bold text-muted">{{ loop.index }}</td>
+                            <td><span class="badge bg-secondary">{{ m_nome }}</span></td>
+                            <td class="fw-bold">{{ t.nome }}</td>
+                            <td>
+                                {% if t.taxa_acerto is defined and t.questoes_resolvidas is defined and
+                                t.questoes_resolvidas > 0 %}
+                                <span
+                                    class="fw-bold {% if t.taxa_acerto < 60 %}text-danger{% elif t.taxa_acerto < 80 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ t.taxa_acerto }}%
+                                </span>
+                                <small class="text-muted d-block">{{ t.questoes_resolvidas }} q.</small>
+                                {% else %}
+                                <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ t.badge_cor }} fw-bold px-3 py-2">
+                                    {% if t.nivel_prioridade == 'alta' %}🔴 Alta
+                                    {% elif t.nivel_prioridade == 'media' %}🟡 Média
+                                    {% else %}🟢 Baixa
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-2">
+                                    {{ t.meta_dinamica }} questões
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if pontos_atencao %}
+    <div class="card shadow-sm border-danger border-2 mb-5 rounded-4 overflow-hidden">
+        <div class="card-header bg-danger text-white fw-bold py-3">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> Alerta de Desempenho Crítico
+            <span class="d-block small fw-normal mt-1 opacity-75">Assuntos onde você está com menos de 60% de acerto. É
+                hora de revisar a teoria!</span>
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for p in pontos_atencao %}
+            <li class="list-group-item d-flex justify-content-between align-items-center p-3 bg-danger bg-opacity-10">
+                <div>
+                    <span class="badge bg-danger mb-1">{{ p.materia }}</span>
+                    <h6 class="mb-0 fw-bold text-dark">{{ p.topico }}</h6>
+                    <small class="text-muted">
+                        {{ p.resolvidas }} questões feitas neste ciclo ·
+                        <span class="text-danger fw-bold">Prioridade {{ p.peso_adaptativo }}</span> ·
+                        Próxima meta: {{ p.meta_dinamica }} questões
+                    </small>
+                </div>
+                <div class="text-end d-flex flex-column align-items-end gap-2">
+                    <div>
+                        <h4 class="mb-0 fw-bold text-danger">{{ p.taxa }}%</h4>
+                        <small class="text-danger fw-bold">de acerto</small>
+                    </div>
+                    <a href="{{ url_for('questao.resolver_questoes', id_materia=p.id_materia, id_topico=p.id_topico) }}"
+                        class="btn btn-warning btn-sm fw-bold shadow-sm">
+                        <i class="bi bi-arrow-repeat"></i> Revisar
+                    </a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <h5 class="fw-bold mb-3"><i class="bi bi-list-nested me-2"></i> Desempenho por Disciplina</h5>
+
+    {# ACORDEÃO DE DESEMPENHO (Componentizado) #}
+    {{ edital_comp.render_performance_accordion(materias) }}
+
+</div>
+{% endblock %}

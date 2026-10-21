@@ -1,0 +1,288 @@
+{% extends 'base_aluno.html' %}
+{% import 'components/performance_card.html' as pc %}
+
+{% block content %}
+<div class="container-fluid py-4 px-md-5">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_detalhado.css') }}">
+
+    <!-- CONFIGURAÇÃO DE DADOS PARA O JS EXTERNO -->
+    <div id="dashboard-config" class="d-none" data-datasets='{{ datasets | tojson | safe }}'
+        data-labels='{{ labels_grafico | tojson | safe }}' data-concluidos='{{ concluidos_por_dia | tojson | safe }}'
+        data-meta-diaria='{{ meta_diaria }}' data-csrf-token='{{ csrf_token() }}'
+        data-materias='{{ materias | tojson | safe }}'>
+    </div>
+
+    <!-- HEADER SECTION -->
+    <div
+        class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 header-title-mobile">
+                <i class="bi bi-bar-chart-steps text-primary me-2"></i> Dashboard Detalhado
+            </h2>
+            <p class="text-muted mb-0 small-mobile">Análise profunda do seu desempenho por matéria e assunto</p>
+        </div>
+        <a href="/aluno/painel" class="btn-premium-outline btn-sm w-mobile-100">
+            <i class="bi bi-arrow-left"></i> Voltar ao Início
+        </a>
+    </div>
+
+    <!-- CHARTS SECTION -->
+    <div class="row mb-4 g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100" style="background-color: var(--card-bg);">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+                    <h5 class="fw-bold mb-1">Questões Resolvidas</h5>
+                    <p class="small text-muted mb-0">Distribuição por disciplina</p>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="chart-container-premium" style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="chartPizzaQuestoes"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100" style="background-color: var(--card-bg);">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+                    <h5 class="fw-bold mb-1">Taxa de Acertos (%)</h5>
+                    <p class="small text-muted mb-0">Desempenho por disciplina</p>
+                </div>
+                <div class="card-body px-4 pb-4">
+                    <div class="chart-container-premium" style="position: relative; height: 300px; width: 100%;">
+                        <canvas id="chartBarrasAcertos"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- LEFT COLUMN: PERFORMANCE BY SUBJECT -->
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-layout-three-columns text-primary me-2 fs-5"></i>
+                <h5 class="fw-bold mb-0">Desempenho por Matéria</h5>
+            </div>
+
+            <div class="accordion border-0" id="accordionDesempenho">
+                {% for m in materias %}
+                {{ pc.render_performance_card(m, loop.index) }}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: STRATEGIC ANALYSIS -->
+        <div class="col-lg-4">
+            <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-lightbulb text-warning me-2 fs-5"></i>
+                <h5 class="fw-bold mb-0">Análise Estratégica</h5>
+            </div>
+
+            <!-- CICLO DE REVISÃO ATIVA (CURVA DO ESQUECIMENTO) -->
+            {% if alertas_revisao %}
+            <div class="card border-0 shadow-sm mb-4 animate__animated animate__fadeInRight"
+                style="background: var(--card-bg); border-radius: 20px;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h6 class="fw-bold mb-0">
+                            <i class="bi bi-clock-history text-info me-2"></i> Ciclo de Revisão Ativa
+                        </h6>
+                        <span class="badge rounded-pill bg-info bg-opacity-10 text-info"
+                            style="font-size: 0.65rem;">CURVA DO ESQUECIMENTO</span>
+                    </div>
+
+                    <p class="small text-muted mb-4">Matérias que estão "esfriando" na sua memória:</p>
+
+                    <div class="revision-alerts">
+                        {% for alerta in alertas_revisao %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold small">{{ alerta.nome }}</span>
+                                <span
+                                    class="badge {% if alerta.cor == 'orange' %}bg-orange-rev{% else %}bg-{{alerta.cor}}{% endif %} p-1 px-2"
+                                    style="font-size: 0.6rem;">
+                                    {{ alerta.status }}
+                                </span>
+                            </div>
+                            <div class="progress" style="height: 6px; background: rgba(0,0,0,0.05);">
+                                {% set pct = [((alerta.dias / 20) * 100), 100] | min %}
+                                <div class="progress-bar {% if alerta.cor == 'orange' %}bg-orange-rev{% else %}bg-{{alerta.cor}}{% endif %}"
+                                    role="progressbar"
+                                    style="--width-progress: {{ pct }}%; width: var(--width-progress);"></div>
+                            </div>
+                            <small class="text-muted" style="font-size: 0.65rem;">Sem resolver questões há <strong>{{
+                                    alerta.dias }} dias</strong></small>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mt-4 p-3 rounded-3 bg-light bg-opacity-10 border border-info border-opacity-25">
+                        <p class="small mb-0" style="font-size: 0.75rem;">
+                            <i class="bi bi-info-circle-fill text-info me-1"></i>
+                            <strong>Dica Ativa:</strong> Tente revisar as matérias em <strong>vermelho</strong>
+                            imediatamente para evitar a perda total do conteúdo.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- METAS DIÁRIAS CALENDAR -->
+            <div class="card border-0 shadow-sm mb-4 calendar-card animate__animated animate__fadeInRight">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h6 class="fw-bold mb-0 text-capitalize" id="current-day-name" style="font-size: 0.95rem;">
+                                --</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">Acompanhe sua consistência
+                                diária</small>
+                        </div>
+                        <div class="calendar-toggle-target">
+                            <button class="btn btn-dark btn-sm rounded-circle border-0" type="button"
+                                style="background: var(--cal-btn-bg); color: var(--cal-text);"
+                                onclick="toggleCalendarCollapse()" id="btn-collapse-cal">
+                                <i class="bi bi-chevron-down opacity-50 transition-all" id="icon-collapse-cal"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="calendar-content-wrapper" class="transition-all">
+
+                        <div class="d-flex justify-content-between align-items-center mb-3 px-1">
+                            <span class="fw-bold text-lowercase" id="month-year-label"
+                                style="font-size: 0.9rem; color: #8b949e;">--</span>
+                            <div class="d-flex gap-2">
+                                <i class="bi bi-chevron-left small opacity-50 cursor-pointer"
+                                    onclick="changeMonth(-1)"></i>
+                                <i class="bi bi-chevron-right small opacity-50 cursor-pointer"
+                                    onclick="changeMonth(1)"></i>
+                            </div>
+                        </div>
+
+                        <div class="calendar-grid mb-1">
+                            <div class="weekday">D</div>
+                            <div class="weekday">S</div>
+                            <div class="weekday">T</div>
+                            <div class="weekday">Q</div>
+                            <div class="weekday">Q</div>
+                            <div class="weekday">S</div>
+                            <div class="weekday">S</div>
+                        </div>
+                        <div class="calendar-grid days" id="calendar-days">
+                            <!-- JS populated -->
+                        </div>
+
+                        <!-- LEGENDA DO CALENDÁRIO -->
+                        <div class="d-flex justify-content-center gap-3 mt-3 mb-1"
+                            style="font-size: 0.7rem; color: #8b949e;">
+                            <div class="d-flex align-items-center gap-1">
+                                <span
+                                    style="width: 8px; height: 8px; background-color: #d39ed3; border-radius: 50%; display: inline-block;"></span>
+                                <span>Hoje</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                <span
+                                    style="width: 8px; height: 8px; background-color: #238636; border-radius: 50%; display: inline-block;"></span>
+                                <span>Meta Batida</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-1">
+                                <span
+                                    style="width: 8px; height: 8px; background-color: var(--cal-other-month); border-radius: 50%; display: inline-block;"></span>
+                                <span>Tentativas</span>
+                            </div>
+                        </div>
+
+                        <div
+                            class="mt-4 pt-3 border-top border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="btn btn-meta-control" onclick="adjustMeta(-5)">
+                                    <i class="bi bi-dash"></i>
+                                </button>
+                                <div class="text-center px-1" style="min-width: 45px;">
+                                    <span class="fw-bold fs-5" id="meta-display">{{ meta_diaria }}</span>
+                                    <small class="d-block text-muted"
+                                        style="font-size: 0.6rem; margin-top: -4px;">QUESTÕES</small>
+                                </div>
+                                <button class="btn btn-meta-control" onclick="adjustMeta(5)">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                            <button class="btn btn-premium-gradient btn-sm px-3 py-2 fw-bold" id="btn-salvar-meta"
+                                onclick="saveMeta()">
+                                SALVAR META
+                            </button>
+                        </div>
+                    </div> <!-- Final do calendar-content-wrapper -->
+                </div>
+            </div>
+
+            <!-- BEST PERFORMANCE CARD -->
+            <div class="card border-0 shadow-sm mb-4" style="background-color: var(--card-bg);">
+                <div class="card-body p-4">
+                    <p class="text-uppercase small fw-bold text-muted mb-3" style="letter-spacing: 0.05em;">Melhor
+                        Desempenho</p>
+                    {% if melhor_materia %}
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3"
+                            style="width: 54px; height: 54px; flex-shrink: 0;">
+                            <i class="bi bi-trophy-fill text-success fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">{{ melhor_materia.nome }}</h6>
+                            <p class="mb-0 text-success fw-bold">{{ melhor_materia.taxa }}% <span
+                                    class="text-muted fw-normal small">de precisão</span></p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small">Continue praticando para destacar sua melhor disciplina.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- FOCUS REVISION LIST -->
+            <div class="card border-0 shadow-sm overflow-hidden" style="background-color: var(--card-bg);">
+                <div
+                    class="card-header border-0 bg-transparent pt-4 px-4 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-exclamation-triangle text-danger me-2"></i> Foco para
+                        Revisão</h6>
+                    <span
+                        class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 py-1 px-2"
+                        style="font-size: 0.65rem;">Prioridade</span>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for p in pontos_atencao %}
+                        <li
+                            class="list-group-item bg-transparent px-4 py-3 border-0 border-bottom d-flex justify-content-between align-items-center">
+                            <div class="me-3 overflow-hidden">
+                                <h6 class="mb-0 text-dark fw-bold text-truncate" style="font-size: 0.9rem;"
+                                    title="{{ p.topico }}">{{ p.topico }}</h6>
+                                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">{{
+                                    p.materia }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="fw-bold text-danger d-block">{{ p.taxa }}%</span>
+                                <small class="text-muted" style="font-size: 0.7rem;">{{ p.total }} q.</small>
+                            </div>
+                        </li>
+                        {% endfor %}
+                        {% if not pontos_atencao %}
+                        <li class="list-group-item bg-transparent px-4 py-4 border-0 text-center text-muted">
+                            <i class="bi bi-check2-circle fs-3 d-block mb-2 opacity-25"></i>
+                            <p class="small mb-0">Nenhum ponto crítico identificado. Bom trabalho!</p>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard_detalhado.js') }}"></script>
+{% endblock %}

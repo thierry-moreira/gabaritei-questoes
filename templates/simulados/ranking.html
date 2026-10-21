@@ -1,0 +1,92 @@
+{% extends 'base_aluno.html' %}
+{% block content %}
+<div class="container mt-4 mb-5">
+    
+    <div class="text-center mb-5">
+        <h2 class="fw-bold"><i class="bi bi-trophy text-warning me-2"></i> Ranking Global</h2>
+        <h5 class="text-muted">{{ simulado.titulo }}</h5>
+        <hr class="mx-auto" style="width: 100px; border-top: 3px solid #0d6efd;">
+    </div>
+
+    {% if not ranking %}
+    <div class="alert alert-info text-center shadow-sm border-0">
+        <i class="bi bi-info-circle me-2"></i> Ninguém completou este simulado ainda. Seja o primeiro a aparecer aqui!
+    </div>
+    <div class="text-center mt-3">
+        <a href="/aluno/simulados" class="btn btn-primary fw-bold">Voltar</a>
+    </div>
+    {% else %}
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-dark text-white">
+                            <tr>
+                                <th class="ps-4 py-3" style="width: 100px;">Posição</th>
+                                <th class="py-3">Aluno</th>
+                                <th class="text-center py-3">Acertos</th>
+                                <th class="text-center py-3">Nota</th>
+                                <th class="pe-4 py-3 text-end">Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in ranking %}
+                            <tr class="{% if r.usuarios.username == current_user.username %}table-primary fw-bold{% endif %}">
+                                <td class="ps-4">
+                                    {% if loop.index == 1 %}
+                                        <span class="fs-4">🥇</span>
+                                    {% elif loop.index == 2 %}
+                                        <span class="fs-4">🥈</span>
+                                    {% elif loop.index == 3 %}
+                                        <span class="fs-4">🥉</span>
+                                    {% else %}
+                                        <span class="ms-2 fw-bold text-muted">{{ loop.index }}º</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-person-circle fs-5 me-2 text-primary opacity-50"></i>
+                                        {{ r.usuarios.username }}
+                                        {% if r.usuarios.username == current_user.username %}
+                                            <span class="badge bg-primary ms-2 small">Você</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="text-center text-muted small">
+                                    {{ r.respostas_corretas }}/{{ r.total_questoes }}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge {% if r.nota >= 7 %}bg-success{% else %}bg-danger{% endif %} fs-6 px-3">
+                                        {{ r.nota }}
+                                    </span>
+                                </td>
+                                <td class="pe-4 text-end text-muted x-small">
+                                    {{ r.data_conclusao.split('T')[0] if 'T' in r.data_conclusao else r.data_conclusao }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="mt-4 d-flex justify-content-between">
+                <a href="/aluno/simulados" class="btn btn-outline-secondary fw-bold px-4">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar
+                </a>
+                <p class="text-muted small">Mostrando os top 50 resultados</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+    .table td, .table th { padding: 1rem 0.5rem; }
+    .x-small { font-size: 0.75rem; }
+    tr:hover { background-color: rgba(13, 110, 253, 0.03) !important; }
+</style>
+{% endblock %}

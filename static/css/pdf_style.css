@@ -1,0 +1,112 @@
+@page { 
+    size: A4; 
+    margin: 1.2cm 1.2cm 1.5cm 1.8cm; 
+}
+
+body {
+    font-family: Arial, sans-serif;
+    font-size: 10.5pt; /* Leve redução para caber mais */
+    color: #222;
+    margin: 0;
+    padding: 0;
+    line-height: 1.4;
+    background: white !important;
+}
+
+/* Filete Colorido Lateral */
+.print-margin-bar {
+    position: fixed !important;
+    left: -1.8cm;
+    top: -1.2cm;
+    bottom: -1.5cm;
+    width: 10px;
+    background: #6366f1 !important;
+    z-index: 10000;
+}
+
+.header-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.print-header {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1.5px solid #6366f1;
+    padding-bottom: 8px;
+    margin-bottom: 15px;
+}
+
+.print-logo {
+    height: 30px !important;
+}
+
+.print-title {
+    font-size: 14pt;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+    text-align: right;
+}
+
+.questao-container {
+    margin-bottom: 15px; /* Reduzido de 30px */
+    page-break-inside: avoid;
+    padding: 0; /* Removido padding interno */
+    background: none !important; /* Removido fundo cinza */
+    border: none !important; /* Removida borda */
+}
+
+.info-questao {
+    font-size: 8.5pt;
+    color: #555;
+    margin-bottom: 6px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #eee; /* Linha sutil separadora */
+}
+
+.info-questao span { font-weight: bold; color: #444; }
+
+.enunciado { margin-bottom: 8px; }
+
+.alternativa {
+    display: flex !important;
+    align-items: flex-start;
+    gap: 8px;
+    margin-left: 5px;
+    margin-bottom: 4px; /* Aumentado levemente para clareza */
+}
+
+.alternativa strong {
+    min-width: 25px; /* Garante que 'A)' tenha espaço fixo e alinhe o texto ao lado */
+    flex-shrink: 0;
+}
+
+.alternativa p, .alternativa div {
+    display: inline !important; /* Força parágrafos internos a não quebrarem linha */
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.sessao-gabarito { 
+    page-break-before: always;
+    padding-top: 10px;
+}
+
+.gabarito-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-top: 10px;
+    font-size: 9pt;
+}
+.gabarito-table th, .gabarito-table td { border: 1px solid #eee; padding: 4px; text-align: center; }
+.gabarito-table th { background-color: #f9fafb; font-weight: bold; }
+
+.print-footer {
+    position: fixed;
+    bottom: -1cm;
+    right: 0;
+    font-size: 7.5pt;
+    color: #aaa;
+}

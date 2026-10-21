@@ -1,0 +1,128 @@
+{# Componente de Paginação Reutilizável #}
+
+{% macro render_pagination(pagina_atual, tem_anterior, tem_proxima, endpoint, args) %}
+{# 1. Criar um dicionário limpo sem o parâmetro 'page' para evitar colisões no url_for #}
+{% set safe_args = {} %}
+{% if args %}
+    {% for k in args.keys()|unique %}
+        {% if k != 'page' %}
+            {# Se for MultiDict (request.args), preservamos todos os valores (útil para filtros múltiplos) #}
+            {% set val = args.getlist(k) if args.getlist is defined else args[k] %}
+            {# Usamos set _ para ignorar o retorno None do update #}
+            {% set _ = safe_args.update({k: val}) %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+
+<nav class="mt-5 mb-5 animate__animated animate__fadeIn">
+    <div class="d-flex justify-content-between align-items-center bg-white p-3 shadow-sm rounded-4 border border-opacity-10" style="border-color: rgba(0,0,0,0.1);">
+        
+        {# Botão Anterior #}
+        <div class="pagination-prev">
+            {% if tem_anterior %}
+                <a href="{{ url_for(endpoint, page=pagina_atual - 1, **safe_args) }}" 
+                   class="btn btn-premium-outline px-4 d-flex align-items-center gap-2">
+                    <i class="bi bi-chevron-left"></i> <span class="d-none d-sm-inline">Anterior</span>
+                </a>
+            {% else %}
+                <button class="btn btn-premium-outline px-4 opacity-50 cursor-not-allowed d-flex align-items-center gap-2" disabled title="Você já está na primeira página">
+                    <i class="bi bi-chevron-left"></i> <span class="d-none d-sm-inline">Anterior</span>
+                </button>
+            {% endif %}
+        </div>
+
+        {# Formulário Central: Ir Para Página #}
+        <div class="pagination-center text-center">
+            <form action="{{ url_for(endpoint, **safe_args) }}" method="GET" class="d-flex align-items-center justify-content-center gap-2 m-0">
+                
+                {# Preserva todos os outros filtros como campos ocultos #}
+                {% for key, value in safe_args.items() %}
+                    {% if value is string or value is number %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% elif value is iterable %}
+                        {% for val in value %}
+                            <input type="hidden" name="{{ key }}" value="{{ val }}">
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+
+                <div class="d-flex align-items-center bg-light rounded-pill px-3 py-1 border shadow-inner">
+                    <span class="text-muted fw-bold small text-uppercase me-2" style="letter-spacing: 0.5px;">Página</span>
+                    <input type="number" name="page" value="{{ pagina_atual }}" min="1" 
+                           class="form-control text-center fw-bold text-dark border-0 bg-transparent p-0" 
+                           style="width: 45px; height: 30px; font-size: 1.1rem; outline: none !important; box-shadow: none !important;" 
+                           title="Digite a página e aperte Enter">
+                    
+                    <button type="submit" class="btn btn-premium-success ms-2 rounded-pill p-0 d-flex align-items-center justify-content-center" 
+                            style="width: 32px; height: 32px; min-height: unset;" title="Navegar para esta página">
+                        <i class="bi bi-arrow-right-short fs-4"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {# Botão Próxima #}
+        <div class="pagination-next">
+            {% if tem_proxima %}
+                <a href="{{ url_for(endpoint, page=pagina_atual + 1, **safe_args) }}" 
+                   class="btn btn-premium px-4 d-flex align-items-center gap-2">
+                    <span class="d-none d-sm-inline">Próxima</span> <i class="bi bi-chevron-right"></i>
+                </a>
+            {% else %}
+                <button class="btn btn-premium-outline px-4 opacity-50 cursor-not-allowed d-flex align-items-center gap-2" disabled title="Você está na última página">
+                    <span class="d-none d-sm-inline">Próxima</span> <i class="bi bi-chevron-right"></i>
+                </button>
+            {% endif %}
+        </div>
+
+    </div>
+</nav>
+
+<style>
+/* Estilos específicos para a Paginação Premium */
+.pagination-center .shadow-inner {
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.pagination-center input::-webkit-outer-spin-button,
+.pagination-center input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+
+.pagination-center input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.cursor-not-allowed {
+    cursor: not-allowed !important;
+}
+
+@media (max-width: 576px) {
+    .pagination-center span {
+        display: none !important;
+    }
+    .pagination-center .bg-light {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+    .pagination-prev .btn, .pagination-next .btn {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .pagination-center .bg-light {
+        transform: scale(0.9);
+    }
+    .pagination-prev .btn, .pagination-next .btn {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+}
+</style>
+{% endmacro %}
+

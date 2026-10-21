@@ -1,0 +1,209 @@
+{% extends 'base_aluno.html' %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/aluno_conta.css') }}">
+
+<div class="container mt-4 mb-5 animate-fade-in" style="max-width: 850px;">
+    <div class="account-card-premium">
+        <!-- Header de Perfil -->
+        <div class="profile-header-premium text-center">
+            <div class="d-flex flex-column align-items-center">
+                <div class="avatar-circle">
+                    {{ current_user.username[0].upper() }}
+                </div>
+                <h2 class="fw-bold mb-1">{{ current_user.username }}</h2>
+                <p class="text-muted mb-0"><i class="bi bi-envelope-at me-1"></i> {{ current_user.email or '' }}</p>
+                <div class="mt-3">
+                    <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3 py-2">
+                        <i class="bi bi-shield-check me-1"></i> Aluno Verificado
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
+                            <i class="bi bi-person-badge fs-4"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0">Informações de Identidade</h5>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="premium-label">NOME DE USUÁRIO</label>
+                            <input type="text" name="username" class="premium-input w-100"
+                                value="{{ current_user.username }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="premium-label">E-MAIL CADASTRADO</label>
+                            <input type="email" name="email" class="premium-input w-100"
+                                value="{{ current_user.email or '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+
+                
+
+
+                <div class="pt-3">
+                    <button type="submit" class="btn-premium-save w-100 w-md-auto">
+                        <i class="bi bi-cloud-upload me-2 text-white-50"></i> SALVAR ALTERAÇÕES
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Seção: Resetar Dados de Estudo -->
+    <div class="mt-4">
+        <div class="danger-zone-premium" style="border-color: rgba(234, 179, 8, 0.3);">
+            <div
+                class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4 text-center text-md-start">
+                <div>
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-3 mb-md-2">
+                        <span
+                            class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-1 fw-bold small mb-2">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> ZERAR DADOS
+                        </span>
+                    </div>
+                    <h5 class="fw-bold text-warning mb-2">Resetar Dados de Estudo</h5>
+                    <p class="text-muted small mb-0" style="max-width: 500px;">
+                        Esta ação irá zerar todo o seu progresso: questões resolvidas, cadernos, flashcards,
+                        simulados, editais e contadores de uso. Sua conta permanece ativa.
+                    </p>
+                </div>
+
+                <button class="btn-warning-soft" data-bs-toggle="modal" data-bs-target="#modalResetarDados">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i> Resetar Dados
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção: Excluir Conta -->
+    <div class="mt-4">
+        <div class="danger-zone-premium">
+            <div
+                class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4 text-center text-md-start">
+                <div>
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-3 mb-md-2">
+                        <span
+                            class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-1 fw-bold small mb-2">
+                            <i class="bi bi-exclamation-octagon me-1"></i> ZONA DE RISCO
+                        </span>
+                    </div>
+                    <h5 class="fw-bold text-danger mb-2">Encerrar Minha Conta</h5>
+                    <p class="text-muted small mb-0" style="max-width: 500px;">
+                        Esta ação removerá permanentemente todos os seus dados de desempenho, simulados e progresso nos
+                        editais.
+                    </p>
+                </div>
+
+                <button class="btn-danger-soft" data-bs-toggle="modal" data-bs-target="#modalExcluirConta">
+                    <i class="bi bi-trash3-fill me-2"></i> Excluir Conta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Resetar Dados -->
+<div class="modal fade" id="modalResetarDados" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg overflow-hidden" style="border-radius: 28px;">
+            <div class="modal-body p-5 text-center">
+                <div class="bg-warning bg-opacity-10 p-4 rounded-circle d-inline-block mb-4"
+                    style="width: 100px; height: 100px;">
+                    <i class="bi bi-arrow-counterclockwise display-4 text-warning"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Zerar todos os dados?</h4>
+                <p class="text-muted mb-4 px-3">
+                    <b>{{ current_user.username }}</b>, ao confirmar, todo o seu progresso de estudos será perdido:
+                </p>
+                <ul class="text-start text-muted small mb-4 px-3" style="list-style: none;">
+                    <li><i class="bi bi-x-circle text-warning me-2"></i> Questões resolvidas e histórico de
+                        acertos/erros</li>
+                    <li><i class="bi bi-x-circle text-warning me-2"></i> Cadernos de questões e filtros salvos</li>
+                    <li><i class="bi bi-x-circle text-warning me-2"></i> Flashcards e categorias</li>
+                    <li><i class="bi bi-x-circle text-warning me-2"></i> Simulados criados e resultados</li>
+                    <li><i class="bi bi-x-circle text-warning me-2"></i> Editais e progresso nos ciclos de estudo</li>
+                    <li><i class="bi bi-x-circle text-warning me-2"></i> Contadores de uso (IA, questões diárias)</li>
+                    <li><i class="bi bi-check-circle text-success me-2"></i> <b>Sua conta permanece ativa</b></li>
+                </ul>
+
+                <div class="d-grid gap-2">
+                    <form action="/aluno/conta/resetar-dados" method="POST" class="m-0">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                        <!-- Campo de confirmação textual -->
+                        <div class="mb-4 text-start">
+                            <label class="premium-label small">CONFIRMAÇÃO <span class="text-danger">*</span></label>
+                            <input type="text" name="texto_confirmacao_reset" class="premium-input w-100"
+                                placeholder="Digite: RESETAR MEUS DADOS" autocomplete="off">
+                            <p class="small text-muted mt-1 mb-0"><i class="bi bi-info-circle me-1"></i> Digite
+                                exatamente <code>RESETAR MEUS DADOS</code> para confirmar.</p>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning w-100 py-3 fw-bold rounded-4 shadow-sm mb-2">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i> SIM, RESETAR MEUS DADOS
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-light w-100 py-3 fw-bold rounded-4" data-bs-dismiss="modal">
+                        NÃO, CANCELAR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- [VULN-07 CORRIGIDO] Modal de Exclusão com verificação de senha e confirmação textual -->
+<div class="modal fade" id="modalExcluirConta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg overflow-hidden" style="border-radius: 28px;">
+            <div class="modal-body p-5 text-center">
+                <div class="bg-danger bg-opacity-10 p-4 rounded-circle d-inline-block mb-4"
+                    style="width: 100px; height: 100px;">
+                    <i class="bi bi-exclamation-triangle display-4 text-danger"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Você tem certeza disso?</h4>
+                <p class="text-muted mb-4 px-3">
+                    Adeus, <b>{{ current_user.username }}</b>. Ao confirmar, todos os seus dados serão apagados e não
+                    poderão ser recuperados.
+                </p>
+
+                <div class="d-grid gap-2">
+                    <form action="/aluno/conta/excluir" method="POST" class="m-0">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                        <!-- Campo de confirmação textual -->
+                        <div class="mb-4 text-start">
+                            <label class="premium-label small">CONFIRMAÇÃO <span class="text-danger">*</span></label>
+                            <input type="text" name="texto_confirmacao" class="premium-input w-100"
+                                placeholder="Digite: EXCLUIR MINHA CONTA" autocomplete="off">
+                            <p class="small text-muted mt-1 mb-0"><i class="bi bi-info-circle me-1"></i> Digite
+                                exatamente <code>EXCLUIR MINHA CONTA</code> para confirmar.</p>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger w-100 py-3 fw-bold rounded-4 shadow-sm mb-2">
+                            SIM, EXCLUIR DEFINITIVAMENTE
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-light w-100 py-3 fw-bold rounded-4" data-bs-dismiss="modal">
+                        NÃO, MUDEI DE IDEIA!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

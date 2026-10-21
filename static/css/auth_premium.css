@@ -1,0 +1,270 @@
+:root {
+    --primary-blue: #3b82f6;
+    --primary-purple: #8b5cf6;
+    --text-main: #1e293b;
+    --text-secondary: #475569;
+    --border-main: #e2e8f0;
+    --glass-bg: rgba(255, 255, 255, 0.95);
+}
+
+body {
+    font-family: 'Outfit', sans-serif !important;
+    background-color: #f1f5f9;
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    letter-spacing: -0.02em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif !important;
+    letter-spacing: -0.03em !important;
+}
+
+.login-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Background Decorativo */
+.bg-decor {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.blob-1 {
+    position: absolute;
+    top: -10%;
+    right: -10%;
+    width: 70vw;
+    height: 70vw;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+    filter: blur(60px);
+}
+
+.blob-2 {
+    position: absolute;
+    bottom: -10%;
+    left: -10%;
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 70%);
+    filter: blur(60px);
+}
+
+/* Glassmorphism Card */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 2.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+    padding: 3rem;
+    width: 100%;
+    max-width: 480px;
+}
+
+.glass-card.wide {
+    max-width: 600px;
+}
+
+/* Premium Buttons */
+.btn-premium {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-purple) 100%) !important;
+    color: white !important;
+    font-weight: 700;
+    height: 3.75rem;
+    border-radius: 1rem;
+    border: none;
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    text-decoration: none;
+}
+
+.btn-premium:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(59, 130, 246, 0.45);
+    filter: brightness(1.1) !important;
+    color: white !important;
+}
+
+/* Form Styles */
+.form-label-premium {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+    display: block;
+    padding-left: 0.25rem;
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.form-control-premium {
+    height: 3.5rem;
+    border-radius: 1rem;
+    padding-left: 3.25rem;
+    border: 1px solid var(--border-main);
+    background: white !important;
+    color: var(--text-main) !important;
+    font-size: 0.95rem;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.form-control-premium:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 1.25rem;
+}
+
+/* Branding & Typography */
+.badge-premium {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.25rem;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 100px;
+    color: var(--primary-blue);
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.branding-title {
+    font-family: 'Outfit', sans-serif !important;
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+    color: var(--text-main);
+    margin-bottom: 1.5rem;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-purple) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    color: transparent !important;
+    display: inline-block;
+}
+
+header.custom-nav {
+    padding: 2rem 3rem;
+    display: flex;
+    align-items: center;
+}
+
+/* Google Button & Divider */
+.btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    background: white !important;
+    border: 1px solid var(--border-main) !important;
+    color: var(--text-main) !important;
+    height: 3.5rem;
+    border-radius: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.btn-google:hover {
+    background: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+    transform: translateY(-1px);
+}
+
+/* Estado desativado (login social temporariamente indisponível) */
+.btn-google.disabled {
+    opacity: 0.55;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.5rem 0;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-main);
+}
+
+.divider:not(:empty)::before {
+    margin-right: 1rem;
+}
+
+.divider:not(:empty)::after {
+    margin-left: 1rem;
+}
+
+/* Password Strength & Progress */
+.progress-strength {
+    height: 6px;
+    border-radius: 10px;
+    background-color: var(--border-main);
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+
+/* Verification Code Input */
+.form-control-code {
+    height: 4.5rem;
+    border-radius: 1.25rem;
+    border: 2px solid var(--border-main);
+    background: white !important;
+    color: var(--primary-blue) !important;
+    font-size: 2.25rem;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: 0.5rem;
+    width: 100%;
+    transition: all 0.2s ease;
+    font-family: 'Outfit', sans-serif;
+}
+
+.form-control-code:focus {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
+}

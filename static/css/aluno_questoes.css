@@ -1,0 +1,620 @@
+/* 
+   Os estilos de .alternativa-eliminada e .alternative-container 
+   foram movidos para o base_aluno_layout.css para evitar repetição.
+*/
+
+.btn-tesoura {
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.alternative-container:hover .btn-tesoura {
+    opacity: 1;
+}
+
+/* Impede que o aluno marque sem querer uma alternativa que ele cortou */
+.alternativa-eliminada input[type="radio"] {
+    pointer-events: none;
+}
+
+/* Container da Explicação da IA */
+.resposta-texto {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    color: #334155;
+}
+
+[data-bs-theme="dark"] .resposta-texto {
+    color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .resposta-texto strong,
+[data-bs-theme="dark"] .resposta-texto b,
+[data-bs-theme="dark"] .ia-card-body-premium strong,
+[data-bs-theme="dark"] .ia-card-body-premium b {
+    color: #a5b4fc !important;
+}
+
+.resposta-texto p {
+    margin-bottom: 0.8rem;
+    display: block;
+}
+
+/* Estilos para Blockquote (Citações, Textos de Lei, Inserções do Professor) */
+.markdown-render blockquote, 
+.resposta-texto blockquote,
+blockquote {
+    border-left: 4px solid var(--primary-color) !important;
+    padding: 0.75rem 1.25rem !important;
+    margin: 1.25rem 0 !important;
+    background: var(--primary-soft) !important;
+    border-radius: 0 8px 8px 0 !important;
+    color: var(--texto-secundario) !important;
+    font-style: italic;
+    display: block !important;
+}
+
+[data-bs-theme="dark"] .markdown-render blockquote, 
+[data-bs-theme="dark"] .resposta-texto blockquote,
+[data-bs-theme="dark"] blockquote {
+    background: rgba(99, 102, 241, 0.1) !important;
+    border-left-color: var(--accent-color) !important;
+    color: #cbd5e1 !important;
+}
+
+.markdown-render blockquote p,
+.resposta-texto blockquote p,
+blockquote p {
+    display: block !important;
+    margin-bottom: 0 !important;
+}
+
+/* Removido o estilo de bloco para strong que causava as barras azuis indesejadas */
+
+/* Destaque para as Fórmulas LaTeX - Estilo mais discreto e integrado */
+.resposta-texto .katex-display {
+    background: rgba(99, 102, 241, 0.05);
+    padding: 10px;
+    border-radius: 12px;
+    margin: 0.75rem 0;
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    overflow-x: auto;
+}
+
+[data-bs-theme="light"] .resposta-texto .katex-display {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+/* Deixar as fórmulas em linha mais nítidas */
+.resposta-texto .katex {
+    font-size: 1.05em;
+    color: #6366f1;
+}
+
+[data-bs-theme="dark"] .resposta-texto .katex {
+    color: #818cf8; /* Um roxo levemente mais claro para o modo escuro */
+}
+
+/* --- ESTILOS DO FILTRO PREMIUM --- */
+.filter-section-title {
+    color: #6366f1;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+[data-bs-theme="light"] .filter-card {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.filter-card:focus-within {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.filter-list {
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* Scrollbar Customizada */
+.filter-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.filter-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.filter-list::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 10px;
+}
+
+.filter-list::-webkit-scrollbar-thumb:hover {
+    background: #6366f1;
+}
+
+.item-filtro {
+    padding: 6px 10px 6px 36px !important;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+    margin-bottom: 2px;
+    display: block;
+    /* Garante que ocupa a largura total */
+}
+
+.item-filtro:hover {
+    background: rgba(99, 102, 241, 0.08);
+}
+
+/* Estilização Customizada das Checkboxes no Filtro */
+.filter-list .form-check-input,
+.filter-card .form-check-input {
+    width: 18px;
+    height: 18px;
+    margin-left: -26px !important;
+    /* Move para dentro do padding do label */
+    margin-top: 2px;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    box-shadow: none !important;
+    float: left;
+}
+
+[data-bs-theme="light"] .filter-list .form-check-input,
+[data-bs-theme="light"] .filter-card .form-check-input {
+    background-color: #fff;
+    border-color: #cbd5e1;
+}
+
+.form-check-input:checked {
+    background-color: #6366f1 !important;
+    border-color: #6366f1 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+}
+
+.item-filtro .form-check-label {
+    cursor: pointer;
+    color: #e2e8f0;
+    font-weight: 500;
+    display: inline-block;
+    vertical-align: middle;
+    width: calc(100% - 30px);
+}
+
+[data-bs-theme="light"] .item-filtro .form-check-label {
+    color: #1e293b;
+}
+
+.filter-search-container {
+    position: relative;
+    margin-bottom: 0.75rem;
+}
+
+.filter-search-container i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.filter-search-input {
+    padding-left: 35px !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 10px !important;
+    color: inherit !important;
+    font-size: 0.85rem !important;
+}
+
+[data-bs-theme="light"] .filter-search-input {
+    background: #fff !important;
+    border-color: #cbd5e1 !important;
+}
+
+.accordion-button-premium {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+    color: #fff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 1rem 1.5rem !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-bs-theme="light"] .accordion-button-premium {
+    background: #fff !important;
+    color: #1e293b !important;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.accordion-button-premium:not(.collapsed) {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3) !important;
+}
+
+.filter-select {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 10px !important;
+    color: inherit !important;
+    font-size: 0.85rem !important;
+    padding: 0.5rem 1rem !important;
+    appearance: none;
+    /* Melhora compatibilidade com temas escuros */
+}
+
+[data-bs-theme="dark"] .filter-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.75rem center !important;
+    background-size: 16px 12px !important;
+}
+
+/* Força o fundo escuro dentro da lista de opções do navegador */
+[data-bs-theme="dark"] .filter-select option {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+}
+
+[data-bs-theme="light"] .filter-select {
+    background: #fff !important;
+    border-color: #cbd5e1 !important;
+    color: #1e293b !important;
+}
+
+/* --- MODAIS MODERNOS --- */
+.modal-content {
+    border-radius: 20px !important;
+    border: 1px solid var(--border-color) !important;
+    background-color: var(--card-bg) !important;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.2) !important;
+    overflow: hidden;
+}
+
+[data-bs-theme="dark"] .modal-content {
+    background-color: #111827 !important;
+    backdrop-filter: blur(10px);
+}
+
+.modal-header-premium-danger {
+    background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+    padding: 1.5rem !important;
+    border-bottom: none !important;
+}
+
+.modal-header-premium-danger .modal-title {
+    color: white !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.025em;
+}
+
+.modal-body-premium {
+    padding: 2rem !important;
+}
+
+.modal-footer-premium {
+    padding: 1.5rem 2rem !important;
+    border-top: 1px solid var(--border-color) !important;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+[data-bs-theme="dark"] .modal-footer-premium {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* --- SISTEMA DE COMENTÁRIOS PREMIUM --- */
+.comment-container-premium {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 16px !important;
+    padding: 1.5rem !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+    margin-top: 1.5rem;
+}
+
+[data-bs-theme="dark"] .comment-container-premium {
+    background: rgba(255, 255, 255, 0.01) !important;
+}
+
+.comment-header-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--texto-principal);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    letter-spacing: -0.01em;
+}
+
+.comment-card-premium {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 14px !important;
+    padding: 1.25rem !important;
+    margin-bottom: 1rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+[data-bs-theme="light"] .comment-card-premium {
+    background: #ffffff !important;
+    border-color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .comment-card-premium {
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.comment-card-premium:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+    border-color: var(--primary-soft) !important;
+}
+
+.comment-user-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.comment-user-name {
+    font-weight: 750;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.comment-date {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--texto-secundario);
+    background: rgba(0, 0, 0, 0.04);
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+[data-bs-theme="dark"] .comment-date {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.comment-text {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--texto-principal);
+    margin: 0;
+    font-weight: 450;
+}
+
+.comment-form-group {
+    position: relative;
+    display: flex;
+    gap: 12px;
+    margin-top: 1.5rem;
+}
+
+.comment-input-premium {
+    border-radius: 12px !important;
+    padding: 0.85rem 1.25rem !important;
+    background: var(--card-bg) !important;
+    border: 2px solid var(--border-color) !important;
+    color: var(--texto-principal) !important;
+    transition: all 0.3s ease;
+    font-size: 0.9rem !important;
+}
+
+.comment-input-premium:focus {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 4px var(--primary-soft) !important;
+    background: #fff !important;
+}
+
+[data-bs-theme="dark"] .comment-input-premium:focus {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.btn-send-comment {
+    background: var(--primary-color) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 0 1.75rem !important;
+    font-weight: 750 !important;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px var(--primary-soft) !important;
+    font-size: 0.9rem;
+}
+
+.btn-send-comment:hover {
+    transform: translateY(-2px);
+    background: var(--primary-hover) !important;
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
+}
+
+.btn-send-comment:active {
+    transform: scale(0.96);
+}
+
+/* --- FILTROS SALVOS MODERNOS --- */
+.filter-chip-premium {
+    display: inline-flex;
+    align-items: center;
+    background: var(--card-bg) !important;
+    border: 1.5px solid var(--border-color) !important;
+    border-radius: 50px !important;
+    padding: 0.45rem 0.5rem 0.45rem 1.25rem !important;
+    gap: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    max-width: 280px;
+}
+
+[data-bs-theme="dark"] .filter-chip-premium {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.filter-chip-premium:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 6px 18px var(--primary-soft) !important;
+    background: white !important;
+}
+
+[data-bs-theme="dark"] .filter-chip-premium:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Responsividade de Comentários */
+@media (max-width: 768px) {
+    .comment-form-group {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .comment-input-premium {
+        width: 100% !important;
+        padding: 1rem !important;
+    }
+
+    .btn-send-comment {
+        width: 100% !important;
+        height: 50px !important;
+        justify-content: center !important;
+    }
+
+    .comment-container-premium {
+        padding: 1rem !important;
+    }
+}
+
+.filter-chip-name {
+    font-size: 0.88rem;
+    font-weight: 750;
+    color: var(--texto-principal) !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.filter-chip-delete {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444 !important;
+    transition: all 0.25s ease;
+    border: none;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.filter-chip-delete:hover {
+    background: #ef4444 !important;
+    color: white !important;
+    transform: rotate(90deg) scale(1.1);
+}
+
+/* --- IA EXPLICA PREMIUM CARD --- */
+.ia-card-premium {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 20px !important;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1) !important;
+    margin-top: 1.5rem;
+    animation: fadeInScale 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-bs-theme="dark"] .ia-card-premium {
+    background: rgba(30, 41, 59, 0.4) !important;
+    backdrop-filter: blur(12px);
+    border-color: rgba(99, 102, 241, 0.2) !important;
+}
+
+.ia-card-header-premium {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+    padding: 1.15rem 1.5rem !important;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: none !important;
+}
+
+.ia-card-header-title {
+    color: white !important;
+    font-weight: 800 !important;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: -0.02em;
+    font-size: 1rem;
+}
+
+.ia-card-body-premium {
+    padding: 1.75rem !important;
+}
+
+/* Animação suave para o card da IA */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.98) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* --- ESTILIZAÇÃO DA SCROLLBAR DO TEXTO BASE --- */
+.texto-base-conteudo::-webkit-scrollbar {
+    width: 6px;
+}
+
+.texto-base-conteudo::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.texto-base-conteudo::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.2); /* Cor suave baseada na primária */
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.texto-base-conteudo::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.5);
+}

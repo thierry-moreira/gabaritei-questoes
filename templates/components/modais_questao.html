@@ -1,0 +1,74 @@
+{# Modais compartilhados para ações em questões #}
+
+{# 1. Modal de Reportar Erro (Feedback) #}
+<div class="modal fade" id="modalFeedback" tabindex="-1" aria-labelledby="modalFeedbackLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="form-feedback">
+        <div class="modal-header modal-header-premium-danger px-4" style="background: #ef4444; color: white;">
+          <h5 class="modal-title" id="modalFeedbackLabel"><i class="bi bi-flag-fill me-2"></i> Reportar Erro na Questão</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        
+        <div class="modal-body modal-body-premium">
+          <input type="hidden" id="feedback-questao-id" name="id_questao">
+          
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-muted text-uppercase mb-2" style="letter-spacing: 0.5px;">Qual é o problema com a questão?</label>
+            <select class="form-select" id="feedback-tipo" required>
+              <option value="" disabled selected>Selecione uma opção...</option>
+              <option value="Gabarito Errado">Gabarito Errado</option>
+              <option value="Questão Desatualizada">Questão Desatualizada</option>
+              <option value="Erro de Digitação/Formatação">Erro de Digitação/Formatação</option>
+              <option value="Falta de Alternativa Correta">Falta de Alternativa Correta</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          
+          <div class="mb-2">
+            <label class="form-label fw-bold small text-muted text-uppercase mb-2" style="letter-spacing: 0.5px;">Descreva o erro (Opcional)</label>
+            <textarea class="form-control" id="feedback-descricao" rows="4" placeholder="Explique rapidamente o que está errado para que possamos corrigir..." style="min-height: 120px;"></textarea>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger px-4 fw-bold shadow-sm" id="btn-enviar-feedback">
+             Enviar Reporte <i class="bi bi-send ms-1"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# 2. Modal de Salvar no Caderno #}
+<div class="modal fade" id="modalCadernos" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title fw-bold"><i class="bi bi-journal-plus me-2"></i> Salvar no Caderno</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <input type="hidden" id="salvar-questao-id">
+          
+          <label class="form-label fw-bold text-muted small text-uppercase">Criar Novo Caderno</label>
+          <div class="input-group mb-4 shadow-sm">
+            <input type="text" id="novo-caderno-nome" class="form-control border-success" placeholder="Nome do caderno... Ex: Revisão PM-SP">
+            <button class="btn btn-success fw-bold" type="button" onclick="criarNovoCaderno()">Criar</button>
+          </div>
+          
+          <hr class="my-4 opacity-25">
+          
+          <label class="form-label fw-bold text-muted small text-uppercase mb-3">Seus Cadernos Existentes</label>
+          <div id="lista-meus-cadernos" class="list-group list-group-flush border rounded overflow-hidden" style="max-height: 300px; overflow-y: auto;">
+            <div class="p-4 text-center">
+                <div class="spinner-border spinner-border-sm text-success"></div>
+                <p class="text-muted small mt-2 mb-0">Carregando seus cadernos...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>

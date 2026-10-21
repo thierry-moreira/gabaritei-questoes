@@ -1,0 +1,44 @@
+{
+  "name": "gabaritei-aluno",
+  "productName": "Gabaritei Aluno",
+  "version": "0.1.0",
+  "description": "App do aluno do Gabaritei Questões — shell Electron sobre o Flask local",
+  "main": "main.js",
+  "author": "Thierry Moreira",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "latest",
+    "electron-builder": "latest"
+  },
+  "build": {
+    "appId": "com.gabaritei.aluno",
+    "productName": "Gabaritei Aluno",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist_backend",
+        "to": "backend"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "GabariteiAluno-Setup-${version}.${ext}"
+    }
+  }
+}

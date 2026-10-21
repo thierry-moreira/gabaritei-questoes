@@ -1,0 +1,57 @@
+{# 
+   Gabaritei UI Components - Macros Biblioteca 
+   Centraliza a geração de elementos visuais repetitivos.
+#}
+
+{% macro render_progress(label, value, color='success') %}
+<div class="premium-progress-container">
+    <div class="premium-progress-label">
+        <span>{{ label }}</span>
+        <span class="text-{{ color }}">{{ value }}%</span>
+    </div>
+    <div class="premium-progress-bar-wrapper">
+        <div class="premium-progress-fill bg-{{ color }}" style="--progress: {{ value or 0 }};"></div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_card_base(title, meta, badge_text=None, badge_class='primary', delay=0) %}
+<div class="animate-premium-up" style="--delay: {{ delay or 0 }};">
+    <div class="premium-card">
+        {% if badge_text %}
+        <div class="mb-3">
+            <span class="badge rounded-pill bg-{{ badge_class }} bg-opacity-10 text-{{ badge_class }} px-3 py-2 border border-{{ badge_class }} border-opacity-25" style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">
+                {{ badge_text }}
+            </span>
+        </div>
+        {% endif %}
+        
+        <h5 class="fw-bold mb-1 text-truncate" style="color: var(--texto-principal);" title="{{ title }}">{{ title }}</h5>
+        <p class="text-muted small mb-4">{{ meta }}</p>
+        
+        {# O conteúdo específico (como progresso ou botões) entra aqui #}
+        {{ caller() }}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_empty_state(icon, title, description, btn_text=None, btn_target=None) %}
+<div class="col-12 text-center py-5 animate-premium-up">
+    <div class="premium-empty-state">
+        <i class="bi bi-{{ icon }} display-1 mb-4 text-muted opacity-25"></i>
+        <h4 class="fw-bold text-muted">{{ title }}</h4>
+        <p class="text-muted mx-auto mb-4" style="max-width: 450px;">{{ description }}</p>
+        {% if btn_text and btn_target %}
+        <button class="btn btn-primary px-4 py-2 border-0 shadow" 
+                style="border-radius: 12px; font-weight: 700; background: var(--premium-accent);" 
+                {% if btn_target.startswith('#') %}
+                data-bs-toggle="modal" data-bs-target="{{ btn_target }}"
+                {% else %}
+                onclick="window.location.href='{{ btn_target }}'"
+                {% endif %}>
+            <i class="bi bi-plus-lg me-2"></i> {{ btn_text }}
+        </button>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}

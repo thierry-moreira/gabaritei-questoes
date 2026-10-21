@@ -1,0 +1,99 @@
+{% extends 'base_aluno.html' %}
+{% import 'components/card_questao.html' as cq with context %}
+{% import 'components/pagination.html' as p with context %}
+{% import 'components/sidebar_filtros.html' as f with context %}
+
+{% block title %}
+{% if current_topico %}
+Questões de {{ current_topico.nome_topico }} - {{ current_materia.nome_materia }} | Gabaritei Questões
+{% elif current_materia %}
+Questões de {{ current_materia.nome_materia }} | Gabaritei Questões
+{% else %}
+Banco de Questões | Gabaritei Questões
+{% endif %}
+{% endblock %}
+
+{% block meta %}
+{% if current_materia %}
+<meta name="description"
+    content="Pratique com milhares de questões de {{ current_materia.nome_materia }}{% if current_topico %} ({{ current_topico.nome_topico }}){% endif %}. Filtre por banca, ano e nível para turbinar seus estudos.">
+{% else %}
+<meta name="description"
+    content="Acesse nosso banco completo de questões para concursos. Filtre por matéria, banca, ano e resolva online com gabarito comentado.">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/aluno_questoes.css') }}">
+
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-10">
+
+        {{ f.render_sidebar_filtros(materias, bancas, orgaos, escolaridades, anos, filtros_salvos) }}
+
+        {# Breadcrumbs #}
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb" style="font-size: 0.9rem;">
+                <li class="breadcrumb-item"><a href="{{ url_for('aluno.area_do_aluno') }}"
+                        class="text-decoration-none text-muted">Início</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('questao.resolver_questoes') }}"
+                        class="text-decoration-none text-muted">Questões</a></li>
+                {% if current_materia %}
+                {% if current_topico %}
+                <li class="breadcrumb-item"><a
+                        href="{{ url_for('questao.resolver_questoes', materia_slug=current_materia.nome_materia|slugify) }}"
+                        class="text-decoration-none text-muted">{{ current_materia.nome_materia }}</a></li>
+                <li class="breadcrumb-item active text-primary fw-bold" aria-current="page">{{
+                    current_topico.nome_topico }}</li>
+                {% else %}
+                <li class="breadcrumb-item active text-primary fw-bold" aria-current="page">{{
+                    current_materia.nome_materia }}</li>
+                {% endif %}
+                {% else %}
+                <li class="breadcrumb-item active text-primary fw-bold" aria-current="page">Todas as Matérias</li>
+                {% endif %}
+            </ol>
+        </nav>
+
+        <div class="d-flex align-items-center mb-3">
+            <div class="bg-white border rounded-pill px-3 py-1 shadow-sm">
+                <span class="text-muted small fw-bold">
+                    <i class="bi bi-stack text-primary me-1"></i>
+                    {% if current_materia %}
+                    Filtrando <span class="text-primary">{{ total_encontrado }}</span> questões de <span
+                        class="text-primary">{{ current_materia.nome_materia }}</span>.
+                    {% elif request.args.get('id_materia') or request.args.get('id_banca') or request.args.get('ano') %}
+                    Foram encontradas <span class="text-primary">{{ total_encontrado }}</span> questões para o seu
+                    filtro.
+                    {% else %}
+                    Total disponível no banco: <span class="text-primary">{{ total_encontrado }}</span> questões.
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        {% for q in questoes %}
+        {{ cq.render_questao(q, is_premium, ids_acertos, ids_erros) }}
+        {% endfor %}
+
+        {{ p.render_pagination(pagina_atual, tem_anterior, tem_proxima, 'questao.resolver_questoes',
+        dict(request.args, materia_slug=current_materia.nome_materia|slugify if current_materia else None,
+        topico_slug=current_topico.nome_topico|slugify if current_topico else None)) }}
+
+    </div>
+</div>
+
+{% include 'components/modais_questao.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/questoes_common.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializa as cascatas de filtros (Matéria/Assunto e Órgão/Cargo)
+        if (typeof initFilterCascades === 'function') {
+            initFilterCascades();
+        }
+    });
+</script>
+{% endblock %}

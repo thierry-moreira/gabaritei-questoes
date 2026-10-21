@@ -1,0 +1,136 @@
+{% extends 'base_aluno.html' %}
+{% import 'macros/ui_components.html' as ui %}
+
+{% block content %}
+<!-- CSS Específico apenas para detalhes exclusivos -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/aluno_simulados.css') }}">
+
+<div class="container mt-4 mb-5">
+    <!-- Header Principal -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-5 animate-premium-up" style="--delay: 0;">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--texto-principal);">
+                <i class="bi bi-journal-check text-primary me-2"></i> Central de Simulados
+            </h2>
+            <p class="text-muted small mb-0">Gerencie seus simulados e teste seus conhecimentos com a comunidade.</p>
+        </div>
+        
+        {# Botão agora persistente para manter consistência e evitar redundância com blocos vazios #}
+        <button class="btn btn-primary py-3 px-4 shadow-sm fw-bold border-0" 
+                style="border-radius: 12px; background: var(--premium-accent);"
+                data-bs-toggle="modal" data-bs-target="#modalCriarSimulado">
+            <i class="bi bi-plus-lg me-1"></i> Criar Meu Simulado
+        </button>
+    </div>
+
+    <!-- Simulados da Comunidade -->
+    <div class="mb-5">
+        <div class="d-flex align-items-center gap-2 mb-4 animate-premium-up" style="--delay: 1;">
+            <div style="width: 4px; height: 24px; background: #3b82f6; border-radius: 4px;"></div>
+            <h5 class="fw-bold mb-0">Simulados da Comunidade</h5>
+        </div>
+        
+        <div class="premium-grid">
+            {% for s in publicos %}
+                {% call ui.render_card_base(
+                    title=s.titulo,
+                    meta=s.usuarios.username,
+                    badge_text='Público',
+                    badge_class='primary',
+                    delay=loop.index0 + 2
+                ) %}
+                    
+                    <div class="premium-tool-group">
+                        <a href="/aluno/simulados/fazer/{{ s.id }}" class="btn-sim-primary text-decoration-none flex-grow-1">
+                            Iniciar Prova
+                        </a>
+                        
+                        <a href="{{ url_for('simulado.baixar_pdf_simulado', id_simulado=s.id) }}" target="_blank" class="premium-btn-icon" title="Baixar PDF">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </a>
+
+                        <a href="/aluno/simulados/ranking/{{ s.id }}" class="premium-btn-icon" title="Ver Ranking">
+                            <i class="bi bi-trophy"></i>
+                        </a>
+                        
+                        {% if s.id_criador == current_user.id %}
+                        <form method="POST" action="/aluno/simulados/excluir/{{ s.id }}" class="form-excluir-simulado m-0">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="button" class="premium-btn-icon premium-btn-danger border-0" title="Excluir" onclick="verificarExclusaoSimulado(this, 'este simulado público')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                {% endcall %}
+            {% else %}
+                {# Removido o botão daqui para evitar redundância com o topo #}
+                {{ ui.render_empty_state('globe', 'Nenhum simulado público', 'Explore a comunidade e participe de provas criadas por outros alunos.') }}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Simulados Privados -->
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-4 animate-premium-up" style="--delay: 5;">
+            <div style="width: 4px; height: 24px; background: #f59e0b; border-radius: 4px;"></div>
+            <h5 class="fw-bold mb-0">Meus Simulados Privados</h5>
+        </div>
+
+        <div class="premium-grid">
+            {% for s in privados %}
+                {% call ui.render_card_base(
+                    title=s.titulo,
+                    meta=s.descricao or 'Personalizado para seus estudos',
+                    badge_text='Privado',
+                    badge_class='warning',
+                    delay=loop.index0 + 6
+                ) %}
+                    
+                    <div class="premium-tool-group">
+                        <a href="/aluno/simulados/fazer/{{ s.id }}" class="btn-sim-primary btn-sim-warning text-decoration-none flex-grow-1">
+                            Iniciar Agora
+                        </a>
+                        
+                        <a href="{{ url_for('simulado.baixar_pdf_simulado', id_simulado=s.id) }}" target="_blank" class="premium-btn-icon" title="Baixar PDF">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </a>
+
+                        <form method="POST" action="/aluno/simulados/excluir/{{ s.id }}" class="form-excluir-simulado m-0">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="button" class="premium-btn-icon premium-btn-danger border-0" title="Excluir" onclick="verificarExclusaoSimulado(this, 'este simulado')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                {% endcall %}
+            {% else %}
+                {# Removido o botão daqui para evitar redundância com o topo #}
+                {{ ui.render_empty_state('lock', 'Meus simulados', 'Seus simulados personalizados e privados aparecerão aqui.') }}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Modularizado -->
+{% include 'components/modal_simulado.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/aluno_simulados.js') }}"></script>
+<script>
+    function verificarExclusaoSimulado(btn, contexto) {
+        confirmarAcao({
+            title: 'Excluir Simulado?',
+            text: `Tem certeza que deseja apagar ${contexto}?`,
+            tipo: 'danger',
+            confirmButtonText: 'Sim, excluir'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                btn.closest('form').submit();
+            }
+        });
+    }
+</script>
+{% endblock %}

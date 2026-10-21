@@ -1,0 +1,156 @@
+/* flashcards.css */
+:root {
+    --card-min-height: 250px;
+}
+
+/* 1. Dashboard Styles */
+.stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: transform 0.2s;
+}
+
+.category-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* 2. FLIP CARD 3D - The Core Effect */
+.flashcard-container {
+    perspective: 1000px;
+    width: 100%;
+    max-width: 600px;
+    margin: 2rem auto;
+    cursor: pointer;
+}
+
+.flashcard-inner {
+    position: relative;
+    width: 100%;
+    min-height: var(--card-min-height);
+    text-align: center;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.flashcard-container.is-flipped .flashcard-inner {
+    transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    min-height: var(--card-min-height);
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem;
+    border-radius: 24px;
+    background: var(--card-bg);
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.card-back {
+    transform: rotateY(180deg);
+    background: linear-gradient(135deg, var(--card-bg) 0%, rgba(var(--primary-color-rgb), 0.05) 100%);
+}
+
+.flashcard-content {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    color: var(--texto-principal);
+}
+
+/* Text Highlighting (Realce) */
+.flashcard-content mark {
+    background-color: #ffd43b;
+    color: #212529;
+    padding: 0 4px;
+    border-radius: 4px;
+}
+
+.flashcard-content strong,
+.flashcard-content b {
+    color: var(--premium-accent, #6366f1);
+}
+
+[data-bs-theme="dark"] .flashcard-content strong,
+[data-bs-theme="dark"] .flashcard-content b {
+    color: #a5b4fc !important;
+}
+
+/* 3. Study Buttons */
+.study-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+}
+
+.btn-sr {
+    min-width: 100px;
+    padding: 1rem;
+    border-radius: 12px;
+    font-weight: 700;
+    transition: transform 0.2s;
+}
+
+.btn-sr:hover {
+    transform: scale(1.05);
+}
+
+/* 4. Category Themes */
+.category-card {
+    border-top: 4px solid var(--primary-color);
+}
+
+.category-theme-blue { --theme-color: #3b82f6; --theme-bg-soft: rgba(59, 130, 246, 0.15); }
+.category-theme-emerald { --theme-color: #10b981; --theme-bg-soft: rgba(16, 185, 129, 0.15); }
+.category-theme-violet { --theme-color: #8b5cf6; --theme-bg-soft: rgba(139, 92, 246, 0.15); }
+.category-theme-amber { --theme-color: #f59e0b; --theme-bg-soft: rgba(245, 158, 11, 0.15); }
+.category-theme-rose { --theme-color: #f43f5e; --theme-bg-soft: rgba(244, 63, 94, 0.15); }
+.category-theme-cyan { --theme-color: #06b6d4; --theme-bg-soft: rgba(6, 182, 212, 0.15); }
+
+[class*="category-theme-"] {
+    border-top-color: var(--theme-color) !important;
+}
+
+[class*="category-theme-"] .icon-box {
+    background-color: var(--theme-bg-soft) !important;
+    color: var(--theme-color) !important;
+}
+
+[class*="category-theme-"] .btn-outline-primary {
+    border-color: var(--theme-color) !important;
+    color: var(--theme-color) !important;
+}
+
+[class*="category-theme-"] .btn-outline-primary:hover {
+    background-color: var(--theme-color) !important;
+    color: white !important;
+}
+
+/* 5. Responsive */
+@media (max-width: 576px) {
+    .flashcard-content {
+        font-size: 1.1rem;
+    }
+    .card-front, .card-back {
+        padding: 1.5rem;
+    }
+}

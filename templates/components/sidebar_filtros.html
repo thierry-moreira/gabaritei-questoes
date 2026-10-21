@@ -1,0 +1,215 @@
+{# templates/components/sidebar_filtros.html #}
+
+{% macro render_sidebar_filtros(materias, bancas, orgaos, escolaridades, anos, filtros_salvos, endpoint='questao.resolver_questoes') %}
+<div class="accordion mb-4 shadow-sm" id="filtrosAcc">
+    <div class="accordion-item border-0 bg-transparent">
+        <h2 class="accordion-header">
+            <button class="accordion-button accordion-button-premium collapsed" data-bs-toggle="collapse" data-bs-target="#bodyFiltros">
+                <i class="bi bi-funnel-fill me-2 text-primary"></i> Filtros de Busca Avançados
+            </button>
+        </h2>
+        <div id="bodyFiltros" class="accordion-collapse collapse" data-bs-parent="#filtrosAcc">
+            <div class="accordion-body mt-3 rounded-4" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05);">
+                <form method="GET" action="{{ url_for(endpoint) }}" id="formFiltros">
+                    
+                    <div class="row g-4">
+                        <div class="col-lg-4">
+                            <h6 class="filter-section-title"><i class="bi bi-book"></i> MATÉRIAS</h6>
+                            <div class="filter-card">
+                                <div class="filter-search-container">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" class="form-control filter-search-input filter-search" placeholder="Buscar matéria..." data-target="list-materias">
+                                </div>
+                                <div class="filter-list" id="list-materias">
+                                    {% for m in materias|sort(attribute='nome_materia') %}
+                                    <div class="form-check item-filtro py-1">
+                                        <input class="form-check-input check-materia" type="checkbox" name="id_materia" value="{{ m.id_materia }}" id="m{{ m.id_materia }}" {% if m.id_materia|string in request.args.getlist('id_materia') %}checked{% endif %}>
+                                        <label class="form-check-label small w-100 ps-2" for="m{{ m.id_materia }}">{{ m.nome_materia }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-8">
+                            <h6 class="filter-section-title"><i class="bi bi-list-stars"></i> ASSUNTOS</h6>
+                            <div class="filter-card">
+                                <div class="filter-search-container">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" class="form-control filter-search-input filter-search" placeholder="Buscar tópico ou subtópico..." data-target="list-assuntos">
+                                </div>
+                                <div class="filter-list" id="list-assuntos">
+                                    <p class="text-muted small text-center my-4" id="msg-aguardando">Marque uma ou mais matérias para carregar os assuntos...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mt-1">
+                        
+                        <div class="col-lg-3">
+                            <h6 class="filter-section-title"><i class="bi bi-building"></i> BANCA</h6>
+                            <div class="filter-card">
+                                <div class="filter-search-container">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" class="form-control filter-search-input filter-search" placeholder="Buscar banca..." data-target="list-bancas">
+                                </div>
+                                <div class="filter-list" id="list-bancas" style="max-height: 260px;">
+                                    {% for b in bancas|sort(attribute='nome_banca') %}
+                                    <div class="form-check item-filtro">
+                                        <input class="form-check-input" type="checkbox" name="id_banca" value="{{ b.id_banca }}" id="b{{ b.id_banca }}" {% if b.id_banca|string in request.args.getlist('id_banca') %}checked{% endif %}>
+                                        <label class="form-check-label small w-100" for="b{{ b.id_banca }}">{{ b.nome_banca }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <h6 class="filter-section-title"><i class="bi bi-briefcase"></i> ÓRGÃO E CARGO</h6>
+                            <div class="filter-card">
+                                <div class="filter-search-container">
+                                    <i class="bi bi-search"></i>
+                                    <input type="text" class="form-control filter-search-input filter-search" placeholder="Buscar órgão..." data-target="list-orgaos">
+                                </div>
+                                <div class="filter-list" id="list-orgaos" style="max-height: 260px;">
+                                    {% for o in orgaos|sort(attribute='nome_orgao') %}
+                                    <div class="item-filtro mb-2 border-bottom pb-1" style="border-color: rgba(255,255,255,0.05) !important;">
+                                        <div class="form-check">
+                                            <input class="form-check-input check-orgao-pai" type="checkbox" name="id_orgao" value="{{ o.id_orgao }}" id="o{{ o.id_orgao }}" {% if o.id_orgao|string in request.args.getlist('id_orgao') %}checked{% endif %}>
+                                            <label class="form-check-label fw-bold small" for="o{{ o.id_orgao }}">{{ o.nome_orgao }}</label>
+                                        </div>
+                                        {% if o.cargos %}
+                                        <div class="ms-3 mt-1 border-start ps-2" style="border-color: rgba(99, 102, 241, 0.3) !important;">
+                                            {% for c in o.cargos|sort(attribute='nome_cargo') %}
+                                            <div class="form-check">
+                                                <input class="form-check-input check-cargo-filho" type="checkbox" name="id_cargo" value="{{ c.id_cargo }}" id="c{{ c.id_cargo }}" data-pai="{{ o.id_orgao }}" {% if c.id_cargo|string in request.args.getlist('id_cargo') %}checked{% endif %}>
+                                                <label class="form-check-label small text-muted" for="c{{ c.id_cargo }}">{{ c.nome_cargo }}</label>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <h6 class="filter-section-title"><i class="bi bi-hash"></i> ID DA QUESTÃO</h6>
+                            <div class="filter-card mb-3">
+                                <input type="number" name="id_questao" class="form-control form-control-sm" placeholder="Ex: 12345" value="{{ request.args.get('id_questao', '') }}">
+                            </div>
+
+                            <h6 class="filter-section-title"><i class="bi bi-command"></i> MODALIDADE</h6>
+                            <div class="filter-card mb-3">
+                                <div class="form-check item-filtro">
+                                    <input class="form-check-input" type="checkbox" name="tipo_questao" value="multipla_escolha" id="tipoME" {% if 'multipla_escolha' in request.args.getlist('tipo_questao') %}checked{% endif %}>
+                                    <label class="form-check-label small" for="tipoME">Múltipla Escolha</label>
+                                </div>
+                                <div class="form-check item-filtro mt-1">
+                                    <input class="form-check-input" type="checkbox" name="tipo_questao" value="certo_errado" id="tipoCE" {% if 'certo_errado' in request.args.getlist('tipo_questao') %}checked{% endif %}>
+                                    <label class="form-check-label small" for="tipoCE">Certo ou Errado</label>
+                                </div>
+                            </div>
+
+                            <h6 class="filter-section-title"><i class="bi bi-clock-history"></i> STATUS</h6>
+                            <select name="status" class="form-select filter-select mb-3">
+                                <option value="todas" {% if request.args.get('status') == 'todas' %}selected{% endif %}>🔎 Todas as Questões</option>
+                                <option value="nao_respondidas" {% if request.args.get('status') == 'nao_respondidas' or not request.args.get('status') %}selected{% endif %}>🆕 Apenas Não Respondidas</option>
+                                <option value="respondidas" {% if request.args.get('status') == 'respondidas' %}selected{% endif %}>✅ Apenas as que já fiz</option>
+                                <option value="acertos" {% if request.args.get('status') == 'acertos' %}selected{% endif %}>🎯 Questões que Acertei</option>
+                                <option value="erros" {% if request.args.get('status') == 'erros' %}selected{% endif %}>❌ Questões que Errei</option>
+                            </select>
+
+                            <h6 class="filter-section-title"><i class="bi bi-mortarboard"></i> ESCOLARIDADE</h6>
+                            <select name="id_nivel" class="form-select filter-select">
+                                <option value="">Todas</option>
+                                {% for e in escolaridades %}
+                                <option value="{{ e.id_nivel }}" {% if request.args.get('id_nivel') == e.id_nivel|string %}selected{% endif %}>{{ e.descritivo_nivel }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <h6 class="filter-section-title"><i class="bi bi-calendar3"></i> ANO</h6>
+                            <div class="filter-card">
+                                <div class="filter-list" id="list-anos" style="max-height: 310px;">
+                                    {% for a in anos %}
+                                    <div class="form-check item-filtro">
+                                        <input class="form-check-input" type="checkbox" name="ano" value="{{ a }}" id="ano{{ a }}" {% if a|string in request.args.getlist('ano') %}checked{% endif %}>
+                                        <label class="form-check-label small w-100" for="ano{{ a }}">{{ a }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 border-top pt-4" id="meusFiltrosSalvos" style="border-color: rgba(255,255,255,0.05) !important;">
+                        <h6 class="comment-header-title mb-4">
+                            <i class="bi bi-tags-fill text-primary"></i> MEUS FILTROS SALVOS PARA ESTA PÁGINA 🚀
+                        </h6>
+                        <div class="d-flex flex-wrap gap-3">
+                            {% for filtro in filtros_salvos %}
+                            <div class="filter-chip-premium">
+                                <a href="{{ url_for(endpoint) }}?{{ filtro.url_params | safe }}" class="filter-chip-name text-decoration-none" title="Aplicar: {{ filtro.nome_filtro }}">
+                                    {{ filtro.nome_filtro }}
+                                </a>
+                                <button type="button" class="filter-chip-delete" onclick="deletarFiltro('{{ filtro.id }}')" title="Excluir este filtro">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-light border shadow-sm rounded-4 w-100 py-3 px-4 d-flex align-items-center gap-3">
+                                <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
+                                <p class="mb-0 text-muted small">Nenhum filtro salvo ainda. Organize seus estudos salvando seus filtros favoritos!</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 d-flex flex-wrap gap-3 justify-content-end align-items-center filter-actions-mobile">
+                        <a href="{{ url_for(endpoint) }}" class="btn btn-premium-outline px-4 py-2" style="font-size: 0.85rem;">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Limpar Tudo
+                        </a>
+
+                        <button type="button" class="btn btn-premium-outline-success px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalSalvarFiltro" style="font-size: 0.85rem;">
+                            <i class="bi bi-bookmark-plus me-1"></i> Salvar Filtro
+                        </button>
+
+                        <button type="submit" class="btn btn-premium px-5 py-3 py-lg-2 shadow-lg" style="font-size: 0.9rem;">
+                            <i class="bi bi-search me-2"></i> FILTRAR QUESTÕES
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Modal Salvar Filtro (Coupled to the form) #}
+<div class="modal fade" id="modalSalvarFiltro" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('filtro.salvar_filtro') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Salvar Filtro de Questões</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-3">Dê um nome para este filtro para acessá-lo rapidamente depois.</p>
+                    <input type="text" name="nome_filtro" class="form-control mb-2" placeholder="Ex: Revisão Vunesp - Português" required>
+                    <input type="hidden" name="url_params" id="hiddenUrlParams">
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success fw-bold"><i class="bi bi-save me-1"></i> Salvar Filtro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endmacro %}

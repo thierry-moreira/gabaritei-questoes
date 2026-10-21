@@ -1,0 +1,174 @@
+{% extends "base_aluno.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flashcards.css') }}">
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 text-center mt-4">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="{{ url_for('flashcards.index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-x-lg me-1"></i> Sair da Sessão
+            </a>
+            <div id="progress-text" class="small fw-bold text-muted">Aguardando...</div>
+        </div>
+
+        <!-- Render dos Cards (Invisíveis inicialmente) -->
+        <div id="deck-estudo">
+            {% if not cards %}
+            <div class="py-5">
+                <i class="bi bi-check-circle-fill fs-1 text-success opacity-50"></i>
+                <h3 class="fw-bold mt-3 text-white">Tudo revisado por aqui!</h3>
+                <p class="text-muted">Você não tem cards para revisar neste momento.</p>
+                <a href="{{ url_for('flashcards.index') }}" class="btn btn-primary px-4 rounded-pill mt-3">Voltar ao Início</a>
+            </div>
+            {% else %}
+            
+            <div class="flashcard-container" id="current-card-container" onclick="toggleFlip()">
+                <div class="flashcard-inner">
+                    <!-- Frente -->
+                    <div class="card-front">
+                        <div class="small fw-bold text-primary mb-4 opacity-75">PERGUNTA</div>
+                        <div class="flashcard-content" id="card-frente-text"></div>
+                        <div class="mt-auto pt-4 small text-muted opacity-50">Clique para ver a resposta</div>
+                    </div>
+                    <!-- Verso -->
+                    <div class="card-back">
+                        <div class="small fw-bold text-success mb-4 opacity-75">RESPOSTA</div>
+                        <div class="flashcard-content" id="card-verso-text"></div>
+                        <div class="mt-auto pt-4 small text-muted opacity-50">Selecione o quão difícil foi</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controles SRS (Ocultos até virar o card) -->
+            <div id="srs-controls" class="d-none animate__animated animate__fadeInUp">
+                <div class="study-controls">
+                    <button class="btn btn-sr btn-danger shadow-sm" onclick="revisar(0)">
+                        <div class="small fw-normal">ESQUECI</div>
+                        ERREI
+                    </button>
+                    <button class="btn btn-sr btn-warning text-white shadow-sm" onclick="revisar(1)">
+                        <div class="small fw-normal">DIFÍCIL</div>
+                        MÉDIO
+                    </button>
+                    <button class="btn btn-sr btn-primary shadow-sm" onclick="revisar(2)">
+                        <div class="small fw-normal">RECORDEI</div>
+                        BOM
+                    </button>
+                    <button class="btn btn-sr btn-success shadow-sm" onclick="revisar(3)">
+                        <div class="small fw-normal">NATURAL</div>
+                        FÁCIL
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Data Store -->
+        <div id="flashcards-data" data-cards='{{ cards|tojson|safe }}' style="display:none;"></div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const deckFlashcards = JSON.parse(document.getElementById('flashcards-data').getAttribute('data-cards'));
+    let currentIndex = 0;
+
+    function formatarMarkdown(texto) {
+        if (!texto) return "";
+        // Substitui **texto** por <b>texto</b>
+        return texto.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    }
+
+    function initEstudo() {
+        if (deckFlashcards.length > 0) {
+            exibirCard(0);
+        }
+    }
+
+    function exibirCard(index) {
+        const card = deckFlashcards[index];
+        const container = document.getElementById('current-card-container');
+        const srs = document.getElementById('srs-controls');
+        
+        // Reset state
+        container.classList.remove('is-flipped');
+        srs.classList.add('d-none');
+
+        // Update content
+        document.getElementById('card-frente-text').innerHTML = formatarMarkdown(card.frente);
+        document.getElementById('card-verso-text').innerHTML = formatarMarkdown(card.verso);
+        document.getElementById('progress-text').innerText = `Card ${index + 1} de ${deckFlashcards.length}`;
+    }
+
+    function toggleFlip() {
+        const container = document.getElementById('current-card-container');
+        const srs = document.getElementById('srs-controls');
+        
+        container.classList.toggle('is-flipped');
+        
+        if (container.classList.contains('is-flipped')) {
+            srs.classList.remove('d-none');
+        } else {
+            srs.classList.add('d-none');
+        }
+    }
+
+    function revisar(qualidade) {
+        const card = deckFlashcards[currentIndex];
+        
+        fetch('/api/flashcards/revisar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id_flashcard: card.id_flashcard,
+                qualidade: qualidade
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                proximoCard();
+            }
+        });
+    }
+
+    function proximoCard() {
+        currentIndex++;
+        if (currentIndex < deckFlashcards.length) {
+            exibirCard(currentIndex);
+        } else {
+            document.getElementById('deck-estudo').innerHTML = `
+                <div class="py-5 animate__animated animate__zoomIn">
+                    <i class="bi bi-trophy fs-1 text-warning"></i>
+                    <h3 class="fw-bold mt-3 text-white">Sessão Finalizada!</h3>
+                    <p class="text-muted">Parabéns por concluir seus estudos de hoje.</p>
+                    <a href="{{ url_for('flashcards.index') }}" class="btn btn-primary px-4 rounded-pill mt-3 shadow">Voltar ao Início</a>
+                </div>
+            `;
+            document.getElementById('progress-text').innerText = "Concluído";
+        }
+    }
+
+    // Atalhos de teclado
+    document.addEventListener('keydown', (e) => {
+        const isFlipped = document.getElementById('current-card-container')?.classList.contains('is-flipped');
+        
+        if (e.code === 'Space') {
+            e.preventDefault();
+            toggleFlip();
+        } else if (isFlipped) {
+            if (e.key === '1') revisar(0);
+            if (e.key === '2') revisar(1);
+            if (e.key === '3') revisar(2);
+            if (e.key === '4') revisar(3);
+        }
+    });
+
+    initEstudo();
+</script>
+{% endblock %}

@@ -1,0 +1,137 @@
+{# Macros Atômicas para as Questões #}
+
+{% macro render_comments_section(q) %}
+<div class="collapse mt-3" id="comentarios-{{ q.id_questao }}">
+    <div class="comment-container-premium">
+        <h6 class="comment-header-title">
+            <i class="bi bi-chat-left-dots-fill text-primary"></i> Discussão da Comunidade
+        </h6>
+
+        {# Comentário do Professor (Gabarito Comentado) - EXCLUSIVO PREMIUM #}
+        {% if q.comentario_gabarito %}
+        {% if is_premium %}
+        <div class="comment-card-premium border-primary mb-4"
+            style="border-left: 5px solid var(--primary-color) !important;">
+            <div class="comment-user-info">
+                <span class="comment-user-name text-primary">
+                    <i class="bi bi-mortarboard-fill"></i> Comentário do Professor
+                </span>
+            </div>
+            <p class="comment-text italic text-muted mb-0">{{ q.comentario_gabarito | safe }}</p>
+        </div>
+        {% else %}
+        <div class="comment-card-premium border-warning mb-4 bg-light"
+            style="border-left: 5px solid #ffc107 !important;">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-lock-fill fs-4 me-3 text-warning"></i>
+                <div>
+                    <h6 class="mb-1 fw-bold">Comentário do Professor Bloqueado</h6>
+                    <p class="mb-0 small text-muted">Assine o plano <strong>Premium</strong> para ver a explicação
+                        técnica deste gabarito.</p>
+                </div>
+                <a href="/planos" class="btn btn-warning btn-sm ms-auto fw-bold">Ver Planos</a>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        {# Container para carregamento dinâmico via JS #}
+        <div id="lista-comentarios-{{ q.id_questao }}" class="mb-4">
+            <p class="text-muted small mb-0">
+                <i class="bi bi-hourglass-split"></i> Carregando comentários da comunidade...
+            </p>
+        </div>
+
+        {# Formulário de Envio #}
+        {% if current_user.is_authenticated %}
+        <form class="form-enviar-comentario mt-4" data-questao-id="{{ q.id_questao }}">
+            <div class="comment-form-group">
+                <input type="text" class="form-control comment-input-premium w-100" name="texto_comentario"
+                    placeholder="Adicione seu comentário construtivo..." required>
+                <button class="btn-send-comment" type="submit">
+                    Enviar <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div class="alert alert-light border mt-4 text-center small">
+            <i class="bi bi-info-circle me-1"></i> <a href="/aluno/login" class="fw-bold">Faça login</a> para participar
+            da discussão com outros alunos.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_support_text(id_questao, texto_base, titulo_referencia=None, start_expanded=False) %}
+{% if texto_base %}
+<div class="texto-base-container bg-light rounded-3 mb-4 border shadow-sm">
+    <div class="d-flex justify-content-between align-items-center p-3 cursor-pointer" data-bs-toggle="collapse"
+        data-bs-target="#txt-{{ id_questao }}" aria-expanded="{{ 'true' if start_expanded else 'false' }}"
+        style="cursor: pointer;"
+        role="button" tabindex="0"
+        onclick="const btn = document.getElementById('txt-btn-{{ id_questao }}'); const icon = document.getElementById('txt-icon-{{ id_questao }}'); if (btn.innerHTML.includes('Expandir')) { btn.innerHTML = 'Minimizar <i class=\'bi bi-chevron-up ms-1\'></i>'; } else { btn.innerHTML = 'Expandir <i class=\'bi bi-chevron-down ms-1\'></i>'; }">
+
+        <h6 class="fw-bold text-primary-emphasis mb-0 small">
+            <i class="bi bi-file-text-fill me-2"></i> TEXTO DE APOIO
+        </h6>
+        <button class="btn btn-sm btn-outline-primary fw-bold" type="button">
+            <span id="txt-btn-{{ id_questao }}">
+                {{ 'Minimizar' if start_expanded else 'Expandir' }}
+                <i class="bi {{ 'bi-chevron-up' if start_expanded else 'bi-chevron-down' }} ms-1"
+                    id="txt-icon-{{ id_questao }}"></i>
+            </span>
+        </button>
+    </div>
+
+    <div class="collapse {{ 'show' if start_expanded }}" id="txt-{{ id_questao }}">
+        <div class="card-body p-4 pt-0">
+            <hr class="mt-0 opacity-25">
+            <div class="texto-base-conteudo"
+                style="max-height: 500px; overflow-y: auto; line-height: 1.8; white-space: pre-line; text-align: justify; font-size: 0.95rem; padding-right: 1.25rem;">
+
+                {% if titulo_referencia %}
+                <h5 class="fw-bold mb-3 border-bottom pb-2 text-primary text-center">
+                    {{ titulo_referencia }}
+                </h5>
+                {% endif %}
+
+                {{ texto_base | safe }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro render_alternatives_group(id_questao, alternativas, input_name='res', mode='estudo') %}
+<div class="alternativas-group alternatives-group mb-4">
+    {% for alt in alternativas %}
+    <label class="alternative-container item-alternativa">
+        <input type="radio" name="{{ input_name }}" value="{{ alt.letra }}"
+            id="alt-{{ alt.id_alternativa if alt.id_alternativa else (id_questao ~ '-' ~ alt.letra) }}" required>
+        <div class="alternative-letter">{{ alt.letra }}</div>
+        <div class="alternative-text flex-grow-1">
+            {{ alt.texto_alternativa | safe }}
+        </div>
+        <button type="button" class="btn btn-sm btn-link text-secondary ms-2 flex-shrink-0 btn-tesoura"
+            title="Eliminar alternativa" style="z-index: 10;">
+            <i class="bi bi-scissors"></i>
+        </button>
+    </label>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro render_question_image(url_imagem) %}
+{% if url_imagem %}
+<div class="questao-imagem-wrapper text-center mb-4 p-2 bg-white border rounded-4 shadow-sm">
+    <img src="{{ url_imagem }}" class="img-fluid rounded-3 questao-img" style="max-height: 450px;"
+        alt="Imagem da questão">
+    <div class="mt-2">
+        <span class="badge bg-light text-muted fw-normal border"><i class="bi bi-zoom-in"></i> Passe o mouse para
+            ampliar</span>
+    </div>
+</div>
+{% endif %}
+{% endmacro %}

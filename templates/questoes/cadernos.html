@@ -1,0 +1,98 @@
+{% extends "base_aluno.html" %}
+{% import 'macros/ui_components.html' as ui %}
+
+{% block content %}
+<!-- Link para o novo CSS Premium -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/aluno_cadernos.css') }}">
+
+<div class="container py-4">
+    <!-- Cabeçalho da Página -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3 animate-premium-up" style="--delay: 0;">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--texto-principal);">
+                <i class="bi bi-journal-bookmark-fill text-primary me-2"></i> Meus Cadernos
+            </h2>
+            <p class="text-muted small mb-0">Organize suas questões salvas em pastas personalizadas.</p>
+        </div>
+        
+        {# Botão persistente para garantir que o usuário sempre possa criar um caderno #}
+        <button class="btn btn-primary d-flex align-items-center gap-2 px-4 py-2 shadow-sm border-0" 
+                style="border-radius: 12px; font-weight: 600; background: var(--premium-accent);" 
+                data-bs-toggle="modal" data-bs-target="#modalNovoCaderno">
+            <i class="bi bi-plus-lg"></i> Novo Caderno
+        </button>
+    </div>
+
+    <!-- Grid de Cadernos -->
+    <div class="premium-grid">
+        {% if cadernos %}
+            {% for c in cadernos %}
+                {% call ui.render_card_base(
+                    title=c.nome_caderno,
+                    meta='Criado em: ' ~ c.criado_em[:10],
+                    delay=loop.index0 + 1
+                ) %}
+                    <!-- Ícone de Pasta -->
+                    <div class="folder-icon-wrapper mb-3">
+                        <i class="bi bi-folder-fill"></i>
+                    </div>
+                    
+                    <div class="premium-tool-group mt-auto" data-id="{{ c.id_caderno }}" data-nome="{{ c.nome_caderno }}">
+                        <a href="{{ url_for('caderno.visualizar_caderno', id_caderno=c.id_caderno) }}" 
+                           class="btn-caderno-open text-decoration-none flex-grow-1">
+                           Abrir Caderno
+                        </a>
+                        <button onclick="excluirCaderno(this)" class="premium-btn-icon premium-btn-danger border-0">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>
+                {% endcall %}
+            {% endfor %}
+        {% else %}
+            <!-- Estado Vazio com CTA de busca -->
+            {{ ui.render_empty_state(
+                icon='folder2-open',
+                title='Sua biblioteca está vazia',
+                description='Você ainda não criou nenhum caderno de questões. Crie pastas para organizar seus estudos por matéria ou concurso.',
+                btn_text='Buscar Questões',
+                btn_target=url_for('questao.resolver_questoes')
+            ) }}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Novo Caderno -->
+<div class="modal fade" id="modalNovoCaderno" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+      <div class="modal-caderno-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="modal-title fw-bold mb-0">
+                <i class="bi bi-folder-plus me-2"></i> Novo Caderno
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+      </div>
+      <div class="modal-body p-4">
+        <label class="form-label fw-semibold text-muted small mb-3">NOME DO CADERNO</label>
+        <div class="premium-input-group">
+            <i class="bi bi-tag"></i>
+            <input type="text" id="input-nome-caderno" class="form-control" placeholder="Ex: Direito Adm - PMPR" autocomplete="off">
+        </div>
+      </div>
+      <div class="modal-footer border-0 p-4 pt-0">
+        <button type="button" class="btn btn-link text-muted text-decoration-none fw-bold me-auto" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary px-4 py-2 border-0" 
+                style="border-radius: 12px; font-weight: 700; background: var(--premium-accent);" 
+                onclick="salvarNovoCaderno()">
+            Criar Caderno
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/meus_cadernos.js') }}"></script>
+{% endblock %}

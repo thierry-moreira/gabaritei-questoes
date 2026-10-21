@@ -1,0 +1,77 @@
+{# 
+    Componente: Performance Card (Subject/Topic)
+    Versão: 1.0
+    Descrição: Renderiza um card de accordion com desempenho por matéria e lista de tópicos.
+#}
+
+{% macro render_performance_card(materia, index) %}
+{% set taxa = materia.taxa | default(0) %}
+{% set color_class = 'success' if taxa >= 80 else ('warning' if taxa >= 60 else 'danger') %}
+
+<div class="card mb-3 border-0 shadow-sm overflow-hidden performance-accordion-card">
+    <div class="card-body p-0">
+        <button class="accordion-button collapsed bg-transparent py-4 px-4 border-0" 
+                type="button" 
+                data-bs-toggle="collapse" 
+                data-bs-target="#collapse{{ index }}">
+            <div class="w-100 me-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold text-dark fs-5">{{ materia.nome }}</span>
+                    <div class="text-end">
+                        <span class="fw-bold fs-4 text-{{ color_class }}">{{ taxa }}%</span>
+                    </div>
+                </div>
+                
+                <div class="progress mb-2" 
+                     style="height: 8px; border-radius: 4px; --subject-color-rgb: var(--bs-{{ color_class }}-rgb); background-color: rgba(var(--subject-color-rgb), 0.2);">
+                    <div class="progress-bar bg-{{ color_class }}" 
+                         role="progressbar" 
+                         style="--progress-width: {{ taxa }}%; width: var(--progress-width);" 
+                         aria-valuenow="{{ taxa }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="100">
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between small">
+                    <span class="text-muted fw-medium">{{ materia.total }} questões resolvidas</span>
+                    <span class="text-muted fw-bold">{{ materia.acertos }} acertos</span>
+                </div>
+            </div>
+        </button>
+    </div>
+
+    <div id="collapse{{ index }}" class="collapse bg-light bg-opacity-10 border-top" data-bs-parent="#accordionDesempenho">
+        <div class="card-body p-0">
+            <ul class="list-group list-group-flush border-0">
+                {% for t in materia.topicos_lista %}
+                    {% set t_taxa = t.taxa | default(0) %}
+                    {% set t_color = 'success' if t_taxa >= 80 else ('warning' if t_taxa >= 60 else 'danger') %}
+                    
+                    <li class="list-group-item bg-transparent px-5 py-3 border-0 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-secondary fw-bold small">{{ t.nome }}</span>
+                            <span class="badge bg-{{ t_color }} {% if t_color == 'warning' %}text-dark{% endif %} rounded-pill">
+                                {{ t_taxa }}%
+                            </span>
+                        </div>
+                        
+                        <div class="progress" style="height: 4px; border-radius: 2px; background-color: rgba(0,0,0,0.05);">
+                            <div class="progress-bar bg-{{ t_color }} opacity-75" style="--progress-width: {{ t_taxa }}%; width: var(--progress-width);"></div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-2 align-items-center">
+                            <small class="text-muted opacity-75">{{ t.total }} resolvidas</small>
+                            <a href="/aluno/questoes?id_materia={{ t.id_materia }}&id_topico={{ t.id_topico }}" 
+                               class="btn btn-link btn-sm p-0 text-decoration-none fw-bold" 
+                               style="font-size: 0.75rem;">
+                                <i class="bi bi-play-circle"></i> Praticar
+                            </a>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endmacro %}

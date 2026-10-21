@@ -1,0 +1,235 @@
+{% extends 'base_aluno.html' %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/resumos.css') }}">
+
+<!-- ELEMENTOS EXCLUSIVOS PARA IMPRESSÃO -->
+<div class="print-only">
+    <div class="print-margin-bar"></div>
+    
+    <table class="print-page-table" style="width: 100%; border: none;">
+        <thead>
+            <tr>
+                <td>
+                    <div class="print-header">
+                        <img src="{{ url_for('static', filename='logo.webp') }}" class="print-logo" alt="Logo">
+                        <h1 class="print-materia-title">{{ materia.nome_materia }}</h1>
+                    </div>
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <div class="resumos-lista-print">
+                        {% for r in resumos %}
+                        <div class="resumo-item-print">
+                            <span class="resumo-numero">RESUMO #{{ loop.index }}</span>
+                            <div class="resumo-conteudo markdown-render">{{ r.conteudo }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td>
+                    <!-- Espaçador invisível que reserva a altura do rodapé no final de TODAS as páginas -->
+                    <div class="print-footer-spacer" style="height: 40px;"></div>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <!-- O rodapé fixo que vai flutuar em cima do espaçador do tfoot -->
+    <div class="print-footer">
+        Gabaritei - GPS da Aprovação | Gerado em {{ agora.strftime('%d/%m/%Y') if agora else '' }}
+    </div>
+</div>
+
+<!-- CONTEÚDO PARA VISUALIZAÇÃO WEB -->
+<div class="container py-4 resumos-container no-print animate-premium-up">
+    <!-- Cabeçalho com Breadcrumb e Botão de Impressão -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
+        <div>
+            <a href="{{ url_for('resumos.index') }}" class="btn btn-link text-decoration-none p-0 mb-3 text-muted back-link">
+                <i class="bi bi-arrow-left me-1"></i> Voltar para Resumos
+            </a>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item"><a href="{{ url_for('resumos.index') }}" class="text-decoration-none">Resumos</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ materia.nome_materia }}</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-0" style="color: var(--texto-principal);">
+                {{ materia.nome_materia }}
+            </h2>
+            <p class="text-muted small mt-1 mb-0">{{ resumos|length }} pontos de revisão encontrados.</p>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-primary d-flex align-items-center gap-2 px-4 shadow-sm border-0"
+                    style="border-radius: 12px; font-weight: 700; background: var(--premium-accent);">
+                <i class="bi bi-printer fs-5"></i> Imprimir / Salvar PDF
+            </button>
+            <button onclick="excluirCaderno('{{ materia.id_materia }}', '{{ resumos|length }}')"
+                    class="btn btn-outline-danger d-flex align-items-center gap-2 px-4 shadow-sm"
+                    style="border-radius: 12px; font-weight: 700;">
+                <i class="bi bi-trash fs-5"></i> Excluir Caderno
+            </button>
+        </div>
+    </div>
+
+    <!-- Caderno Digital (Notebook Layout) -->
+    <div class="notebook-viewport no-print">
+        {% if resumos %}
+            <div class="notebook-pages-container" id="notebookPages">
+                {% for r in resumos %}
+                <div class="notebook-page-wrapper">
+                    <div class="notebook-card">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-2" style="border-radius: 8px;">
+                                RESUMO #{{ loop.index }}
+                            </span>
+                            <button class="btn btn-link text-danger p-0" title="Excluir este resumo"
+                                    onclick="excluirResumo('{{ r.id_resumo }}')">
+                                <i class="bi bi-trash fs-5"></i>
+                            </button>
+                        </div>
+                        <div class="resumo-text markdown-render">
+                            {{ r.conteudo }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Controles de Navegação -->
+            <div class="notebook-controls">
+                <button class="btn-nav-page" id="prevPage" title="Página Anterior">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                
+                <div class="page-indicator">
+                    Página <span id="currentPage">1</span> de {{ resumos|length }}
+                </div>
+
+                <button class="btn-nav-page" id="nextPage" title="Próxima Página">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        {% else %}
+            <div class="py-5 text-center">
+                <div class="icon-box bg-light p-4 rounded-circle d-inline-block mb-3">
+                    <i class="bi bi-journal-x fs-1 text-muted"></i>
+                </div>
+                <h5 class="text-muted">Nenhum resumo nesta matéria.</h5>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Renderizar Markdown automaticamente ao carregar
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof marked !== 'undefined') {
+            document.querySelectorAll('.markdown-render').forEach(function(el) {
+                const raw = el.textContent.trim();
+                el.innerHTML = marked.parse(raw, { breaks: true, gfm: true });
+                
+                // Renderizar formulas matematicas (KaTeX)
+                if (typeof renderMathInElement !== 'undefined') {
+                    renderMathInElement(el, {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false},
+                            {left: '\\(', right: '\\)', display: false},
+                            {left: '\\[', right: '\\]', display: true}
+                        ],
+                        throwOnError : false,
+                        strict: "ignore"
+                    });
+                }
+            });
+        }
+
+        // Lógica de Navegação do Caderno
+        const container = document.getElementById('notebookPages');
+        const prevBtn = document.getElementById('prevPage');
+        const nextBtn = document.getElementById('nextPage');
+        const indicator = document.getElementById('currentPage');
+        
+        if (container && prevBtn && nextBtn) {
+            const updateUI = () => {
+                const index = Math.round(container.scrollLeft / container.clientWidth);
+                indicator.innerText = index + 1;
+                prevBtn.disabled = index === 0;
+                nextBtn.disabled = index === (container.children.length - 1);
+            };
+
+            container.addEventListener('scroll', updateUI);
+
+            prevBtn.addEventListener('click', () => {
+                container.scrollBy({ left: -container.clientWidth, behavior: 'smooth' });
+            });
+
+            nextBtn.addEventListener('click', () => {
+                container.scrollBy({ left: container.clientWidth, behavior: 'smooth' });
+            });
+
+            // Teclado
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') prevBtn.click();
+                if (e.key === 'ArrowRight') nextBtn.click();
+            });
+
+            // Initial UI state
+            updateUI();
+        }
+    });
+
+    function excluirResumo(id) {
+        confirmarAcao({
+            title: 'Excluir Resumo?',
+            text: 'Deseja remover este ponto de revisão do seu caderno?',
+            tipo: 'danger',
+            confirmButtonText: 'Sim, excluir'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/api/resumos/excluir/${id}`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert("Erro ao excluir resumo: " + (data.error || "Desconhecido"));
+                    }
+                });
+            }
+        });
+    }
+
+    function excluirCaderno(id, total) {
+        confirmarAcao({
+            title: 'Excluir Caderno Inteiro?',
+            text: `Esta ação excluirá TODOS os ${total} resumo(s) desta matéria. Não será possível desfazer.`,
+            tipo: 'danger',
+            confirmButtonText: 'Sim, excluir tudo'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/api/resumos/excluir-materia/${id}`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/aluno/resumos';
+                    } else {
+                        alert("Erro ao excluir caderno: " + (data.error || "Desconhecido"));
+                    }
+                });
+            }
+        });
+    }
+</script>
+
+{% endblock %}

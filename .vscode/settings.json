@@ -1,0 +1,14 @@
+{
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/__pycache__": true
+  },
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/venv/**": true
+  },
+  "python.terminal.useEnvFile": true,
+  "python.analysis.diagnosticsSource": "Pylance + Pyrefly"
+}

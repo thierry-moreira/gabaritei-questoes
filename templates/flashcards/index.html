@@ -1,0 +1,179 @@
+{% extends "base_aluno.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flashcards.css') }}">
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        
+        <!-- Header Section -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-5 mt-3 gap-3">
+            <div>
+                <h1 class="fw-bold mb-1">Meu Deck de Flashcards</h1>
+                <p class="text-muted mb-0">Transforme questões em memória de longo prazo.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-primary px-4 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovaCategoria">
+                    <i class="bi bi-folder-plus me-2"></i> Nova Categoria
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="stat-card border-primary text-center">
+                    <div class="fs-1 fw-bold text-primary">{{ total_revisar }}</div>
+                    <div class="text-muted small text-uppercase fw-bold">Para Revisar Hoje</div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="stat-card h-100 d-flex align-items-center justify-content-between bg-primary-subtle border-0">
+                    <div class="ps-3">
+                        <h5 class="fw-bold mb-1">Pronto para começar?</h5>
+                        <p class="mb-0 text-muted small">Mantenha sua ofensiva praticando seus cards diários.</p>
+                    </div>
+                    {% if total_revisar > 0 %}
+                    <a href="{{ url_for('flashcards.estudar', id_categoria='todos') }}" class="btn btn-primary px-4 py-2 rounded-3 me-3">
+                        Estudar Todos <i class="bi bi-play-fill ms-1"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <h4 class="fw-bold mb-4">Minhas Categorias</h4>
+
+        <div class="row g-4">
+            {% if not categorias %}
+            <div class="col-12 text-center py-5">
+                <div class="p-5 border border-dashed rounded-4 bg-light-subtle">
+                    <i class="bi bi-stack fs-1 text-muted opacity-25"></i>
+                    <p class="mt-3 text-muted">Você ainda não tem categorias de flashcards.</p>
+                    <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#modalNovaCategoria">Começar Agora</button>
+                </div>
+            </div>
+            {% endif %}
+
+            {% set themes = ['blue', 'emerald', 'violet', 'amber', 'rose', 'cyan'] %}
+            {% for cat in categorias %}
+            {% set theme = themes[loop.index0 % themes|length] if themes|length > 0 else 'blue' %}
+            <div class="col-md-6 col-xl-4">
+                <div class="category-card category-theme-{{ theme }} h-100">
+                    <div class="p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="icon-box rounded-3 p-2">
+                                <i class="bi bi-journal-bookmark fs-4"></i>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-link text-muted p-0" data-bs-toggle="dropdown"><i class="bi bi-three-dots-vertical"></i></button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="{{ url_for('flashcards.gerenciar_categoria', id_categoria=cat.id_categoria) }}">Gerenciar Cards</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger" href="javascript:void(0)" onclick="excluirCategoria('{{ cat.id_categoria }}')">Excluir Categoria</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <h5 class="fw-bold text-dark-emphasis mb-1">{{ cat.nome_categoria }}</h5>
+                        <p class="text-muted small mb-4">
+                            {% if cat.id_materia %}
+                                {% if cat.nome_categoria != cat.materias.nome_materia %}
+                                    <span class="badge bg-secondary-subtle text-secondary border">{{ cat.materias.nome_materia }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-light text-muted border">Personalizada</span>
+                            {% endif %}
+                        </p>
+                        
+                        <div class="d-grid">
+                            <a href="{{ url_for('flashcards.estudar', id_categoria=cat.id_categoria) }}" class="btn btn-outline-primary rounded-3">
+                                Estudar Esta Categoria
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal Nova Categoria -->
+<div class="modal fade" id="modalNovaCategoria" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Nova Categoria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted">Nome da Categoria</label>
+                    <input type="text" id="nome-categoria" class="form-control form-control-lg rounded-3" placeholder="Ex: Direito Administrativo">
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary rounded-3 px-4" onclick="criarCategoria()">Criar Categoria</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function criarCategoria() {
+    const nome = document.getElementById('nome-categoria').value;
+    if(!nome) return alert("Digite um nome!");
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    fetch('/api/flashcards/categoria/nova', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ nome: nome })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success) {
+            location.reload();
+        } else {
+            alert("Erro ao criar categoria: " + data.error);
+        }
+    });
+}
+
+function excluirCategoria(id) {
+    confirmarAcao({
+        title: 'Excluir Categoria?',
+        text: "Isso apagará permanentemente todos os flashcards desta categoria!",
+        tipo: 'danger',
+        confirmButtonText: 'Sim, apagar tudo'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/api/flashcards/categoria/excluir/${id}`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || '' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    Swal.fire({
+                        title: 'Apagado!',
+                        text: 'Categoria removida com sucesso.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    alert("Erro ao excluir: " + data.error);
+                }
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

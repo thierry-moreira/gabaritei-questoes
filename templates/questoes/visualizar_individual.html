@@ -1,0 +1,143 @@
+{% extends 'base_aluno.html' %}
+{% import 'components/card_questao.html' as cq with context %}
+
+{% block title %}Questão{% if q.nome_topico %} sobre {{ q.nome_topico }}{% endif %} - {{ q.nome_materia }} | Gabaritei{% endblock %}
+
+{% block meta %}
+<meta name="description"
+    content="Resolva esta questão de {{ q.nome_materia }}{% if q.nome_topico %} focada em {{ q.nome_topico }}{% endif %}. Acesse o gabarito, veja os comentários e organize seus estudos para concursos na Plataforma Gabaritei.">
+<meta property="og:title" content="Questão{% if q.nome_topico %} sobre {{ q.nome_topico }}{% endif %} - {{ q.nome_materia }} | Gabaritei">
+<meta property="og:description" content="Resolva esta questão de {{ q.nome_materia }}{% if q.nome_topico %} focada em {{ q.nome_topico }}{% endif %}. Acesse o gabarito, veja os comentários e organize seus estudos para concursos na Plataforma Gabaritei.">
+<link rel="canonical"
+    href="{{ url_for('questao.visualizar_questao_seo', materia_slug=q.nome_materia|slugify, topico_slug=(q.nome_topico|slugify if q.nome_topico else 'assunto'), id_questao=q.id_questao, _external=True) }}">
+
+<!-- JSON-LD: QAPage Schema Markup para o Google -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "QAPage",
+  "mainEntity": {
+    "@type": "Question",
+    "name": {{ (q.enunciado | striptags | trim)[:120] | tojson }},
+    "text": {{ q.enunciado | striptags | tojson }},
+    "answerCount": {{ q.alternativas_questao | length }},
+    {% set correct_ans = namespace(found=False, text='') %}
+    {% for alt in q.alternativas_questao %}
+        {% if alt.is_correct %}
+            {% set correct_ans.found = True %}
+            {% set correct_ans.text = alt.letra ~ ') ' ~ (alt.texto or alt.texto_alternativa) %}
+        {% endif %}
+    {% endfor %}
+    {% if correct_ans.found %}
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": {{ correct_ans.text | striptags | tojson }},
+      "url": "{{ url_for('questao.visualizar_questao_seo', materia_slug=q.nome_materia|slugify, topico_slug=(q.nome_topico|slugify if q.nome_topico else 'assunto'), id_questao=q.id_questao, _external=True) }}#resposta"
+    },
+    {% endif %}
+    "suggestedAnswer": [
+      {% for alt in q.alternativas_questao if not alt.is_correct %}
+      {
+        "@type": "Answer",
+        "text": {{ (alt.letra ~ ') ' ~ (alt.texto or alt.texto_alternativa)) | striptags | tojson }}
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
+  }
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/aluno_questoes.css') }}" media="print" onload="this.media='all'">
+{% endblock %}
+
+{% block content %}
+
+{% if not current_user.is_authenticated %}
+<script>
+    // Força o modo claro para visitantes não autenticados (SEO/Página Pública)
+    document.documentElement.setAttribute('data-bs-theme', 'light');
+    const emergencyStyle = document.getElementById('theme-emergency-style');
+    if (emergencyStyle) {
+        emergencyStyle.innerHTML = `
+            html, body { background-color: #f8f9fa !important; color: #212529 !important; }
+            .main-wrapper { background-color: #f8f9fa !important; }
+        `;
+    }
+</script>
+
+<!-- Header Público Simples com Logo -->
+<div class="row justify-content-center mb-2">
+    <div class="col-lg-10 text-center">
+        <a href="/">
+            <img src="{{ url_for('static', filename='logo.webp') }}" alt="Gabaritei" style="height: 45px; width: auto;" class="mb-3" width="111" height="45">
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-10">
+
+        <!-- Breadcrumbs (Hierarquia Clara para SEO) -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb bg-body-tertiary p-3 rounded-4 shadow-sm border">
+                <li class="breadcrumb-item"><a href="/aluno/painel" class="text-decoration-none text-primary-emphasis"><i
+                            class="bi bi-house-door me-1"></i>Início</a></li>
+                <li class="breadcrumb-item"><a href="/aluno/questoes" class="text-decoration-none text-primary-emphasis">Questões</a></li>
+                <li class="breadcrumb-item"><a href="/aluno/questoes?id_materia={{ q.id_materia }}"
+                        class="text-decoration-none text-primary-emphasis">{{ q.nome_materia }}</a></li>
+                {% if q.nome_topico %}
+                <li class="breadcrumb-item active text-truncate" aria-current="page" style="max-width: 300px;">{{
+                    q.nome_topico }}</li>
+                {% endif %}
+            </ol>
+        </nav>
+
+        <!-- Card da Questão -->
+        <div class="position-relative">
+            {{ cq.render_questao(q, is_premium, ids_acertos, ids_erros, limit_reached=limit_reached) }}
+
+            {% if limit_reached %}
+            {# OVERLAY DE BLOQUEIO (PAYWALL SEO) #}
+            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded-4"
+                style="background: rgba(255,255,255,0.7); backdrop-filter: blur(8px); z-index: 100;">
+                <div class="text-center p-5 bg-white shadow-lg rounded-4 border mx-3" style="max-width: 500px;">
+                    <div class="mb-4">
+                        <i class="bi bi-shield-lock-fill text-primary" style="font-size: 4rem;"></i>
+                    </div>
+                    <h2 class="fw-bold mb-3">Limite Diário Atingido!</h2>
+                    <p class="text-muted mb-4">
+                        Você já visualizou 5 questões hoje. Para continuar estudando e ter acesso a milhares de questões
+                        comentadas, crie sua conta gratuita agora mesmo!
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a href="/aluno/cadastro" class="btn btn-primary btn-lg fw-bold rounded-pill py-3">
+                            Criar Minha Conta Grátis
+                        </a>
+                        <a href="/aluno/login" class="btn btn-outline-secondary btn-lg rounded-pill py-2">
+                            Já tenho uma conta (Login)
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Call to action para mais questões -->
+        <div class="text-center mt-5 mb-4">
+            <a href="/aluno/questoes?id_materia={{ q.id_materia }}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                <i class="bi bi-search me-2"></i>Ver mais questões de {{ q.nome_materia }}
+            </a>
+        </div>
+
+    </div>
+</div>
+
+{% include 'components/modais_questao.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/questoes_common.js') }}" defer></script>
+{% endblock %}

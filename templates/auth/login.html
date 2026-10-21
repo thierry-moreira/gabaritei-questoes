@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Usuário | Gabaritei Questões</title>
+    
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Custom Premium CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth_premium.css') }}?v=3.0">
+</head>
+<body>
+    <div class="login-screen">
+        <div class="bg-decor">
+            <div class="blob-1"></div>
+            <div class="blob-2"></div>
+        </div>
+
+        <header class="custom-nav d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary bg-opacity-10 p-2 rounded-3 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                    <span class="material-symbols-outlined text-primary" style="font-size: 24px;">school</span>
+                </div>
+                <span class="h4 mb-0 fw-bold tracking-tight text-dark">Gabaritei Questões</span>
+            </div>
+            
+            <a href="/" class="btn btn-light rounded-pill px-4 fw-bold text-secondary d-flex align-items-center gap-2 border" style="font-size: 0.85rem; transition: all 0.2s ease;">
+                <span class="material-symbols-outlined" style="font-size: 18px;">arrow_back</span>
+                Voltar para o site
+            </a>
+        </header>
+
+        <main class="container flex-grow-1 d-flex align-items-center justify-content-center py-5">
+            <div class="row w-100 align-items-center justify-content-center">
+                
+                <!-- Branding -->
+                <div class="col-lg-6 d-none d-lg-block pe-lg-5">
+                    <div class="badge-premium">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">stars</span>
+                        Estudo de Alto Nível
+                    </div>
+                    <h1 class="branding-title">Gabarite suas<br><span class="gradient-text">Provas</span></h1>
+                    <p class="fs-5 text-secondary mb-5" style="max-width: 440px;">
+                        Acesse milhares de questões comentadas, simulados personalizados e acompanhe sua evolução em tempo real com nossa inteligência artificial.
+                    </p>
+                    <div class="d-flex gap-4">
+                        <div class="d-flex align-items-center gap-2 text-secondary">
+                            <span class="material-symbols-outlined text-primary">check_circle</span>
+                            <span class="small fw-bold">Questões Atualizadas</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 text-secondary">
+                            <span class="material-symbols-outlined text-primary">check_circle</span>
+                            <span class="small fw-bold">IA Integrada</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Criar Usuário Card -->
+                <div class="col-12 col-md-8 col-lg-5 d-flex justify-content-center">
+                    <div class="glass-card">
+                        <div class="mb-5">
+                            <span class="material-symbols-outlined text-primary d-block mb-2" style="font-size: 44px;">person_add</span>
+                            <h2 class="fw-bold mb-2" style="font-size: 1.6rem;">Criar seu usuário</h2>
+                            <p class="text-secondary mb-0">Aplicação local, sem senha: você entra direto da próxima vez.</p>
+                        </div>
+
+                          {% with messages = get_flashed_messages(with_categories=true) %}
+                          {% if messages %}
+                            {% for category, message in messages %}
+                              <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show mb-4 rounded-3" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                              </div>
+                            {% endfor %}
+                          {% endif %}
+                        {% endwith %}
+
+                        <form method="POST" action="{{ url_for('auth.criar_usuario') }}" class="d-flex flex-column gap-4">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            
+                            <div>
+                                <label class="form-label-premium" for="username">Como quer ser chamado?</label>
+                                <div class="input-wrapper">
+                                    <span class="material-symbols-outlined input-icon">badge</span>
+                                    <input type="text" name="username" id="username" class="form-control-premium" 
+                                        placeholder="Seu nome ou apelido" required autofocus maxlength="60">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="form-label-premium" for="email">E-mail (opcional)</label>
+                                <div class="input-wrapper">
+                                    <span class="material-symbols-outlined input-icon">mail</span>
+                                    <input type="email" name="email" id="email" class="form-control-premium" 
+                                        placeholder="seu@email.com (opcional)">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-premium">
+                                CRIAR USUÁRIO
+                                <span class="material-symbols-outlined">arrow_forward</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <footer class="mt-auto py-5 px-5" style="border-top: 1px solid rgba(0,0,0,0.05);">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 small">
+                <div class="text-secondary">
+                    <span class="fw-bold text-dark">Gabaritei Questões</span>
+                    <span class="ms-1">© 2026. Software livre.</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

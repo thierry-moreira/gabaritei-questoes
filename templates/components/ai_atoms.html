@@ -1,0 +1,17 @@
+{# Macro para renderizar o container de explicação da IA (Premium) #}
+{% macro render_ai_container(id_questao) %}
+<div id="container-ia-{{ id_questao }}" class="w-100 d-none mt-3 animate__animated animate__fadeIn">
+    <div class="ia-card-premium"> 
+        <div class="ia-card-header-premium d-flex justify-content-between align-items-center">
+            <h6 class="modal-title fw-bold mb-0" style="font-size: 0.9rem;">
+                <i class="bi bi-stars"></i> EXPLICAÇÃO PASSO A PASSO
+            </h6>
+            <button type="button" class="btn-close btn-close-white" 
+                    onclick="document.getElementById('container-ia-{{ id_questao }}').classList.add('d-none')"></button>
+        </div>
+        <div class="ia-card-body-premium">
+            <div class="resposta-texto markdown-render"></div>
+        </div>
+    </div>
+</div>
+{% endmacro %}

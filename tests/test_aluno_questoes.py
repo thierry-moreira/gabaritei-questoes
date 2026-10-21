@@ -1,0 +1,304 @@
+import os
+import sys
+import unittest
+from datetime import datetime, timedelta
+from unittest.mock import patch, MagicMock
+
+# Adiciona o diretório raiz ao sys.path para garantir que as importações funcionem corretamente
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# Configura o ambiente de testes
+os.environ['FLASK_ENV'] = 'development'
+os.environ['FLASK_SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'teste-chave-secreta-provisoria')
+
+# Importa a aplicação Flask oficial
+from app import app
+
+class TestAlunoQuestaoFlask(unittest.TestCase):
+    
+    def setUp(self):
+        """Inicializa o cliente de testes do Flask antes de cada teste."""
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+        self.client = app.test_client()
+
+    # -------------------------------------------------------------------------
+    # Testes de Painel e Dashboards (GET)
+    # -------------------------------------------------------------------------
+    
+    @patch('utils.current_user')
+    @patch('rotas.aluno.current_user')
+    @patch('rotas.aluno.safe_execute')
+    @patch('rotas.aluno.supabase')
+    def test_painel_aluno_sucesso(self, mock_supabase, mock_safe_execute, mock_aluno_current_user, mock_utils_current_user):
+        """Valida que o painel do aluno calcula acertos, erros e streak de forma mockada com sucesso."""
+        for mock_user in [mock_aluno_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+        
+        # Configura as respostas consecutivas do safe_execute:
+        # 1. Total resolvidas (Count)
+        mock_res_total = MagicMock()
+        mock_res_total.count = 10
+        
+        # 2. Total acertos (Count)
+        mock_res_acertos = MagicMock()
+        mock_res_acertos.count = 7
+        
+        # 3. Histórico de respostas (Data) - Simula streak de 2 dias
+        mock_res_historico = MagicMock()
+        hoje_br = (datetime.now() - timedelta(hours=3))
+        ontem_br = hoje_br - timedelta(days=1)
+        
+        mock_res_historico.data = [
+            {'criado_em': hoje_br.strftime('%Y-%m-%dT12:00:00Z'), 'is_correct': True},
+            {'criado_em': ontem_br.strftime('%Y-%m-%dT10:00:00Z'), 'is_correct': False}
+        ]
+        
+        # Retorna na ordem das queries realizadas no endpoint:
+        mock_safe_execute.side_effect = [mock_res_total, mock_res_acertos, mock_res_historico]
+        
+        response = self.client.get('/aluno/painel')
+        self.assertEqual(response.status_code, 200)
+        # Deve renderizar o painel e calcular a taxa de acertos (7 de 10 = 70%) e streak (2 dias)
+        self.assertIn(b'70%', response.data)
+        self.assertIn(b'2', response.data)
+        self.assertIn(b'dias de estudo constante', response.data.lower())
+        
+        # Garante que o pedagógio invisible de expiração premium rodou
+
+    @patch('utils.current_user')
+    @patch('rotas.aluno.current_user')
+    @patch('rotas.aluno.safe_execute')
+    @patch('rotas.aluno.supabase')
+    def test_dashboard_detalhado_sucesso(self, mock_supabase, mock_safe_execute, mock_aluno_current_user, mock_utils_current_user):
+        """Valida o processamento do dashboard detalhado por matéria, tópicos e curvas de esquecimento."""
+        for mock_user in [mock_aluno_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+            mock_user.meta_diaria = 10
+
+        # Mocks consecutivos para o dashboard detalhado:
+        # 1. Histórico de respostas (5 resolvidas de Direito Constitucional, id_questao=1)
+        mock_res_hist = MagicMock()
+        criado_antigo = datetime.utcnow() - timedelta(days=5) # 5 dias atrás (REVISAR)
+        mock_res_hist.data = [
+            {'id_questao': 1, 'is_correct': True, 'criado_em': criado_antigo.strftime('%Y-%m-%dT12:00:00Z')},
+            {'id_questao': 1, 'is_correct': True, 'criado_em': criado_antigo.strftime('%Y-%m-%dT13:00:00Z')},
+            {'id_questao': 1, 'is_correct': True, 'criado_em': criado_antigo.strftime('%Y-%m-%dT14:00:00Z')},
+            {'id_questao': 1, 'is_correct': True, 'criado_em': criado_antigo.strftime('%Y-%m-%dT15:00:00Z')},
+            {'id_questao': 1, 'is_correct': False, 'criado_em': criado_antigo.strftime('%Y-%m-%dT16:00:00Z')}
+        ]
+
+        # 2. View completa das questões (Metadados da questão 1)
+        mock_res_meta = MagicMock()
+        mock_res_meta.data = [{
+            'id_questao': 1,
+            'id_materia': 10,
+            'nome_materia': 'Direito Constitucional',
+            'id_topico': 100,
+            'nome_topico': 'Direitos Fundamentais'
+        }]
+
+        mock_safe_execute.side_effect = [mock_res_hist, mock_res_meta]
+
+        response = self.client.get('/aluno/dashboard_detalhado')
+        self.assertEqual(response.status_code, 200)
+        
+        # Deve identificar taxa de acerto (4 de 5 = 80%), classificar como Melhor Matéria (mínimo 5 resolvidas)
+        # E disparar alerta de "REVISAR" para o atraso de 5 dias
+        self.assertIn(b'Direito Constitucional', response.data)
+        self.assertIn(b'revisar', response.data.lower())
+        self.assertIn(b'80%', response.data)
+
+    @patch('utils.current_user')
+    @patch('rotas.aluno.current_user')
+    @patch('rotas.aluno.safe_execute')
+    @patch('rotas.aluno.supabase')
+    def test_dashboard_detalhado_vazio(self, mock_supabase, mock_safe_execute, mock_aluno_current_user, mock_utils_current_user):
+        """Garante que alunos sem histórico sejam redirecionados para o painel principal com flash informando."""
+        for mock_user in [mock_aluno_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        # Histórico de respostas vazio
+        mock_res_hist = MagicMock()
+        mock_res_hist.data = []
+        mock_safe_execute.return_value = mock_res_hist
+
+        response = self.client.get('/aluno/dashboard_detalhado')
+        # Deve redirecionar para a área do aluno
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/aluno/painel', response.headers['Location'])
+
+        # Verifica o flash message
+        with self.client.session_transaction() as sess:
+            flashes = sess.get('_flashes', [])
+            self.assertTrue(any("Resolva algumas questões primeiro" in msg[1] for msg in flashes))
+
+
+    # -------------------------------------------------------------------------
+    # Testes de Resolução e Paywall (POST)
+    # -------------------------------------------------------------------------
+
+    @patch('utils.current_user')
+    @patch('rotas.questao.current_user')
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    def test_responder_questao_aluno_sucesso(self, mock_supabase, mock_safe_execute, mock_questao_current_user, mock_utils_current_user):
+        """Valida que a rota POST de resposta processa a alternativa correta e insere histórico."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+        
+        # Mocks consecutivos do safe_execute:
+        # 1. Alternativas da questão (ID 50)
+        mock_res_alt = MagicMock()
+        mock_res_alt.data = [
+            {'id_alternativa': 101, 'letra': 'A', 'is_correct': True},
+            {'id_alternativa': 102, 'letra': 'B', 'is_correct': False}
+        ]
+        
+        # 2. Comentário do gabarito da questão
+        mock_res_coment = MagicMock()
+        mock_res_coment.data = {'comentario_gabarito': 'Excelente comentário explicativo.'}
+
+        # 3. Inserção do histórico
+        mock_res_insert = MagicMock()
+
+        mock_safe_execute.side_effect = [
+            mock_res_alt,
+            mock_res_coment,
+            mock_res_insert
+        ]
+
+        # Submete alternativa A (que é a correta)
+        response = self.client.post('/aluno/responder', json={
+            'questao_id': 50,
+            'alternativa': 'A'
+        })
+
+        self.assertEqual(response.status_code, 200)
+        
+        dados = response.get_json()
+        self.assertTrue(dados.get('sucesso'))
+        self.assertTrue(dados.get('correta'))
+        self.assertEqual(dados.get('letra_correta'), 'A')
+        self.assertEqual(dados.get('comentario'), 'Excelente comentário explicativo.')
+
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    def test_responder_publico_visitante_sucesso(self, mock_supabase, mock_safe_execute):
+        """Valida que o visitante anônimo consegue responder uma questão normal (abaixo do limite de 5)."""
+        # Mocks para alternativas da questão
+        mock_res_alt = MagicMock()
+        mock_res_alt.data = [
+            {'id_alternativa': 201, 'letra': 'A', 'is_correct': False},
+            {'id_alternativa': 202, 'letra': 'B', 'is_correct': True}
+        ]
+        # Inserção no histórico anônimo
+        mock_res_insert = MagicMock()
+
+        mock_safe_execute.side_effect = [mock_res_alt, mock_res_insert]
+
+        response = self.client.post('/api/responder_publico', json={
+            'questao_id': 70,
+            'alternativa': 'B'
+        })
+        self.assertEqual(response.status_code, 200)
+        
+        dados = response.get_json()
+        self.assertTrue(dados.get('sucesso'))
+        self.assertTrue(dados.get('correta'))
+        self.assertEqual(dados.get('letra_correta'), 'B')
+
+        # Garante que a questão foi guardada na sessão para rastreamento do limite
+        with self.client.session_transaction() as sess:
+            self.assertIn(70, sess.get('anon_questoes', []))
+
+    @patch('utils.verificar_bot_real')
+    def test_responder_publico_visitante_paywall_bloqueado(self, mock_verificar_bot):
+        """Garante que o paywall bloqueia visitantes anônimos (status 403) ao tentar responder mais de 5 questões únicas."""
+        mock_verificar_bot.return_value = False # Simula que não é um crawler do Google/Bing
+
+        # Injeta 5 questões resolvidas na sessão anônima do Flask
+        with self.client.session_transaction() as sess:
+            sess['anon_questoes'] = [10, 20, 30, 40, 50]
+
+        # Tenta responder a 6ª questão
+        response = self.client.post('/api/responder_publico', json={
+            'questao_id': 60,
+            'alternativa': 'A'
+        })
+        
+        # Deve responder com status 403 (Proibido) acionando paywall
+        self.assertEqual(response.status_code, 403)
+        dados = response.get_json()
+        self.assertFalse(dados.get('success'))
+        self.assertIn('Você atingiu o limite de 5 questões gratuitas', dados.get('error'))
+
+
+    # -------------------------------------------------------------------------
+    # Testes de Moderação de Comentários (POST)
+    # -------------------------------------------------------------------------
+
+    @patch('utils.current_user')
+    @patch('rotas.questao.current_user')
+    @patch('utils.verificar_texto_improprio')
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    def test_salvar_comentario_sucesso(self, mock_supabase, mock_safe_execute, mock_moderacao, mock_questao_current_user, mock_utils_current_user):
+        """Garante que comentários com linguajar aceitável sejam postados com sucesso."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        # Moderação aprova o texto
+        mock_moderacao.return_value = (True, None)
+
+        # 1. Busca username
+        mock_res_user = MagicMock()
+        mock_res_user.data = {'username': 'concurseiro_estudioso'}
+        # 2. Inserção do comentário
+        mock_res_insert = MagicMock()
+
+        mock_safe_execute.side_effect = [mock_res_user, mock_res_insert]
+
+        response = self.client.post('/api/comentarios', json={
+            'id_questao': 50,
+            'texto': 'Comentário muito produtivo e bem explicado!'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json().get('success'))
+
+    @patch('utils.current_user')
+    @patch('rotas.questao.current_user')
+    @patch('utils.verificar_texto_improprio')
+    def test_salvar_comentario_bloqueado_moderacao(self, mock_moderacao, mock_questao_current_user, mock_utils_current_user):
+        """Garante que comentários contendo termos banidos sejam bloqueados com status 400."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        # Moderação reprova o texto
+        mock_moderacao.return_value = (False, 'Linguajar inadequado detectado.')
+
+        response = self.client.post('/api/comentarios', json={
+            'id_questao': 50,
+            'texto': 'PalavraFeia!'
+        })
+        # Deve barrar com status 400 (Bad Request)
+        self.assertEqual(response.status_code, 400)
+        
+        dados = response.get_json()
+        self.assertFalse(dados.get('success'))
+        self.assertEqual(dados.get('error'), 'Linguajar inadequado detectado.')
+
+if __name__ == '__main__':
+    unittest.main()
