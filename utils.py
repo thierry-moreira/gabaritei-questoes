@@ -176,22 +176,3 @@ def slugify(text):
     text = re.sub(r'[^a-z0-9]+', '-', text).strip('-')
     return text
 
-def registrar_log_admin(id_admin, username_admin, tabela, acao, registro_id=None, detalhes=None):
-    """Auditoria do painel administrativo: registra em logs_admin QUEM fez a
-    alteração (id + username), em QUAL tabela, o TIPO (INSERT/UPDATE/DELETE),
-    o registro afetado e QUANDO (data + hora com timezone, via DEFAULT NOW()).
-    Falha silenciosa: a auditoria nunca pode derrubar a operação principal."""
-    try:
-        from banco_dados import supabase
-        safe_execute(supabase.table("logs_admin").insert({
-            "id_admin": id_admin,
-            "username_admin": username_admin or "desconhecido",
-            "tabela": tabela,
-            "acao": acao,
-            "registro_id": registro_id,
-            "detalhes": detalhes or {}
-        }))
-    except Exception as e:
-        logging.getLogger(__name__).warning(
-            f"Falha ao registrar log de auditoria ({tabela}/{acao}): {e}"
-        )
