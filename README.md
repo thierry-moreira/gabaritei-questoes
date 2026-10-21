@@ -2,7 +2,7 @@
 
 Plataforma de estudo para concursos (questões, simulados, flashcards, resumos, cadernos e editais) em modelo **desktop local**. Software livre (licença MIT).
 
-- **Sem senha, sem conta online**: o login do aluno é automático na primeira execução — o "cadastro" local pede apenas um nome de usuário.
+- **Conta real com e-mail e senha** (Supabase Auth): o progresso fica na nuvem, vinculado à conta — o mesmo aluno continua de onde parou em qualquer máquina.
 - **100% offline-first no front**: backend Flask local + janela Electron.
 
 ## Arquitetura
@@ -15,7 +15,7 @@ Plataforma de estudo para concursos (questões, simulados, flashcards, resumos, 
 
 **Modelo de segurança do cliente** (`docs/banco_dados.md`):
 - Leitura de dados de estudo: liberada (questões, taxonomia, materiais — nada sensível).
-- Escrita dos dados do aluno: exige o header `x-app-token` (migration `rls_header_app_aluno`) — token que vive apenas no shell (`desktop/token.local.js`, gitignored) e no `.env` de dev.
+- Escrita dos dados do aluno: exige o header `x-app-token` (migration `rls_header_app_aluno`) **e** a identidade do dono — `auth.uid()` amarrado a `usuarios.auth_id` (migrations `auth_usuario_e_policies` + `policies_para_authenticated`): mesmo que o token vaze, ninguém escreve dados de outro aluno.
 - A chave `service_role` **nunca** faz parte deste app — gestão de conteúdo fica num painel separado.
 
 ## Setup (dev)

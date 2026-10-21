@@ -53,14 +53,16 @@ Valida as proteções preventivas contra acessos automatizados indevidos.
 
 ### 4. Autenticação e Sessões (`test_auth.py`)
 Valida o fluxo completo de controle de acesso do aluno à plataforma.
-- **Fluxos testados (modelo desktop, sem senha):**
-  - Entrada automática: com usuário local existente, `/aluno/login` (GET) faz login e redireciona ao `/aluno/painel`; sem usuário, renderiza a tela de criação.
-  - Criação do usuário local via `POST /aluno/criar` (sucesso, username vazio bloqueado com flash, conta existente entra direto sem duplicar).
-  - Rotas removidas na migração desktop (cadastro, recuperação de senha, verificação de e-mail) respondendo 404; `POST /aluno/login` responde 405.
-  - Fluxo de encerramento de sessão (`/logout`) limpando dados do aluno e preservando sessões administrativas protegidas.
+- **Fluxos testados (login real com e-mail + senha, Supabase Auth):**
+  - Tela de login (`/aluno/login`): sem sessão salva renderiza a tela com e-mail/senha; com refresh token salvo restaura a sessão e redireciona ao `/aluno/painel`; refresh expirado/revogado limpa o token e mostra o login normal.
+  - `POST /aluno/entrar` (credenciais corretas entram e redirecionam; e-mail/senha vazios e credenciais inválidas retornam flash de erro).
+  - `POST /aluno/criar` (cadastro completo cria conta Auth + perfil e entra; senha curta bloqueada antes do Auth; "Confirm email" ligado pede confirmação; e-mail já cadastrado orienta login/recuperação).
+  - `POST /aluno/esqueci` (dispara o reset de senha com e-mail normalizado; e-mail vazio bloqueado).
+  - `/logout` limpa a sessão do aluno (incluindo o refresh token) e preserva sessões administrativas protegidas.
 - **Mocks importantes:**
-  - `@patch('rotas.auth.current_user')` para injetar o estado do usuário logado/anônimo do Flask-Login.
-  - `@patch('rotas.auth.safe_execute')` para simular o retorno de registros de usuários no banco de dados.
+  - `@patch('rotas.auth.entrar_com_senha')` / `@patch('rotas.auth.criar_conta_auth')` / `@patch('rotas.auth.pedir_reset_senha')` para simular o Supabase Auth (login, cadastro e reset).
+  - `@patch('rotas.auth.sessao_atual')` / `@patch('rotas.auth.restaurar_sessao')` para os fluxos de sessão lembrada entre execuções.
+  - `@patch('rotas.auth._linha_do_usuario_auth')` / `@patch('rotas.auth._criar_perfil')` / `@patch('rotas.auth._entrar_flask')` para o vínculo Auth↔perfil do aluno.
 
 ### 5. Ecossistema do Aluno e Questões (`test_aluno_questoes.py`) [Fase 4 - Consolidada]
 Valida os dashboards de estatísticas do aluno, a lógica de resolução de questões com streaks e a barreira técnica de paywall para visitantes.
@@ -99,7 +101,7 @@ Valida a lógica dos fluxos acionados por Inteligência Artificial na plataforma
 ### 7. Painel da Conta do Usuário (`test_conta.py`)
 Valida as rotas de atualização de informações cadastrais do aluno, redefinição de dados de estudo e exclusão permanente de conta.
 - **Fluxos testados:**
-  - `/aluno/conta/` (GET para exibição da tela e POST para atualização de username e e-mail, sem senha).
+  - `/aluno/conta/` (GET para exibição da tela e POST para atualização de username e e-mail).
   - `/aluno/conta/resetar-dados` (validação de frase secreta "RESETAR MEUS DADOS" e exclusão em massa das tabelas do Supabase de progresso do aluno).
   - `/aluno/conta/excluir` (validação de frase secreta "EXCLUIR MINHA CONTA", exclusão física de registros e logout da sessão).
 - **Mocks importantes:**

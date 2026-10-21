@@ -11,7 +11,7 @@ O módulo de gestão de conta (`rotas/conta.py`) é responsável por orquestrar 
 Permite ao aluno alterar seu nome de usuário e e-mail de contato (no modelo desktop o aluno não possui senha).
 *   **Métodos HTTP**: `GET` e `POST` (configurada com `strict_slashes=False` para flexibilidade de roteamento).
 *   **Segurança**: Acesso restrito a alunos autenticados através do decorator `@aluno_required`.
-*   **Fluxo simplificado (desktop)**: o formulário submete `username` e `email` diretamente — sem senha de confirmação, pois o aluno local é o único usuário da instalação.
+*   **Fluxo simplificado**: o formulário submete `username` e `email` diretamente — sem senha de confirmação (a identidade já é garantida pelo login do Auth com e-mail + senha).
 *   **Persistência**: Grava as alterações na tabela `usuarios` baseando-se no ID do aluno logado.
 
 ---

@@ -67,6 +67,11 @@ def resetar_dados_conta():
 
         safe_execute(supabase.table("editais_ciclo").delete().eq("id_usuario", user_id))
 
+        # Progresso de editais (tabelas com dono — migration auth_usuario_e_policies)
+        safe_execute(supabase.table("editais_materias").delete().eq("id_usuario", user_id))
+        safe_execute(supabase.table("editais_topicos").delete().eq("id_usuario", user_id))
+        safe_execute(supabase.table("editais_progresso").delete().eq("id_usuario", user_id))
+
         safe_execute(supabase.table("comentarios_questao").delete().eq("id_usuario", user_id))
 
         flash("✅ Todos os seus dados de estudo foram redefinidos com sucesso! Sua conta está zerada.", "success")

@@ -8,8 +8,9 @@
 // - A SUPABASE_ANON_KEY aqui embutida é PÚBLICA por design (protegida por
 //   RLS na migration rls_policies_aluno). A service_role NUNCA entra no
 //   bundle — o app do aluno importa apenas banco_dados_aluno.py.
-// - FLASK_SECRET_KEY é gerada aleatória a cada boot (sessões não persistem
-//   entre execuções; o login do aluno é automático, impacto zero).
+// - FLASK_SECRET_KEY é persistente em app.getPath('userData')/secret.key:
+//   a sessão (login lembrado, refresh token do Auth) sobrevive entre
+//   execuções do app — antes era aleatória a cada boot e a sessão morria.
 // - O backend escuta apenas 127.0.0.1 (host do app.py).
 // ============================================================
 
@@ -18,6 +19,7 @@ const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
 const crypto = require('crypto');
+const fs = require('fs');
 
 // --- Configuração (anon key pública, protegida por RLS) ---
 const SUPABASE_URL = 'https://ivhuaevrrkrnagbqmnwc.supabase.co';
@@ -42,6 +44,20 @@ const ehDev = !app.isPackaged;
 let backend = null;
 let janela = null;
 
+// Sessões que sobrevivem ao fechar/abrir: a secret key é gerada 1x e fica em
+// app.getPath('userData')/secret.key — o login do Auth é lembrado entre boots.
+function secretKeyPersistente() {
+  const p = path.join(app.getPath('userData'), 'secret.key');
+  try {
+    return fs.readFileSync(p, 'utf8').trim();
+  } catch (e) {
+    const k = crypto.randomBytes(32).toString('hex');
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    fs.writeFileSync(p, k);
+    return k;
+  }
+}
+
 function configBackend() {
   if (ehDev) {
     return {
@@ -64,7 +80,7 @@ function iniciarBackend() {
       ...process.env,
       SUPABASE_URL,
       SUPABASE_ANON_KEY,
-      FLASK_SECRET_KEY: crypto.randomBytes(32).toString('hex'),
+      FLASK_SECRET_KEY: secretKeyPersistente(),
       FLASK_DEBUG: 'false',
       APP_TOKEN,
     },

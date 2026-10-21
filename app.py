@@ -181,6 +181,23 @@ talisman = Talisman(
     }
 )
 
+# --- Auth com senha (Supabase Auth): mantém o client autenticado -------------
+# O client global perde a sessão a cada boot do processo; o refresh token vive
+# na sessão Flask (cookie persistente). Aqui o reaplicamos no primeiro request
+# de quem já está logado no Flask-Login.
+from banco_dados_aluno import sessao_atual as _sessao_auth_atual, restaurar_sessao as _restaurar_sessao_auth
+
+@app.before_request
+def _garantir_sessao_auth():
+    if current_user.is_authenticated:
+        try:
+            if _sessao_auth_atual() is None:
+                rt = session.get('auth_refresh_token')
+                if rt:
+                    _restaurar_sessao_auth(rt)
+        except Exception:
+            pass
+
 @app.errorhandler(429)
 def ratelimit_handler(e):
     flash("Muitas tentativas de acesso. Por segurança, aguarde 1 minuto.", "danger")

@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criar Usuário | Gabaritei Questões</title>
-    
+    <title>Entrar | Gabaritei Questões</title>
+
     <!-- Google Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Custom Premium CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth_premium.css') }}?v=3.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth_premium.css') }}?v=4.0">
 </head>
 <body>
     <div class="login-screen">
@@ -28,16 +28,11 @@
                 </div>
                 <span class="h4 mb-0 fw-bold tracking-tight text-dark">Gabaritei Questões</span>
             </div>
-            
-            <a href="/" class="btn btn-light rounded-pill px-4 fw-bold text-secondary d-flex align-items-center gap-2 border" style="font-size: 0.85rem; transition: all 0.2s ease;">
-                <span class="material-symbols-outlined" style="font-size: 18px;">arrow_back</span>
-                Voltar para o site
-            </a>
         </header>
 
         <main class="container flex-grow-1 d-flex align-items-center justify-content-center py-5">
             <div class="row w-100 align-items-center justify-content-center">
-                
+
                 <!-- Branding -->
                 <div class="col-lg-6 d-none d-lg-block pe-lg-5">
                     <div class="badge-premium">
@@ -60,52 +55,110 @@
                     </div>
                 </div>
 
-                <!-- Criar Usuário Card -->
+                <!-- Card de autenticação -->
                 <div class="col-12 col-md-8 col-lg-5 d-flex justify-content-center">
                     <div class="glass-card">
-                        <div class="mb-5">
-                            <span class="material-symbols-outlined text-primary d-block mb-2" style="font-size: 44px;">person_add</span>
-                            <h2 class="fw-bold mb-2" style="font-size: 1.6rem;">Criar seu usuário</h2>
-                            <p class="text-secondary mb-0">Aplicação local, sem senha: você entra direto da próxima vez.</p>
+                        <div class="mb-4">
+                            <span class="material-symbols-outlined text-primary d-block mb-2" style="font-size: 44px;">lock</span>
+                            <h2 class="fw-bold mb-2" style="font-size: 1.6rem;">Entrar na sua conta</h2>
+                            <p class="text-secondary mb-0">Sua conta, seu progresso — em qualquer computador.</p>
                         </div>
 
-                          {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% with messages = get_flashed_messages(with_categories=true) %}
                           {% if messages %}
                             {% for category, message in messages %}
-                              <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show mb-4 rounded-3" role="alert">
+                            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show mb-4 rounded-3" role="alert">
                                 {{ message }}
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                              </div>
+                            </div>
                             {% endfor %}
                           {% endif %}
                         {% endwith %}
 
-                        <form method="POST" action="{{ url_for('auth.criar_usuario') }}" class="d-flex flex-column gap-4">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            
-                            <div>
-                                <label class="form-label-premium" for="username">Como quer ser chamado?</label>
-                                <div class="input-wrapper">
-                                    <span class="material-symbols-outlined input-icon">badge</span>
-                                    <input type="text" name="username" id="username" class="form-control-premium" 
-                                        placeholder="Seu nome ou apelido" required autofocus maxlength="60">
+                        <!-- MODO: ENTRAR -->
+                        <div id="box-entrar" class="d-flex flex-column gap-4">
+                            <form method="POST" action="{{ url_for('auth.entrar') }}" class="d-flex flex-column gap-4">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div>
+                                    <label class="form-label-premium" for="email">E-mail</label>
+                                    <div class="input-wrapper">
+                                        <span class="material-symbols-outlined input-icon">mail</span>
+                                        <input type="email" name="email" id="email" class="form-control-premium" placeholder="seu@email.com" required autofocus>
+                                    </div>
                                 </div>
-                            </div>
-
-                            <div>
-                                <label class="form-label-premium" for="email">E-mail (opcional)</label>
-                                <div class="input-wrapper">
-                                    <span class="material-symbols-outlined input-icon">mail</span>
-                                    <input type="email" name="email" id="email" class="form-control-premium" 
-                                        placeholder="seu@email.com (opcional)">
+                                <div>
+                                    <label class="form-label-premium" for="senha">Senha</label>
+                                    <div class="input-wrapper">
+                                        <span class="material-symbols-outlined input-icon">lock</span>
+                                        <input type="password" name="senha" id="senha" class="form-control-premium" placeholder="Sua senha" required>
+                                    </div>
                                 </div>
+                                <button type="submit" class="btn btn-premium">
+                                    ENTRAR
+                                    <span class="material-symbols-outlined">arrow_forward</span>
+                                </button>
+                            </form>
+                            <div class="d-flex justify-content-between small">
+                                <a href="#" id="link-criar" class="text-decoration-none fw-bold">Criar conta</a>
+                                <a href="#" id="link-esqueci" class="text-decoration-none fw-bold">Esqueci a senha</a>
                             </div>
+                        </div>
 
-                            <button type="submit" class="btn btn-premium">
-                                CRIAR USUÁRIO
-                                <span class="material-symbols-outlined">arrow_forward</span>
-                            </button>
-                        </form>
+                        <!-- MODO: CRIAR CONTA -->
+                        <div id="box-criar" class="d-none flex-column gap-4">
+                            <form method="POST" action="{{ url_for('auth.criar_usuario') }}" class="d-flex flex-column gap-4">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div>
+                                    <label class="form-label-premium" for="username">Como quer ser chamado?</label>
+                                    <div class="input-wrapper">
+                                        <span class="material-symbols-outlined input-icon">badge</span>
+                                        <input type="text" name="username" id="username" class="form-control-premium" placeholder="Seu nome ou apelido" required maxlength="60">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="form-label-premium" for="email2">E-mail</label>
+                                    <div class="input-wrapper">
+                                        <span class="material-symbols-outlined input-icon">mail</span>
+                                        <input type="email" name="email" id="email2" class="form-control-premium" placeholder="seu@email.com" required>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="form-label-premium" for="senha2">Senha (mínimo 8 caracteres)</label>
+                                    <div class="input-wrapper">
+                                        <span class="material-symbols-outlined input-icon">lock</span>
+                                        <input type="password" name="senha" id="senha2" class="form-control-premium" placeholder="Crie uma senha forte" required minlength="8">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-premium">
+                                    CRIAR CONTA
+                                    <span class="material-symbols-outlined">person_add</span>
+                                </button>
+                            </form>
+                            <div class="small">
+                                <a href="#" id="link-voltar-login" class="text-decoration-none fw-bold">Já tenho conta — entrar</a>
+                            </div>
+                        </div>
+
+                        <!-- MODO: ESQUECI A SENHA -->
+                        <div id="box-esqueci" class="d-none flex-column gap-4">
+                            <form method="POST" action="{{ url_for('auth.esqueci_senha') }}" class="d-flex flex-column gap-4">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div>
+                                    <label class="form-label-premium" for="email3">E-mail da conta</label>
+                                    <div class="input-wrapper">
+                                        <span class="material-symbols-outlined input-icon">mark_email_read</span>
+                                        <input type="email" name="email" id="email3" class="form-control-premium" placeholder="seu@email.com" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-premium">
+                                    ENVIAR LINK DE RECUPERAÇÃO
+                                    <span class="material-symbols-outlined">send</span>
+                                </button>
+                            </form>
+                            <div class="small">
+                                <a href="#" id="link-voltar-login2" class="text-decoration-none fw-bold">Voltar para o login</a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -124,5 +177,20 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function mostrarBox(id) {
+            ['box-entrar', 'box-criar', 'box-esqueci'].forEach(function (b) {
+                var el = document.getElementById(b);
+                if (b === id) { el.classList.remove('d-none'); el.classList.add('d-flex'); }
+                else { el.classList.add('d-none'); el.classList.remove('d-flex'); }
+            });
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('link-criar').addEventListener('click', function (e) { e.preventDefault(); mostrarBox('box-criar'); });
+            document.getElementById('link-esqueci').addEventListener('click', function (e) { e.preventDefault(); mostrarBox('box-esqueci'); });
+            document.getElementById('link-voltar-login').addEventListener('click', function (e) { e.preventDefault(); mostrarBox('box-entrar'); });
+            document.getElementById('link-voltar-login2').addEventListener('click', function (e) { e.preventDefault(); mostrarBox('box-entrar'); });
+        });
+    </script>
 </body>
 </html>

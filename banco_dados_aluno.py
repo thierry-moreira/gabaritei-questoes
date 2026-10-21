@@ -32,3 +32,54 @@ opts = SyncClientOptions(
 )
 
 supabase: Client = create_client(url, anon_key, options=opts)
+
+
+# ---------------------------------------------------------------------------
+# AUTH COM SENHA (Supabase Auth) — identidade real por usuário
+# ---------------------------------------------------------------------------
+# O client é ÚNICO e a identidade muda com o login: o SDK encadeia o
+# access_token nas queries postgrest automaticamente (on_auth_state_change
+# atualiza options.headers), preservando os headers custom (x-app-token).
+# O processo Flask do app desktop atende UM usuário por vez; a identidade
+# troca no login/logout.
+#
+# RLS: as policies de escrita exigem (eh_app_aluno() AND dono via auth.uid()),
+# migration auth_usuario_e_policies. Leitura de dados de estudo continua livre.
+
+def entrar_com_senha(email: str, senha: str):
+    """Login email+senha. A partir daqui TODAS as queries saem com o JWT do
+    usuário (auth.uid() passa a identificar o dono nas policies)."""
+    return supabase.auth.sign_in_with_password({"email": email, "password": senha})
+
+
+def criar_conta_auth(email: str, senha: str):
+    """Cria a conta no Supabase Auth. Com 'Confirm email' desligado devolve
+    sessão pronta; ligado, devolve user pendente de confirmação (sem sessão)."""
+    return supabase.auth.sign_up({"email": email, "password": senha})
+
+
+def restaurar_sessao(refresh_token: str):
+    """Restaura a sessão de um boot anterior a partir do refresh token
+    (guardado na sessão Flask). Reautentica o client global."""
+    return supabase.auth.refresh_session(refresh_token)
+
+
+def definir_sessao(access_token: str, refresh_token: str):
+    """Reaplica tokens (relogin silencioso sem nova ida ao servidor Auth)."""
+    return supabase.auth.set_session(access_token, refresh_token)
+
+
+def sessao_atual():
+    """Sessão Auth corrente (None se o client está anônimo/expirado)."""
+    return supabase.auth.get_session()
+
+
+def sair_auth():
+    """Limpa a identidade do client global (volta a anônimo)."""
+    supabase.auth.sign_out()
+
+
+def pedir_reset_senha(email: str):
+    """Dispara o e-mail de recuperação do Supabase (requer SMTP configurado
+    no dashboard do projeto)."""
+    supabase.auth.reset_password_for_email(email)

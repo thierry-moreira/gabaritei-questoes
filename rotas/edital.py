@@ -330,6 +330,7 @@ def criar_edital():
             res_mat = safe_execute(supabase.table('editais_materias').insert({
                 'id_edital': id_edital,
                 'id_materia': id_mat,
+                'id_usuario': current_user.id,
                 'ordem': ordem_materia
             }))
             id_edital_materia = res_mat.data[0]['id_edital_materia']
@@ -343,7 +344,8 @@ def criar_edital():
                     continue
                 res_top = safe_execute(supabase.table('editais_topicos').insert({
                     'id_edital_materia': id_edital_materia,
-                    'id_topico': int(t_id)
+                    'id_topico': int(t_id),
+                    'id_usuario': current_user.id
                 }))
 
                 if ordem_materia == 1 and j == 0 and primeira_materia_id:
@@ -356,6 +358,7 @@ def criar_edital():
 
             safe_execute(supabase.table('editais_progresso').insert({
                 'id_edital': id_edital,
+                'id_usuario': current_user.id,
                 'materia_atual_id': primeira_materia_id,
                 'topico_atual_id': primeiro_topico_id,
                 'meta_dinamica': meta_inicial,

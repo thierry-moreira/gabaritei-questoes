@@ -34,12 +34,12 @@ O painel administrativo **não faz parte** desta aplicação. Desde o split de a
 
 ### 4. Modularização por Blueprints (11 Módulos)
 A aplicação do aluno é decomposta em 11 Blueprints independentes organizados sob a pasta `rotas/`:
-1.  **`auth`**: Entrada desktop (auto-login do usuário local, sem senha).
+1.  **`auth`**: Login real com e-mail + senha via Supabase Auth — cadastro (`/aluno/criar`), entrada (`/aluno/entrar`), recuperação de senha (`/aluno/esqueci`) e logout; a sessão é lembrada entre execuções pelo refresh token guardado na sessão Flask.
 2.  **`aluno`**: Painel principal do estudante (Dashboard) e área de estudos geral.
 3.  **`api`**: Endpoints internos para requisições assíncronas feitas pelo frontend.
 4.  **`simulado`**: Criação, resposta e cálculo de pontuações de simulados inteiros.
 5.  **`edital`**: Exibição e análise estruturada de editais de concursos abertos e previstos.
-6.  **`conta`**: Gerenciamento de perfil e preferências do usuário logado (desktop, sem senha).
+6.  **`conta`**: Gerenciamento de perfil e preferências do usuário logado (atualização, reset de dados de estudo e exclusão da conta).
 7.  **`caderno`**: Funcionalidades de cadernos de questões agrupadas sob medida pelo estudante.
 8.  **`filtro`**: Controle e aplicação de filtros complexos de disciplinas, bancas e anos.
 9.  **`questao`**: Fluxo de exibição, resposta, gabaritos comentados e discussões de questões isoladas.
@@ -52,7 +52,7 @@ A aplicação do aluno é decomposta em 11 Blueprints independentes organizados 
 ### 5. Gestão de Sessão Crítica (`load_user`)
 A função principal do `login_manager` executa validação a cada requisição:
 - **Resiliência e Retentativa**: Possui um fluxo integrado de tratamento de erros com até 3 tentativas sequenciais com pequenos delays caso ocorra uma instabilidade momentânea na conexão do Supabase.
-- **Modelo Desktop**: No fluxo desktop (sem senha para alunos) não há trava de dispositivo único — o `load_user` apenas reconstrói o objeto `User` a partir do registro do banco (a trava `session_token` permanece exclusiva do painel administrativo).
+- **Modelo Auth por usuário**: alunos autenticam com e-mail + senha (Supabase Auth); o `load_user` reconstrói o objeto `User` a partir do registro do banco e o `before_request` do app reaplica o JWT do aluno logado quando o processo reinicia (refresh token persistido na sessão Flask). A trava `session_token` permanece exclusiva do painel administrativo.
 
 ### 6. Interface Dinâmica e Injeção de Contexto (`context_processor`)
 Para evitar que rotas repitam chamadas redundantes a serviços globais, a função `inject_global_data` disponibiliza automaticamente para todos os arquivos HTML as seguintes propriedades dinâmicas:

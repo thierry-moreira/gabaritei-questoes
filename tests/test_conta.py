@@ -81,10 +81,10 @@ class TestContaBlueprint(unittest.TestCase):
         """Garante a delecao em lote dos dados de estudo com a frase correta (sem senha)."""
         mock_get_user.return_value = self._mock_aluno()
 
-        # 1 update de meta + 8 deletes
+        # 1 update de meta + 11 deletes (3 novos: progresso de editais, com dono)
         mock_res = MagicMock()
         mock_res.data = [{'id': 12345}]
-        mock_safe_execute.side_effect = [mock_res] * 9
+        mock_safe_execute.side_effect = [mock_res] * 12
 
         response = self.client.post('/aluno/conta/resetar-dados', data={
             'texto_confirmacao_reset': 'RESETAR MEUS DADOS'
