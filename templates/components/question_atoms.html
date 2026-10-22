@@ -7,9 +7,8 @@
             <i class="bi bi-chat-left-dots-fill text-primary"></i> Discussão da Comunidade
         </h6>
 
-        {# Comentário do Professor (Gabarito Comentado) - EXCLUSIVO PREMIUM #}
+        {# Comentário do Professor (Gabarito Comentado) #}
         {% if q.comentario_gabarito %}
-        {% if is_premium %}
         <div class="comment-card-premium border-primary mb-4"
             style="border-left: 5px solid var(--primary-color) !important;">
             <div class="comment-user-info">
@@ -19,20 +18,6 @@
             </div>
             <p class="comment-text italic text-muted mb-0">{{ q.comentario_gabarito | safe }}</p>
         </div>
-        {% else %}
-        <div class="comment-card-premium border-warning mb-4 bg-light"
-            style="border-left: 5px solid #ffc107 !important;">
-            <div class="d-flex align-items-center">
-                <i class="bi bi-lock-fill fs-4 me-3 text-warning"></i>
-                <div>
-                    <h6 class="mb-1 fw-bold">Comentário do Professor Bloqueado</h6>
-                    <p class="mb-0 small text-muted">Assine o plano <strong>Premium</strong> para ver a explicação
-                        técnica deste gabarito.</p>
-                </div>
-                <a href="/planos" class="btn btn-warning btn-sm ms-auto fw-bold">Ver Planos</a>
-            </div>
-        </div>
-        {% endif %}
         {% endif %}
 
         {# Container para carregamento dinâmico via JS #}

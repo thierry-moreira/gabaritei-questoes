@@ -1,5 +1,5 @@
-{% macro render_questao(q, is_premium, ids_acertos, ids_erros, context='geral', id_caderno=None, mode='estudo',
-loop_index=None, limit_reached=False) %}
+{% macro render_questao(q, ids_acertos, ids_erros, context='geral', id_caderno=None, mode='estudo',
+loop_index=None) %}
 {% import 'components/ai_atoms.html' as ai with context %}
 {% import 'components/question_atoms.html' as atoms with context %}
 <div class="card shadow-sm border-0 mb-3 rounded-2 overflow-hidden">
@@ -97,10 +97,10 @@ loop_index=None, limit_reached=False) %}
                     q.id_questao if mode == 'prova' else 'res' ), mode=mode) }}
                     {% if mode == 'estudo' %}
                     <div class="text-md-end mb-4">
-                        {% if False %}
+                        {% if not current_user.is_authenticated %}
                         <button type="button"
                             class="btn-premium py-3 py-md-2 px-md-4 shadow-sm w-100 w-md-auto d-flex d-md-inline-flex align-items-center justify-content-center"
-                            onclick="window.location.href='/aluno/cadastro'" style="font-size: 1rem;">
+                            onclick="window.location.href='/aluno/login'" style="font-size: 1rem;">
                             <i class="bi bi-person-plus me-2"></i> Cadastre-se para responder
                         </button>
                         {% else %}

@@ -73,7 +73,7 @@ Banco de Questões | Gabaritei Questões
         </div>
 
         {% for q in questoes %}
-        {{ cq.render_questao(q, is_premium, ids_acertos, ids_erros) }}
+        {{ cq.render_questao(q, ids_acertos, ids_erros) }}
         {% endfor %}
 
         {{ p.render_pagination(pagina_atual, tem_anterior, tem_proxima, 'questao.resolver_questoes',

@@ -32,7 +32,6 @@ class TestResumosBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_get_user.return_value = mock_user
 
         response = self.client.get('/aluno/resumos')
@@ -40,12 +39,11 @@ class TestResumosBlueprint(unittest.TestCase):
 
     @patch('rotas.resumos.safe_execute')
     @patch('flask_login.utils._get_user')
-    def test_resumos_index_premium_sucesso(self, mock_get_user, mock_safe_execute):
-        """Garante a exibição do dashboard agrupado por matérias para usuários premium."""
+    def test_resumos_index_sucesso(self, mock_get_user, mock_safe_execute):
+        """Garante a exibição do dashboard agrupado por matérias para usuários autenticados."""
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_user.tema = 'light'
         mock_get_user.return_value = mock_user
@@ -69,7 +67,6 @@ class TestResumosBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_user.tema = 'light'
         mock_get_user.return_value = mock_user
@@ -99,7 +96,6 @@ class TestResumosBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_get_user.return_value = mock_user
 
         mock_res_materia = MagicMock()
@@ -121,7 +117,6 @@ class TestResumosBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -138,7 +133,6 @@ class TestResumosBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -158,7 +152,6 @@ class TestResumosBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -175,7 +168,6 @@ class TestResumosBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 

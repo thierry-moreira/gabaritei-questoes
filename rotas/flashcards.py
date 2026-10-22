@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for
 from banco_dados_aluno import supabase
 from extensoes import limiter
-from utils import safe_execute, aluno_required, premium_required
+from utils import safe_execute, aluno_required
 from flask_login import current_user
 from datetime import datetime, timedelta
 from postgrest import CountMethod
@@ -12,7 +12,6 @@ flashcards_bp = Blueprint('flashcards', __name__)
 @flashcards_bp.route('/aluno/flashcards')
 @limiter.exempt
 @aluno_required
-@premium_required
 def index():
     try:
         query_cat = supabase.table("flashcard_categorias")\
@@ -39,7 +38,6 @@ def index():
 @flashcards_bp.route('/aluno/flashcards/categoria/<id_categoria>')
 @limiter.exempt
 @aluno_required
-@premium_required
 def gerenciar_categoria(id_categoria):
     try:
         query_cat = supabase.table("flashcard_categorias").select("*").eq("id_categoria", id_categoria).eq("id_usuario", current_user.id).single()
@@ -64,7 +62,6 @@ def gerenciar_categoria(id_categoria):
 @flashcards_bp.route('/aluno/flashcards/estudar/<id_categoria>')
 @limiter.exempt
 @aluno_required
-@premium_required
 def estudar(id_categoria):
     try:
         agora = datetime.now().isoformat()
@@ -85,7 +82,6 @@ def estudar(id_categoria):
 
 @flashcards_bp.route('/api/flashcards/categoria/nova', methods=['POST'])
 @aluno_required
-@premium_required
 def criar_categoria():
     dados = request.get_json()
     nome = dados.get('nome')
@@ -109,7 +105,6 @@ def criar_categoria():
 
 @flashcards_bp.route('/api/flashcards/criar', methods=['POST'])
 @aluno_required
-@premium_required
 def criar_card():
     dados = request.get_json()
     id_cat = dados.get('id_categoria')
@@ -136,7 +131,6 @@ def criar_card():
 
 @flashcards_bp.route('/api/flashcards/revisar', methods=['POST'])
 @aluno_required
-@premium_required
 def revisar_card():
     dados = request.get_json()
     id_card = dados.get('id_flashcard')
@@ -190,7 +184,6 @@ def revisar_card():
 
 @flashcards_bp.route('/api/flashcards/excluir/<id_card>', methods=['POST'])
 @aluno_required
-@premium_required
 def excluir_card(id_card):
     try:
         supabase.table("flashcards").delete().eq("id_flashcard", id_card).eq("id_usuario", current_user.id).execute()
@@ -201,7 +194,6 @@ def excluir_card(id_card):
 
 @flashcards_bp.route('/api/flashcards/categoria/excluir/<id_categoria>', methods=['POST'])
 @aluno_required
-@premium_required
 def excluir_categoria(id_categoria):
     try:
         user_id_str = str(current_user.id)

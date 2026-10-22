@@ -29,12 +29,3 @@ if openai_key:
         print(f"✅ Site: OpenAI Ativa (Modelo: {MODELO_GPT})")
     except Exception as e:
         print(f"❌ Erro ao configurar OpenAI para o site: {e}")
-
-MODELO_EXTRACAO = "gpt-5.4-nano" 
-client_extracao = None
-
-if client_gpt:
-    client_extracao = client_gpt
-    print(f"✅ Extração: OpenAI Ativa (Modelo: {MODELO_EXTRACAO})")
-else:
-    print(f"❌ Extração: Erro ao configurar modelo remoto. Verifique a OPENAI_API_KEY.")

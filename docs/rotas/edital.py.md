@@ -202,5 +202,5 @@ A rota `/aluno/editais/dashboard/<id_edital>` compila dados históricos e analí
 
 > [!CAUTION]
 > **Acesso Restrito e Segurança contra IDOR**:
-> *   **Premium Required**: O motor adaptativo e as rotas de editais verticalizados dependem de processamento estocástico e queries avançadas. Por isso, são protegidos pelo decorador `@premium_required` (no modelo software livre atual, exige apenas autenticação de aluno).
+> *   **Acesso Autenticado**: O motor adaptativo e as rotas de editais verticalizados dependem de processamento estocástico e queries avançadas. Por isso, são protegidos pelo decorador `@aluno_required` — no modelo software livre, todo aluno autenticado tem acesso completo.
 > *   **Validação de IDOR**: A exclusão de editais ou o processamento de respostas via API fiscalizam estritamente a posse do edital cruzando o ID do usuário logado na sessão com o registro do banco de dados antes de executar comandos deletérios.

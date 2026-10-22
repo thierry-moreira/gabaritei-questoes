@@ -351,9 +351,7 @@ function initQuestoes() {
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Analisando...';
 
-            const endpoint = (window.GABARITEI_AUTH && window.GABARITEI_AUTH.isAuthenticated)
-                ? '/aluno/responder'
-                : '/api/responder_publico';
+            const endpoint = '/aluno/responder';
 
             fetch(endpoint, {
                 method: 'POST',
@@ -430,16 +428,11 @@ function initQuestoes() {
                         }
                     } else {
                         Swal.fire({
-                            icon: 'warning',
-                            title: 'Limite Atingido',
-                            html: data.error || 'Você atingiu o limite diário de questões.',
+                            icon: 'error',
+                            title: 'Resposta não registrada',
+                            html: data.error || 'Não foi possível registrar sua resposta. Tente novamente.',
                             confirmButtonColor: 'var(--premium-accent)',
-                            confirmButtonText: 'Criar conta',
-                            showCloseButton: true
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                window.location.href = '/aluno/cadastro';
-                            }
+                            confirmButtonText: 'Fechar'
                         });
                         btn.disabled = false;
                         btn.innerHTML = '<i class="bi bi-check2-circle me-2"></i> Responder';

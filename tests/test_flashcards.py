@@ -24,7 +24,7 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         self.client = app.test_client()
 
     # -------------------------------------------------------------------------
-    # Testes de Acesso e Segurança (Premium vs Grátis)
+    # Testes de Acesso e Segurança
     # -------------------------------------------------------------------------
 
     @patch('flask_login.utils._get_user')
@@ -33,7 +33,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_get_user.return_value = mock_user
 
         response = self.client.get('/aluno/flashcards')
@@ -41,12 +40,11 @@ class TestFlashcardsBlueprint(unittest.TestCase):
 
     @patch('rotas.flashcards.supabase')
     @patch('flask_login.utils._get_user')
-    def test_index_acesso_premium_sucesso(self, mock_get_user, mock_supabase):
-        """Usuário premium acessa o painel de flashcards com listagem de categorias e revisões do dia."""
+    def test_index_listagem_sucesso(self, mock_get_user, mock_supabase):
+        """Usuário autenticado acessa o painel de flashcards com listagem de categorias e revisões do dia."""
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -79,7 +77,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -108,7 +105,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -128,7 +124,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -159,7 +154,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -179,7 +173,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_get_user.return_value = mock_user
 
         response = self.client.post('/api/flashcards/categoria/nova', json={})
@@ -195,7 +188,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -219,7 +211,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_get_user.return_value = mock_user
 
         response = self.client.post('/api/flashcards/criar', json={"id_categoria": 1})
@@ -238,7 +229,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -275,7 +265,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -311,7 +300,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -350,7 +338,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -390,7 +377,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 
@@ -407,7 +393,6 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_user = MagicMock()
         mock_user.is_authenticated = True
         mock_user.role = 'aluno'
-        mock_user.plano = 'premium'
         mock_user.id = 12345
         mock_get_user.return_value = mock_user
 

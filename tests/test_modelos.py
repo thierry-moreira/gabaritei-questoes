@@ -8,9 +8,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from modelos import User
 
 class TestUserModel(unittest.TestCase):
-    def test_inicializacao_usuario_gratis_padrao(self):
+    def test_inicializacao_usuario_padrao(self):
         """
-        Garante que um usuário gratuito com valores padrão seja criado corretamente.
+        Garante que um usuário com valores padrão seja criado corretamente.
         """
         user = User(
             id="user123",

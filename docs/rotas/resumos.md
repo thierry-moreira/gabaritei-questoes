@@ -41,7 +41,6 @@ sequenceDiagram
     ```python
     @login_required
     @aluno_required
-    @premium_required
     ```
 *   **Descrição**: Fornece uma visão consolidada do caderno de estudos do aluno, exibindo cada disciplina juntamente com a contagem de resumos gerados.
 *   **Lógica de Agregação de Alta Performance**:
@@ -60,7 +59,6 @@ sequenceDiagram
     ```python
     @login_required
     @aluno_required
-    @premium_required
     ```
 *   **Descrição**: Lista de forma detalhada e cronológica todos os resumos de uma matéria específica.
 *   **Garantia de Integridade Relacional (Fail-Fast)**:
@@ -87,7 +85,6 @@ sequenceDiagram
     ```python
     @login_required
     @aluno_required
-    @premium_required
     ```
 *   **Proteção Rígida Contra IDOR (Insecure Direct Object References)**:
     A rota de exclusão possui blindagem de segurança no nível de consulta. Mesmo que um atacante saiba o UUID de um resumo que não lhe pertença e tente forçar a chamada da API, a cláusula SQL exige cumulativamente o ID do usuário logado:
@@ -102,7 +99,6 @@ sequenceDiagram
 
 | Regra de Negócio | Descrição | Implementação Técnica |
 | :--- | :--- | :--- |
-| **Acesso Premium** | Rotas exclusivas de usuários autenticados | Decorator `@premium_required` (alias de `aluno_required` no modelo software livre) |
 | **Privacidade Estrita** | Um aluno não pode ver nem deletar resumos de outros | Filtragem obrigatória por `current_user.id` em todas as queries |
 | **Resiliência de Comunicação** | Tolerância a falhas temporárias de rede com o Supabase | Encapsulamento de requisições através do método centralizado `safe_execute` |
 

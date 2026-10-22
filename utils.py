@@ -1,14 +1,11 @@
-import os
 import re
 import time
 import logging
-import socket
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-from flask import redirect, url_for, flash, request, session
+from flask import redirect, url_for, session
 from flask_login import current_user
 from typing import Any
-from postgrest import CountMethod
 from banco_dados_aluno import supabase
 
 logger = logging.getLogger(__name__)
@@ -24,58 +21,6 @@ def safe_execute(query_func: Any) -> Any:
             else:
                 logger.error(f"❌ Erro persistente na consulta Supabase após 3 tentativas: {e}")
                 raise e
-
-def pegar_ip_real():
-    return request.remote_addr
-
-def get_base_url():
-    # Aplicação local/desktop: usa a origem da própria requisição (http)
-    return request.host_url.rstrip('/')
-
-_bot_cache: dict[str, tuple[bool, float]] = {}
-
-def verificar_bot_real(ip, user_agent):
-    if not user_agent:
-        return False
-        
-    ua = user_agent.lower()
-    is_google = "googlebot" in ua
-    is_bing = "bingbot" in ua
-    
-    if not (is_google or is_bing):
-        return False
-
-    cache = _bot_cache
-    agora = time.time()
-    
-    if ip in cache:
-        res, exp = cache[ip]
-        if agora < exp:
-            return res
-
-    try:
-        hostname, _, _ = socket.gethostbyaddr(ip)
-        
-        is_authentic = False
-        if is_google and (hostname.endswith(".googlebot.com") or hostname.endswith(".google.com")):
-            is_authentic = True
-        elif is_bing and hostname.endswith(".search.msn.com"):
-            is_authentic = True
-            
-        if not is_authentic:
-            cache[ip] = (False, agora + 3600)
-            return False
-            
-        ip_confirmado = socket.gethostbyname(hostname)
-        if ip_confirmado == ip:
-            cache[ip] = (True, agora + 86400)
-            return True
-            
-    except (socket.herror, socket.gaierror, Exception) as e:
-        logger.warning(f"Falha na verificação de bot para IP {ip}: {e}")
-        
-    cache[ip] = (False, agora + 3600)
-    return False
 
 def verificar_texto_improprio(texto):
     if not texto:
@@ -113,10 +58,6 @@ def aluno_required(f):
             return redirect(url_for('auth.login_aluno'))
         return f(*args, **kwargs)
     return decorated_function
-
-def premium_required(f):
-    # Alias para aluno_required - todo usuário autenticado tem acesso premium
-    return aluno_required(f)
 
 def calcular_ofensiva_usuario(user_id):
     try:

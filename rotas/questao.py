@@ -7,7 +7,7 @@ from postgrest import CountMethod
 
 from banco_dados_aluno import supabase
 from extensoes import MODELO_GPT, TEMPERATURE_GPT, csrf, client_gpt, limiter
-from utils import safe_execute, aluno_required, premium_required, slugify
+from utils import safe_execute, aluno_required, slugify
 
 questao_bp = Blueprint('questao', __name__)
 
@@ -59,51 +59,6 @@ def responder_questao():
         "correta": foi_correta,
         "letra_correta": letra_correta,
         "comentario": comentario
-    })
-
-
-@questao_bp.route('/api/responder_publico', methods=['POST'])
-@limiter.limit("20 per minute")
-def responder_publico():
-    from flask import session
-    dados = request.get_json()
-    questao_id = int(dados.get('questao_id'))
-    letra_escolhida = dados.get('alternativa')
-
-    questoes_vistas = list(set(int(x) for x in session.get('anon_questoes', []) if str(x).isdigit()))
-    
-    if len(questoes_vistas) >= 5 and questao_id not in questoes_vistas:
-        return jsonify({"success": False, "error": "Você atingiu o limite de 5 questões gratuitas. Crie uma conta para continuar estudando!"}), 403
-
-    query_alt = supabase.table("alternativas_questao")\
-        .select("*")\
-        .eq("id_questao", questao_id)\
-        .order("letra")
-    res_alt = safe_execute(query_alt)
-    alternativas = res_alt.data or []
-    
-    letra_correta = next((a['letra'] for a in alternativas if a['is_correct']), None)
-    foi_correta = (letra_escolhida == letra_correta)
-    
-    if questao_id not in questoes_vistas:
-        questoes_vistas.append(questao_id)
-        session['anon_questoes'] = questoes_vistas
-        session.modified = True
-        
-        try:
-            safe_execute(supabase.table("historico_respostas_anonimo").insert({
-                "id_questao": questao_id,
-                "is_correct": foi_correta
-            }))
-        except Exception as e:
-            print(f"Erro silenciado ao gravar resposta anônima: {e}")
-            if current_app.config.get('TESTING'):
-                raise e
-
-    return jsonify({
-        "sucesso": True,
-        "correta": foi_correta,
-        "letra_correta": letra_correta
     })
 
 
@@ -254,8 +209,6 @@ def resolver_questoes(materia_slug=None, topico_slug=None):
     tem_proxima = total_encontrado > (pagina_atual * itens_por_pagina)
     tem_anterior = pagina_atual > 1
 
-    is_premium = True  # Software livre: acesso liberado para autenticados
-
     return render_template('questoes/resolver.html',
                            questoes=questoes,
                            total_encontrado=total_encontrado,
@@ -271,7 +224,6 @@ def resolver_questoes(materia_slug=None, topico_slug=None):
                            ids_acertos=ids_acertos,
                            ids_erros=ids_erros,
                            filtros_salvos=filtros_salvos,
-                           is_premium=is_premium,
                            current_materia=current_materia,
                            current_topico=current_topico)
 
@@ -308,7 +260,6 @@ def visualizar_questao_seo(materia_slug, topico_slug, id_questao):
 
     ids_acertos = []
     ids_erros = []
-    limit_reached = False
 
     if current_user.is_authenticated:
         res_hist = safe_execute(supabase.table("historico_respostas").select("id_questao, is_correct").eq("id_usuario", current_user.id).eq("id_questao", id_questao))
@@ -317,33 +268,11 @@ def visualizar_questao_seo(materia_slug, topico_slug, id_questao):
                 ids_acertos.append(id_questao)
             else:
                 ids_erros.append(id_questao)
-    else:
-        from utils import verificar_bot_real
-        is_bot = verificar_bot_real(request.remote_addr, request.user_agent.string)
-
-        from flask import session
-        if 'anon_questoes' not in session:
-            session['anon_questoes'] = []
-            
-        questoes_vistas = list(set(int(x) for x in session.get('anon_questoes', []) if str(x).isdigit()))
-        
-        if id_questao not in questoes_vistas:
-            if not is_bot and len(questoes_vistas) >= 5:
-                limit_reached = True
-            else:
-                if not is_bot:
-                    questoes_vistas.append(id_questao)
-                    session['anon_questoes'] = questoes_vistas
-                    session.modified = True
-
-    is_premium = True  # Software livre: acesso liberado para autenticados
 
     return render_template('questoes/visualizar_individual.html', 
                            q=questao,
                            ids_acertos=ids_acertos,
-                           ids_erros=ids_erros,
-                           is_premium=is_premium,
-                           limit_reached=limit_reached)
+                           ids_erros=ids_erros)
 
 
 @questao_bp.route('/api/responder', methods=['POST'])
@@ -451,7 +380,6 @@ def sanitizar_latex(texto):
 @questao_bp.route('/api/ia_explica', methods=['POST'])
 @limiter.exempt
 @aluno_required
-@premium_required
 def ia_explica():
     if not client_gpt:
         return jsonify({"explicacao": "IA não configurada."}), 500
@@ -568,7 +496,6 @@ def ia_explica():
 @questao_bp.route('/api/ia/gerar_estudo', methods=['POST'])
 @limiter.exempt
 @aluno_required
-@premium_required
 def ia_gerar_estudo():
     if not client_gpt:
         return jsonify({"success": False, "error": "IA não configurada."}), 500

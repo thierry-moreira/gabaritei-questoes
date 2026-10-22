@@ -1,7 +1,7 @@
 # Documentação Técnica: `rotas/simulado.py` (Provas Simuladas)
 
 ## Descrição Geral
-O módulo de Simulados implementa o ecossistema de exames cronometrados personalizados do Gabaritei Questões. Exclusivo para assinantes Premium, ele permite criar e realizar simulados públicos ou privados gerados dinamicamente com base em múltiplos filtros taxonômicos e organizacionais, participar de classificações em tempo real e exportar cadernos de prova profissionais no formato PDF.
+O módulo de Simulados implementa o ecossistema de exames cronometrados personalizados do Gabaritei Questões. Disponível para todo aluno autenticado (modelo software livre), ele permite criar e realizar simulados públicos ou privados gerados dinamicamente com base em múltiplos filtros taxonômicos e organizacionais, participar de classificações em tempo real e exportar cadernos de prova profissionais no formato PDF.
 
 ---
 
@@ -12,7 +12,7 @@ O fluxo de processamento de um simulado compreende a criação do cabeçalho fí
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Aluno as Aluno (Premium)
+    actor Aluno
     participant S as Simulado (rotas/simulado.py)
     participant DB as Supabase (Banco de Dados)
 
@@ -61,22 +61,22 @@ else:
 
 ### 1. Painel de Controle (`/aluno/simulados`)
 *   **Método**: `GET`
-*   **Segurança**: `@aluno_required`, `@premium_required`
+*   **Segurança**: `@aluno_required`
 *   **Isenção de Rate Limits**: `@limiter.exempt`
 *   **Descrição**: Exibe a interface central de provas. Realiza duas varreduras paralelas no banco de dados Supabase:
-    1.  **Simulados Públicos**: Aberto para todos os assinantes, carregando o autor através de junção com a tabela de usuários (`usuarios(username)`).
+    1.  **Simulados Públicos**: Aberto para todos os alunos autenticados, carregando o autor através de junção com a tabela de usuários (`usuarios(username)`).
     2.  **Simulados Privados**: Filtrados estritamente pelo ID do estudante logado.
     Também carrega listas taxonômicas (bancas, órgãos, matérias e cargos) para municiar o modal dinâmico de filtros.
 
 ### 2. Geração Dinâmica (`/aluno/simulados/gerar`)
 *   **Método**: `POST`
-*   **Segurança**: `@aluno_required`, `@premium_required`
+*   **Segurança**: `@aluno_required`
 *   **Isenção de Rate Limits**: `@limiter.exempt`
 *   **Lógica**: Processa formulários com múltiplos vetores de restrição. Em caso de falhas sistêmicas ou problemas de rede com o banco durante as inserções em lote, captura a exceção em um bloco `try/except` que dispara uma rotina física de rollback apagando imediatamente a "capa" criada na tabela `simulados` para impedir registros órfãos ou inconsistentes na plataforma.
 
 ### 3. Interface de Execução (`/aluno/simulados/fazer/<id_simulado>`)
 *   **Método**: `GET`
-*   **Segurança**: `@aluno_required`, `@premium_required`
+*   **Segurança**: `@aluno_required`
 *   **Isenção de Rate Limits**: `@limiter.exempt`
 *   **Blindagem de Privacidade**:
     Antes de carregar a prova, o sistema avalia a flag `eh_privado` do simulado. Se for privada e o criador for diferente de `current_user.id`, bloqueia o acesso instantaneamente com mensagem de erro amigável e redirecionamento de segurança.
@@ -155,7 +155,7 @@ q['letra_gabarito'] = letra_certa if letra_certa else 'N/A'
 | Operação | Mecanismo de Integridade | Comportamento Técnico |
 | :--- | :--- | :--- |
 | **Exclusão de Simulado** | `ON DELETE CASCADE` | Ao deletar o cabeçalho físico, as chaves estrangeiras apagam automaticamente todos os registros associativos nas tabelas `simulados_questoes` e `simulados_resultados` em nível de banco de dados (Supabase/PostgreSQL) de forma atômica. |
-| **Acesso Premium** | Decorator de Nível de Blueprint | Exige autenticação em todas as rotas de simulado usando o decorator `@premium_required` (alias de `aluno_required` no modelo software livre). |
+| **Acesso Autenticado** | Decorator de Nível de Blueprint | Exige autenticação de aluno (`@aluno_required`) em todas as rotas de simulado — no modelo software livre, todo aluno autenticado tem acesso completo. |
 | **Blindagem de Ownership** | Prevenção a IDOR | Verificação compulsória de `current_user.id` em todas as rotas mutativas ou de simulados privados. |
 
 > [!WARNING]

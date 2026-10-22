@@ -5,7 +5,7 @@ from flask_login import current_user
 
 from banco_dados_aluno import supabase
 from extensoes import limiter
-from utils import safe_execute, aluno_required, premium_required
+from utils import safe_execute, aluno_required
 
 edital_bp = Blueprint('edital', __name__)
 
@@ -286,7 +286,6 @@ def _avancar_ciclo_edital(id_edital, marcar_concluido=False):
 @edital_bp.route('/aluno/editais', methods=['GET'])
 @limiter.exempt
 @aluno_required
-@premium_required
 def painel_editais():
     res_editais = safe_execute(
         supabase.table("editais_ciclo").select("*").eq("id_usuario", current_user.id).order("criado_em", desc=True)
@@ -301,7 +300,6 @@ def painel_editais():
 @edital_bp.route('/aluno/editais/criar', methods=['POST'])
 @limiter.exempt
 @aluno_required
-@premium_required
 def criar_edital():
     titulo = request.form.get('titulo')
     materias = request.form.getlist('materias[]')
@@ -381,7 +379,6 @@ def criar_edital():
 @edital_bp.route('/aluno/editais/estudar/<int:id_edital>')
 @limiter.exempt
 @aluno_required
-@premium_required
 def estudar_edital(id_edital):
     try:
         res_edital_check = safe_execute(
@@ -479,7 +476,6 @@ def estudar_edital(id_edital):
 @edital_bp.route('/aluno/editais/responder', methods=['POST'])
 @limiter.exempt
 @aluno_required
-@premium_required
 def responder_edital():
     dados = request.get_json()
     id_edital = dados.get('id_edital')
@@ -582,7 +578,6 @@ def responder_edital():
 @edital_bp.route('/aluno/editais/pular/<int:id_edital>', methods=['POST'])
 @limiter.exempt
 @aluno_required
-@premium_required
 def pular_topico_edital(id_edital):
     try:
         success, msg, _ = _avancar_ciclo_edital(id_edital, marcar_concluido=True)
@@ -603,7 +598,6 @@ def pular_topico_edital(id_edital):
 @edital_bp.route('/aluno/editais/dashboard/<int:id_edital>')
 @limiter.exempt
 @aluno_required
-@premium_required
 def dashboard_edital(id_edital):
     try:
         res_edital = safe_execute(
@@ -718,7 +712,6 @@ def dashboard_edital(id_edital):
 @edital_bp.route('/aluno/editais/excluir/<id_edital>', methods=['POST'])
 @limiter.exempt
 @aluno_required
-@premium_required
 def excluir_edital(id_edital):
     try:
         query_del = supabase.table("editais_ciclo").delete().eq("id_edital", int(id_edital)).eq("id_usuario", current_user.id)

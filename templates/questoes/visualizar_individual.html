@@ -97,32 +97,7 @@
 
         <!-- Card da Questão -->
         <div class="position-relative">
-            {{ cq.render_questao(q, is_premium, ids_acertos, ids_erros, limit_reached=limit_reached) }}
-
-            {% if limit_reached %}
-            {# OVERLAY DE BLOQUEIO (PAYWALL SEO) #}
-            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center rounded-4"
-                style="background: rgba(255,255,255,0.7); backdrop-filter: blur(8px); z-index: 100;">
-                <div class="text-center p-5 bg-white shadow-lg rounded-4 border mx-3" style="max-width: 500px;">
-                    <div class="mb-4">
-                        <i class="bi bi-shield-lock-fill text-primary" style="font-size: 4rem;"></i>
-                    </div>
-                    <h2 class="fw-bold mb-3">Limite Diário Atingido!</h2>
-                    <p class="text-muted mb-4">
-                        Você já visualizou 5 questões hoje. Para continuar estudando e ter acesso a milhares de questões
-                        comentadas, crie sua conta gratuita agora mesmo!
-                    </p>
-                    <div class="d-grid gap-2">
-                        <a href="/aluno/cadastro" class="btn btn-primary btn-lg fw-bold rounded-pill py-3">
-                            Criar Minha Conta Grátis
-                        </a>
-                        <a href="/aluno/login" class="btn btn-outline-secondary btn-lg rounded-pill py-2">
-                            Já tenho uma conta (Login)
-                        </a>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
+            {{ cq.render_questao(q, ids_acertos, ids_erros) }}
         </div>
 
         <!-- Call to action para mais questões -->

@@ -3,14 +3,13 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, abort
 from flask_login import login_required, current_user
 from banco_dados_aluno import supabase
-from utils import safe_execute, aluno_required, premium_required
+from utils import safe_execute, aluno_required
 
 resumos_bp = Blueprint('resumos', __name__)
 
 @resumos_bp.route('/aluno/resumos')
 @login_required
 @aluno_required
-@premium_required
 def index():
     query = supabase.table('resumos_estudo').select('id_materia, materias(nome_materia)').eq('id_usuario', str(current_user.id))
     res = safe_execute(query)
@@ -32,7 +31,6 @@ def index():
 @resumos_bp.route('/aluno/resumos/materia/<int:id_materia>')
 @login_required
 @aluno_required
-@premium_required
 def ver_materia(id_materia):
     m_query = supabase.table('materias').select('id_materia, nome_materia').eq('id_materia', id_materia).single()
     m_res = safe_execute(m_query)
@@ -48,7 +46,6 @@ def ver_materia(id_materia):
 @resumos_bp.route('/api/resumos/excluir/<id_resumo>', methods=['POST'])
 @login_required
 @aluno_required
-@premium_required
 def excluir(id_resumo):
     query = supabase.table('resumos_estudo').delete().eq('id_resumo', id_resumo).eq('id_usuario', str(current_user.id))
     res = safe_execute(query)
@@ -59,7 +56,6 @@ def excluir(id_resumo):
 @resumos_bp.route('/api/resumos/excluir-materia/<int:id_materia>', methods=['POST'])
 @login_required
 @aluno_required
-@premium_required
 def excluir_caderno(id_materia):
     query = supabase.table('resumos_estudo').delete().eq('id_materia', id_materia).eq('id_usuario', str(current_user.id))
     res = safe_execute(query)

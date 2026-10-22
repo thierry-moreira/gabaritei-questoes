@@ -41,9 +41,3 @@ O arquivo centraliza a criação e o apontamento dos modelos GPT oficiais, trata
 - **Modelo Oficial**: `gpt-5.4-mini`
 - **Configurações de Geração**: Temperatura fixada em `0.3` (`TEMPERATURE_GPT = 0.3`). Esta escolha técnica garante um equilíbrio excepcional para fins pedagógicos: restringe a "criatividade/alucinação" do modelo, priorizando respostas com máxima exatidão técnica, lógica de negócios precisa e explicações didáticas assertivas.
 - **Fail-Safe**: Caso a variável `OPENAI_API_KEY` não seja localizada no ambiente, o sistema imprime logs de erro apropriados no console, mas permite que o servidor do Flask inicie suas demais operações normais.
-
-### 2. Cliente de Extração Estruturada (Processador de Editais)
-- **Instância**: `client_extracao`
-- **Modelo Oficial**: `gpt-5.4-nano`
-- **Propósito**: Configuração especializada e dedicada para ler arquivos brutos, tabelas e parágrafos extensos de Editais de concursos públicos em formato PDF e convertê-los em estruturas JSON rígidas e estruturadas.
-- **Acoplamento**: Atualmente mapeia a mesma instância de cliente do `client_gpt`, mas está arquitetado de forma independente para viabilizar migrações futuras para clusters ou endpoints especializados na nuvem sem impactar o cliente conversacional.

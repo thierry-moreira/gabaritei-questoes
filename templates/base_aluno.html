@@ -63,8 +63,7 @@
     <script>
         // Estado de Autenticação Global para o JS
         window.GABARITEI_AUTH = {
-            isAuthenticated: ("{{ 'true' if current_user.is_authenticated else 'false' }}" === "true"),
-            isPremium: ("{{ 'true' if is_premium|default(false) else 'false' }}" === "true")
+            isAuthenticated: ("{{ 'true' if current_user.is_authenticated else 'false' }}" === "true")
         };
     </script>
     <title>{% block title %}Gabaritei - Sistema de Questões{% endblock %}</title>

@@ -9,7 +9,7 @@ Este documento serve como guia técnico e especificação para a manutenção, e
 
 Para garantir a confiabilidade e a velocidade de execução da suíte, todos os testes devem seguir estritamente as diretrizes abaixo:
 
-1. **Isolamento de Rede:** Nenhuma requisição HTTP real deve ser disparada durante a execução dos testes. Chamadas para APIs externas (como a API *Have I Been Pwned* ou serviços de IA) devem ser interceptadas e simuladas usando `unittest.mock`.
+1. **Isolamento de Rede:** Nenhuma requisição HTTP real deve ser disparada durante a execução dos testes. Chamadas para APIs externas (como os serviços de IA) devem ser interceptadas e simuladas usando `unittest.mock`.
 2. **Isolamento de Banco de Dados:** Nenhuma conexão real com o Supabase ou PostgreSQL deve ser efetuada. Interações com o banco de dados são mockadas simulando as respostas retornadas pelo wrapper `safe_execute` ou pela biblioteca do Supabase.
 3. **Nativo e Leve:** A suíte de testes utiliza estritamente a biblioteca nativa `unittest` do Python. Isso elimina a necessidade de instalar pacotes adicionais e garante compatibilidade total com o ambiente existente.
 4. **Sem Alterações na Infraestrutura:** Não é permitido modificar os arquivos `.env` ou `requirements.txt` apenas para fins de testes.
@@ -27,12 +27,12 @@ caminho_do_projeto\tests\
 ├── test_utils.py        # Testes de funções utilitárias e regras de negócio isoladas
 ├── test_rotas.py        # Testes de honeypots de segurança administrativa
 ├── test_auth.py         # Testes de autenticação, login, cadastro e sessões
-├── test_aluno_questoes.py # Testes do dashboard, resolução, streaks e paywall (Fase 4)
+├── test_aluno_questoes.py # Testes do dashboard, resolução e streaks (Fase 4)
 ├── test_ia_chat.py        # Testes de IA, explicações, resumos e flashcards (Fase 6)
 ├── test_conta.py          # Testes de atualização de perfil, reset de dados e exclusão de conta
 ├── test_api.py            # Testes de cascata de matérias, cargos e preferências de tema
 ├── test_flashcards.py     # Testes do sistema de flashcards e algoritmo Anki SM-2
-├── test_caderno.py        # Testes de coleções de questões e limites de criação
+├── test_caderno.py        # Testes de coleções de questões e criação de cadernos
 └── test_resumos.py        # Testes do painel de resumos por matéria e exclusão
 ```
 
@@ -65,34 +65,19 @@ Valida o fluxo completo de controle de acesso do aluno à plataforma.
   - `@patch('rotas.auth._linha_do_usuario_auth')` / `@patch('rotas.auth._criar_perfil')` / `@patch('rotas.auth._entrar_flask')` para o vínculo Auth↔perfil do aluno.
 
 ### 5. Ecossistema do Aluno e Questões (`test_aluno_questoes.py`) [Fase 4 - Consolidada]
-Valida os dashboards de estatísticas do aluno, a lógica de resolução de questões com streaks e a barreira técnica de paywall para visitantes.
+Valida os dashboards de estatísticas do aluno e a lógica de resolução de questões com streaks.
 - **Fluxos testados:**
   - `/aluno/painel` (ofensiva/streak em Brasília, dados agregados por data, taxas de acerto).
   - `/aluno/dashboard_detalhado` (esquecimento, melhor matéria, redirecionamento se histórico estiver vazio).
-  - `/aluno/responder` e `/api/responder` (envio de respostas, limites de grátis, incremento de streak no banco).
-  - `/api/responder_publico` (paywall para visitantes limitando a 5 resoluções gratuitas na sessão).
+  - `/aluno/responder` e `/api/responder` (envio de respostas e incremento de streak no banco).
   - `/api/comentarios` (moderação contra palavras inadequadas antes da inserção).
 - **Mocks importantes:**
   - Simulação de histórico de respostas e tabelas do banco de dados no Supabase.
-  - Sessão do Flask (`session['anon_questoes']`) para simulação de visitantes anônimos.
-
-Valida as restrições rigorosas de segurança administrativa, fluxos de login com 2FA/TOTP multifator, controle de dispositivo único e CRUD taxonômico completo.
-- **Fluxos testados:**
-  - `/admin/dashboard` (redirecionamento de não administradores, renderização das contagens de taxonomia de questões).
-  - Trava de dispositivo único (expulsão de login se o token na sessão não for compatível com o banco).
-  - `/admin/login` (fluxo de credenciais corretas/incorretas, mitigação de Timing Attack via Dummy Hash).
-  - `/admin/setup-2fa` (geração de QR Code em base64 e verificação inicial de chaves TOTP).
-  - `/admin/verify-2fa` (validação de código TOTP ativo e gravação do novo token de sessão única).
-  - `/api/gestao/add-materia` (inserção e retorno de nova matéria por admin autenticado).
-  - `/admin/cadastro` (POST manual de cadastro de questão certo/errado, verificação de prova e gravação de alternativas).
-- **Mocks importantes:**
-  - Mock de `pyotp.TOTP` e geração em runtime de segredos base32 para validação real-time de tokens.
-  - Simulação de tokens de segurança de sessão no banco e dados de taxonomia agregados de contagem de banco de dados.
 
 ### 6. Integração com IA (`test_ia_chat.py`) [Fase 6 - Consolidada]
 Valida a lógica dos fluxos acionados por Inteligência Artificial na plataforma.
 - **Fluxos testados:**
-  - `/api/ia_explica` (validação de cache local `explicacoes_ia`, bloqueio de cota para planos sem IA ativa e geração bem-sucedida via OpenAI com limpeza de strings desnecessárias).
+  - `/api/ia_explica` (validação de cache local `explicacoes_ia` e geração bem-sucedida via OpenAI com limpeza de strings desnecessárias).
   - `/api/ia/gerar_estudo` (criação de resumos e flashcards, validação de cache de usuário em `resumos_estudo` ou `flashcards`, consulta a cache global `ia_cache_estudo` e gravação correta de novos materiais gerados).
 - **Mocks importantes:**
   - Mock rigoroso do cliente oficial OpenAI (`client_gpt` em `rotas.questao`), cobrindo `chat.completions.create` retornando estruturas de escolhas e conteúdos fiéis.
@@ -119,7 +104,7 @@ Valida os endpoints secundários que fornecem dados estruturados JSON e salvam p
   - Simulação de updates e selects de preferências do perfil do usuário no Supabase.
 
 ### 9. Repetição Espaçada e Flashcards (`test_flashcards.py`)
-Valida a segurança das rotas exclusivas para assinantes Premium, a criação de cards/categorias de estudo e a integridade matemática do algoritmo SM-2 (Anki).
+Valida a segurança das rotas de usuários autenticados, a criação de cards/categorias de estudo e a integridade matemática do algoritmo SM-2 (Anki).
 - **Fluxos testados:**
   - `/aluno/flashcards` (dashboard inicial com listagem e contador de revisão).
   - `/aluno/flashcards/categoria/<id>` (gerenciamento e listagem de cards).
@@ -128,11 +113,11 @@ Valida a segurança das rotas exclusivas para assinantes Premium, a criação de
   - `/api/flashcards/revisar` (algoritmo adaptativo SM-2 ajustando dinamicamente intervalo e fator de facilidade para qualidades 0, 1, 2 e 3).
   - Exclusão via APIs de categorias e cartões individuais.
 - **Mocks importantes:**
-  - Mock de `flask_login.utils._get_user` simulando estados do plano (`gratis` vs `premium`).
+  - Mock de `flask_login.utils._get_user` simulando o usuário autenticado.
   - Simulação de retornos de inserção, deleção e queries de intervalo Supabase.
 
 ### 10. Coleções de Questões (`test_caderno.py`)
-Valida as restrições de limites de criação de cadernos e a gestão individual de pastas de questões.
+Valida a criação de cadernos e a gestão individual de pastas de questões.
 - **Fluxos testados:**
   - `/aluno/meus_cadernos` (painel geral com listagem de coleções).
   - `/aluno/caderno/<id>` (detalhamento integrado com histórico de acertos e erros).
@@ -143,13 +128,11 @@ Valida as restrições de limites de criação de cadernos e a gestão individua
   - Injeção de estado `id_usuario` na sessão do Flask client.
 
 ### 11. Resumos Teóricos (`test_resumos.py`)
-Valida o agrupamento de resumos teóricos por matérias e as barreiras técnicas de paywall associadas.
+Valida o agrupamento de resumos teóricos por matérias e a exclusão de resumos e cadernos.
 - **Fluxos testados:**
   - `/aluno/resumos` (dashboard agrupando quantidades de resumos por disciplina).
   - `/aluno/resumos/materia/<id>` (detalhamento de resumos com data de criação com tratamento de erro 404).
   - `/api/resumos/excluir/<id>` (remoção física de arquivos e registros).
-- **Mocks importantes:**
-  - Mock de `@premium_required` para redirecionamento resiliente de contas grátis.
 
 ---
 
@@ -217,25 +200,6 @@ dados_retorno = response.get_json()
 self.assertTrue(dados_retorno.get('success'))
 ```
 
-### E. Manipulação de Sessões do Flask (Paywall de Visitantes)
-Para rotas que dependem de variáveis salvas na sessão do Flask (como o contador de questões anônimas do paywall), você pode injetar valores diretamente na sessão antes de fazer a chamada de teste:
-
-```python
-# Injeta 5 IDs de questões respondidas na sessão anônima para acionar o paywall
-with self.client.session_transaction() as sess:
-    sess['anon_questoes'] = [101, 102, 103, 104, 105]
-
-# Tenta responder a uma nova questão (ID 106)
-response = self.client.post('/api/responder_publico', json={
-    "questao_id": 106,
-    "alternativa": "A"
-})
-
-# Deve ser bloqueado pelo paywall retornando status 403
-self.assertEqual(response.status_code, 403)
-self.assertIn("Você atingiu o limite", response.get_json().get('error'))
-```
-
 ---
 
 ## 🚀 Como Executar a Suíte de Testes
@@ -266,5 +230,5 @@ python -m unittest tests/test_auth.py
 
 Ao adicionar novos recursos ao **Gabaritei Questões**, certifique-se de expandir a suíte seguindo estas fases propostas:
 
-1. **Painel do Aluno e Questões (Fase 4 - Consolidada):** Cobertura completa de painéis estatísticos, cálculo de curvas de esquecimento, resolução de questões com streak e paywall de 5 questões.
-2. **Integração com IA (Fase 6 - Consolidada):** Cobertura de explicações pedagógicas com suporte visual e persistência (/api/ia_explica), geração de resumos/flashcards (/api/ia/gerar_estudo) e gerenciamento de limites Trial.
+1. **Painel do Aluno e Questões (Fase 4 - Consolidada):** Cobertura completa de painéis estatísticos, cálculo de curvas de esquecimento e resolução de questões com streak.
+2. **Integração com IA (Fase 6 - Consolidada):** Cobertura de explicações pedagógicas com suporte visual e persistência (/api/ia_explica) e geração de resumos/flashcards (/api/ia/gerar_estudo).

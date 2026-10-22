@@ -209,9 +209,8 @@ app.jinja_env.filters['slugify'] = slugify
 @app.context_processor
 def inject_global_data():
     if not current_user.is_authenticated:
-        return dict(is_premium=False, global_streak=0)
+        return dict(global_streak=0)
 
-    # Software livre - todos os usuários autenticados são premium
     total_flashcards = 0
     try:
         res_f = supabase.table("flashcards").select("id_flashcard", count=CountMethod.exact).eq("id_usuario", current_user.id).lte("proxima_revisao", datetime.now().isoformat()).execute()
@@ -220,7 +219,6 @@ def inject_global_data():
         pass
 
     return dict(
-        is_premium=True,
         global_streak=calcular_ofensiva_usuario(current_user.id),
         global_flashcards_revisar=total_flashcards,
     )

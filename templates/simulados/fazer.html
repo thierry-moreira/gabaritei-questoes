@@ -23,7 +23,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         
         {% for q in questoes %}
-            {{ cq.render_questao(q, is_premium, ids_acertos, ids_erros, mode='prova', loop_index=loop.index) }}
+            {{ cq.render_questao(q, ids_acertos, ids_erros, mode='prova', loop_index=loop.index) }}
         {% endfor %}
 
         <div class="text-center mt-5 p-4 bg-white rounded shadow-sm border">

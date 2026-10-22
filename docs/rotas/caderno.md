@@ -39,7 +39,7 @@ erDiagram
 
 ## 🔄 Fluxo de Trabalho e Ciclo de Vida do Caderno
 
-O diagrama de sequência abaixo descreve a criação e alimentação de um caderno, destacando as travas de segurança e cota:
+O diagrama de sequência abaixo descreve a criação e alimentação de um caderno, destacando as travas de segurança:
 
 ```mermaid
 sequenceDiagram
@@ -84,7 +84,6 @@ sequenceDiagram
     1. Recupera o nome do caderno e a lista dos IDs das questões associadas a ele.
     2. Busca o bloco detalhado das questões diretamente através da `view_questoes_completa` usando filtragem em massa (`.in_("id_questao", ids_questoes)`).
     3. Cruza os IDs com o histórico do estudante (`historico_respostas`) para obter os acertos e erros ocorridos especificamente nessas questões.
-    4. Passa a flag `is_premium=True` (software livre) para liberar as funcionalidades na tela de visualização do aluno.
 *   **Coloração de Desempenho**: As questões resolvidas são renderizadas com badges indicativas:
     *   `Badge Verde (Acerto)`: Se o ID da questão está presente em `ids_acertos`.
     *   `Badge Vermelha (Erro)`: Se o ID da questão está presente em `ids_erros`.
@@ -96,7 +95,7 @@ Para garantir uma experiência de uso rápida e sem reloads na interface web, as
 *   **`listar_cadernos`** (`GET /api/cadernos`):
     Retorna uma lista contendo todos os cadernos criados pelo usuário. Muito usada em combos suspensos (dropdowns) na tela de resolução de questões globais.
 *   **`criar_caderno`** (`POST /api/cadernos/novo`):
-    Cria a entidade caderno validando os limites de uso. Estudantes gratuitos têm o teto de criação fiscalizado de forma estrita.
+    Cria a entidade caderno para o usuário autenticado, sem limites de uso (modelo software livre).
 *   **`salvar_na_pasta`** (`POST /api/cadernos/salvar`):
     Vincula uma questão ao caderno. Protege o banco de redundâncias, capturando violações de chaves únicas (`duplicate key`) e convertendo-as em avisos amigáveis para o usuário.
 *   **`remover_questao_caderno`** (`POST /api/cadernos/remover_questao`):

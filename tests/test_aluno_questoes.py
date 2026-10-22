@@ -141,7 +141,7 @@ class TestAlunoQuestaoFlask(unittest.TestCase):
 
 
     # -------------------------------------------------------------------------
-    # Testes de Resolução e Paywall (POST)
+    # Testes de Resolução (POST)
     # -------------------------------------------------------------------------
 
     @patch('utils.current_user')
@@ -189,58 +189,6 @@ class TestAlunoQuestaoFlask(unittest.TestCase):
         self.assertTrue(dados.get('correta'))
         self.assertEqual(dados.get('letra_correta'), 'A')
         self.assertEqual(dados.get('comentario'), 'Excelente comentário explicativo.')
-
-    @patch('rotas.questao.safe_execute')
-    @patch('rotas.questao.supabase')
-    def test_responder_publico_visitante_sucesso(self, mock_supabase, mock_safe_execute):
-        """Valida que o visitante anônimo consegue responder uma questão normal (abaixo do limite de 5)."""
-        # Mocks para alternativas da questão
-        mock_res_alt = MagicMock()
-        mock_res_alt.data = [
-            {'id_alternativa': 201, 'letra': 'A', 'is_correct': False},
-            {'id_alternativa': 202, 'letra': 'B', 'is_correct': True}
-        ]
-        # Inserção no histórico anônimo
-        mock_res_insert = MagicMock()
-
-        mock_safe_execute.side_effect = [mock_res_alt, mock_res_insert]
-
-        response = self.client.post('/api/responder_publico', json={
-            'questao_id': 70,
-            'alternativa': 'B'
-        })
-        self.assertEqual(response.status_code, 200)
-        
-        dados = response.get_json()
-        self.assertTrue(dados.get('sucesso'))
-        self.assertTrue(dados.get('correta'))
-        self.assertEqual(dados.get('letra_correta'), 'B')
-
-        # Garante que a questão foi guardada na sessão para rastreamento do limite
-        with self.client.session_transaction() as sess:
-            self.assertIn(70, sess.get('anon_questoes', []))
-
-    @patch('utils.verificar_bot_real')
-    def test_responder_publico_visitante_paywall_bloqueado(self, mock_verificar_bot):
-        """Garante que o paywall bloqueia visitantes anônimos (status 403) ao tentar responder mais de 5 questões únicas."""
-        mock_verificar_bot.return_value = False # Simula que não é um crawler do Google/Bing
-
-        # Injeta 5 questões resolvidas na sessão anônima do Flask
-        with self.client.session_transaction() as sess:
-            sess['anon_questoes'] = [10, 20, 30, 40, 50]
-
-        # Tenta responder a 6ª questão
-        response = self.client.post('/api/responder_publico', json={
-            'questao_id': 60,
-            'alternativa': 'A'
-        })
-        
-        # Deve responder com status 403 (Proibido) acionando paywall
-        self.assertEqual(response.status_code, 403)
-        dados = response.get_json()
-        self.assertFalse(dados.get('success'))
-        self.assertIn('Você atingiu o limite de 5 questões gratuitas', dados.get('error'))
-
 
     # -------------------------------------------------------------------------
     # Testes de Moderação de Comentários (POST)

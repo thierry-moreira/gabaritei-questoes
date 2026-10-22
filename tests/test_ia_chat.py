@@ -34,7 +34,6 @@ class TestIAChatBlueprint(unittest.TestCase):
         for mock_user in [mock_questao_user, mock_utils_user]:
             mock_user.is_authenticated = True
             mock_user.id = '12345'
-            mock_user.plano = 'premium'
             mock_user.role = 'aluno'
 
         # Mock da query de cache que encontra explicação
@@ -56,7 +55,6 @@ class TestIAChatBlueprint(unittest.TestCase):
         for mock_user in [mock_questao_user, mock_utils_user]:
             mock_user.is_authenticated = True
             mock_user.id = '12345'
-            mock_user.plano = 'premium'
             mock_user.role = 'aluno'
 
         # Configura respostas sucessivas de safe_execute:
@@ -121,7 +119,6 @@ class TestIAChatBlueprint(unittest.TestCase):
         for mock_user in [mock_questao_user, mock_utils_user]:
             mock_user.is_authenticated = True
             mock_user.id = '12345'
-            mock_user.plano = 'premium'
             mock_user.role = 'aluno'
 
         # Mock da busca da questão
@@ -154,7 +151,6 @@ class TestIAChatBlueprint(unittest.TestCase):
         for mock_user in [mock_questao_user, mock_utils_user]:
             mock_user.is_authenticated = True
             mock_user.id = '12345'
-            mock_user.plano = 'premium'
             mock_user.role = 'aluno'
 
         # Mock sequencial do safe_execute:

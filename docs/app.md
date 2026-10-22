@@ -56,7 +56,6 @@ A função principal do `login_manager` executa validação a cada requisição:
 
 ### 6. Interface Dinâmica e Injeção de Contexto (`context_processor`)
 Para evitar que rotas repitam chamadas redundantes a serviços globais, a função `inject_global_data` disponibiliza automaticamente para todos os arquivos HTML as seguintes propriedades dinâmicas:
-- **`is_premium`**: Booleano fixo `True` (no modelo software livre, todo usuário autenticado).
 - **`global_streak`**: Ofensiva (dias consecutivos de estudo) calculada via `calcular_ofensiva_usuario`.
 - **`global_flashcards_revisar`**: Total de flashcards agendados para revisão do dia.
 

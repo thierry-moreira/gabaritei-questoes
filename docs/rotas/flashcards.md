@@ -1,7 +1,7 @@
 # Documentação Técnica: `rotas/flashcards.py` (Sistema SRS)
 
 ## Descrição Geral
-O módulo de Flashcards implementa a consagrada metodologia de **Repetição Espaçada (SRS - Spaced Repetition System)**. Voltado exclusivamente para assinantes Premium, o sistema permite criar categorias temáticas e organizar cartões de estudo contendo "Frente e Verso". Um algoritmo matemático calcula de forma adaptativa a data ideal para a próxima revisão de cada cartão com base no nível de dificuldade reportado pelo aluno.
+O módulo de Flashcards implementa a consagrada metodologia de **Repetição Espaçada (SRS - Spaced Repetition System)**. Disponível para todo aluno autenticado (modelo software livre), o sistema permite criar categorias temáticas e organizar cartões de estudo contendo "Frente e Verso". Um algoritmo matemático calcula de forma adaptativa a data ideal para a próxima revisão de cada cartão com base no nível de dificuldade reportado pelo aluno.
 
 ---
 
@@ -87,19 +87,19 @@ stateDiagram-v2
 
 ### 1. Dashboard Principal (`/aluno/flashcards`)
 *   **Método**: `GET`
-*   **Segurança**: `@aluno_required`, `@premium_required`
+*   **Segurança**: `@aluno_required`
 *   **Isenção de Rate Limits**: `@limiter.exempt` para garantir navegabilidade suave.
 *   **Lógica**: Carrega todas as categorias ativas do usuário e realiza uma consulta com contagem otimizada exata (`count="exact"`) para determinar a quantidade de cards pendentes (`proxima_revisao <= agora`), exibindo o indicador dinâmico na tela.
 
 ### 2. Gerenciamento de Cards (`/aluno/flashcards/categoria/<id_categoria>`)
 *   **Método**: `GET`
-*   **Segurança**: `@aluno_required`, `@premium_required`
+*   **Segurança**: `@aluno_required`
 *   **Isenção de Rate Limits**: `@limiter.exempt`
 *   **Lógica**: Exibe a lista completa de cartões de uma pasta. Possui validação estrita de ownership da categoria, redirecionando o aluno de volta ao painel principal em caso de URLs manipuladas ou dados inválidos.
 
 ### 3. Sessão de Revisão Ativa (`/aluno/flashcards/estudar/<id_categoria>`)
 *   **Método**: `GET`
-*   **Segurança**: `@aluno_required`, `@premium_required`
+*   **Segurança**: `@aluno_required`
 *   **Isenção de Rate Limits**: `@limiter.exempt`
 *   **Lógica**: Carrega apenas os cartões cuja data de `proxima_revisao` seja menor ou igual ao horário atual (`lte`). Se o parâmetro for `'todos'`, faz uma mesclagem global de cards de todas as categorias do aluno, mantendo o isolamento por usuário.
 

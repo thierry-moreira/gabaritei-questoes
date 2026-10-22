@@ -12,15 +12,13 @@ Este módulo constitui o núcleo operacional e pedagógico do **Gabaritei**, pro
 
 $$\text{Streak}_{\text{hoje}} = \begin{cases} \text{Streak}_{\text{ontem}} + 1 & \text{se } \text{data}_{\text{última}} = \text{hoje} - 1 \\ 1 & \text{se } \text{data}_{\text{última}} < \text{hoje} - 1 \\ \text{Streak}_{\text{ontem}} & \text{se } \text{data}_{\text{última}} = \text{hoje} \end{cases}$$
 
-*   **`salvar_resposta`**: Endpoint da API pública para persistência síncrona com verificação de cotas de resolução diária para usuários do plano gratuito.
+*   **`salvar_resposta`**: Endpoint de API (`/api/responder`) para persistência síncrona das respostas do aluno no histórico.
 
-### 2. Paywall e Indexação Otimizada (SEO)
-*   **`responder_publico`**: Endpoint com rate limit especial (`/api/responder_publico`) para tráfego anônimo (Landing Page). Permite que visitantes respondam a até **5 questões por sessão**, salvando os IDs na sessão do Flask (`anon_questoes`) para conversão.
-*   **`visualizar_questao_seo`**: Exibe a página individual da questão (`/questoes/<materia>/q<id>`). Implementa **Redirecionamento Canônico (301)** para corrigir dinamicamente quaisquer slugs corrompidos digitados na URL, garantindo perfeita indexação no Google.
-*   **Isenção de Crawlers**: Utiliza verificação de DNS reverso e análise de cabeçalhos de User-Agent no utilitário `verificar_bot_real` para isentar bots oficiais de busca (Googlebot/Bingbot) do bloqueio do paywall, mantendo 100% da biblioteca de questões indexada para SEO.
+### 2. Página Pública de Questão (Vitrine SEO)
+*   **`visualizar_questao_seo`**: Exibe a página individual da questão (`/questoes/<materia>/q<id>`). Implementa **Redirecionamento Canônico (301)** para corrigir dinamicamente quaisquer slugs corrompidos digitados na URL, garantindo perfeita indexação no Google. É uma vitrine pública: visitantes leem a questão e as alternativas, mas só usuários autenticados respondem — o card substitui o botão de resposta por "Cadastre-se para responder".
 
 ### 3. Ecossistema Pedagógico de IA (Gabi IA)
-*   **`ia_explica`**: Gera explicações hiper-pedagógicas em tempo real (`/api/ia_explica`) para usuários Premium. Integra prompts de sistema altamente restritivos para evitar alucinações de lei e suporta **visão computacional** enviando imagens extraídas do enunciado/alternativas via URLs assinadas e seguras à API do GPT-4o mini.
+*   **`ia_explica`**: Gera explicações hiper-pedagógicas em tempo real (`/api/ia_explica`) para usuários autenticados. Integra prompts de sistema altamente restritivos para evitar alucinações de lei e suporta **visão computacional** enviando imagens extraídas do enunciado/alternativas via URLs assinadas e seguras à API do GPT-4o mini.
 *   **`ia_gerar_estudo`**: Endpoint unificado (`/api/ia/gerar_estudo`) que extrai a teoria subjacente à questão para gerar resumos ou flashcards permanentes:
     *   **Resumos**: Gravados no caderno de resumos do aluno (`resumos_estudo`).
     *   **Flashcards**: Pergunta e resposta estruturadas para memorização ativa (Frente/Verso), salvas automaticamente no respectivo baralho da matéria (`flashcards` e `flashcard_categorias`).
@@ -53,46 +51,7 @@ sequenceDiagram
     end
 ```
 
-### Diagrama 2: Paywall SEO e Isenção de Robôs de Busca Real
-Este diagrama ilustra a proteção de tráfego, separando a verificação estrita de paywall (limite de 5 questões para visitantes) da isenção total oferecida a robôs reais para maximizar a indexação SEO:
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Visitante as Usuário Anônimo / Crawler
-    participant App as Flask Route (/questoes/... ou /responder_publico)
-    participant Util as verificar_bot_real (Reverse DNS)
-    participant Session as Flask Session (anon_questoes)
-    participant DB as Supabase
-    
-    Visitante->>App: Acessa Questão SEO / Envia resposta pública
-    App->>Util: verificar_bot_real(IP, User-Agent)
-    Util-->>App: Retorna is_bot (True/False)
-    
-    alt É Robô de Busca Real (Googlebot/Bingbot)
-        Note over App: Isenção Total de Paywall
-        App->>DB: Busca dados da questão
-        DB-->>App: Dados
-        App-->>Visitante: Renderiza página completa (SEO indexável)
-    else É Usuário Comum
-        App->>Session: Recupera 'anon_questoes' da sessão
-        Session-->>App: Lista de IDs de questões vistas
-        
-        alt IDs vistos >= 5 e questão atual não está na lista
-            App-->>Visitante: Exibe Paywall / Bloqueia resolução (Erro 403)
-        else Permissão concedida
-            alt Questão atual não vista
-                App->>Session: Adiciona ID à lista 'anon_questoes'
-                App->>DB: Insere em historico_respostas_anonimo (para estatística)
-            end
-            App->>DB: Busca dados da questão
-            DB-->>App: Dados
-            App-->>Visitante: Exibe Questão / Retorna resultado
-        end
-    end
-```
-
-### Diagrama 3: Arquitetura de IA (Gabi IA) com Barramento de Cache Duplo
+### Diagrama 2: Arquitetura de IA (Gabi IA) com Barramento de Cache Duplo
 Ilustração do ecossistema inteligente que impede redundâncias, implementando cache local no caderno/baralho do aluno e cache global persistido para otimizar custos com APIs e tempo de latência:
 
 ```mermaid
@@ -157,7 +116,7 @@ O motor generativo adota uma política de **tolerância zero contra alucinaçõe
 ## 🔐 Segurança, IDOR e Integridade de Dados
 
 *   **Proteção Contra IDOR**:
-    *   A deleção física de questões (`excluir_questao`) migrou para o ambiente administrativo (`rotas/admin_api.py`, blindada por `@admin_required` com trava de dispositivo único — ver `docs/rotas/admin.md`). O blueprint de questões do aluno não expõe nenhuma rota destrutiva.
+    *   A deleção física de questões (`excluir_questao`) migrou para o ambiente administrativo (`rotas/admin_api.py`, blindada por `@admin_required` com trava de dispositivo único — ver `docs/rotas/admin.md` no repositório do painel administrativo). O blueprint de questões do aluno não expõe nenhuma rota destrutiva.
     *   A inserção de resumos e flashcards sempre resolve e força a propriedade ao UUID autenticado do aluno (`current_user.id`), inviabilizando qualquer injeção ou tentativa de alteração cruzada de dados por IDs arbitrários.
 *   **Moderação Híbrida**: O salvamento de novos comentários de alunos em questões passa pela camada local de moderação (`verificar_texto_improprio`) impedindo termos chulos ou ataques na comunidade de estudantes.
 

@@ -12,7 +12,7 @@ Os filtros salvos atuam como cadernos persistentes e são injetados de forma ass
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Aluno as Aluno (Premium)
+    actor Aluno
     participant F as Filtro (rotas/filtro.py)
     participant DB as Supabase (Banco de Dados)
     participant Q as Questões (Layout)
@@ -21,13 +21,9 @@ sequenceDiagram
     Q->>Aluno: Exibir questões selecionadas com query_string
     Aluno->>F: Clicar em "Salvar Caderno" (enviar url_params e nome_filtro)
     
-    alt Validação de Cota Aprovada
-        F->>DB: Inserir em 'filtros_salvos' (id_usuario, nome_filtro, url_params)
-        DB-->>F: Sucesso na gravação
-        F-->>Aluno: Exibir alerta Flash de sucesso
-    else Validação Rejeitada (Limite atingido)
-        F-->>Aluno: Exibir alerta Flash de cota esgotada
-    end
+    F->>DB: Inserir em 'filtros_salvos' (id_usuario, nome_filtro, url_params)
+    DB-->>F: Sucesso na gravação
+    F-->>Aluno: Exibir alerta Flash de sucesso
     
     note over F: Redireciona com redirect(f"/aluno/questoes?{url_params}")
     F->>Q: Manter aluno exatamente na página em que estava

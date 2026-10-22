@@ -9,14 +9,13 @@ except (ImportError, OSError):
 
 from banco_dados_aluno import supabase
 from extensoes import limiter
-from utils import safe_execute, aluno_required, premium_required
+from utils import safe_execute, aluno_required
 
 simulado_bp = Blueprint('simulado', __name__)
 
 @simulado_bp.route('/aluno/simulados')
 @limiter.exempt
 @aluno_required
-@premium_required
 def painel_simulados():
     res_publicos = safe_execute(
         supabase.table("simulados").select("*, usuarios(username)").eq("eh_privado", False).order("criado_em", desc=True)
@@ -52,7 +51,6 @@ def painel_simulados():
 @simulado_bp.route('/aluno/simulados/gerar', methods=['POST'])
 @limiter.exempt
 @aluno_required
-@premium_required
 def gerar_simulado():
     titulo = request.form.get('titulo')
     privacidade = request.form.get('privacidade')
@@ -139,7 +137,6 @@ def gerar_simulado():
 @simulado_bp.route('/aluno/simulados/fazer/<id_simulado>')
 @limiter.exempt
 @aluno_required
-@premium_required
 def fazer_simulado(id_simulado):
     res_simulado = safe_execute(
         supabase.table('simulados').select('*').eq('id', id_simulado).single()
@@ -191,7 +188,6 @@ def fazer_simulado(id_simulado):
 @simulado_bp.route('/aluno/simulados/corrigir/<id_simulado>', methods=['POST'])
 @limiter.exempt
 @aluno_required
-@premium_required
 def corrigir_simulado(id_simulado):
     try:
         res_simulado = safe_execute(supabase.table('simulados').select('*').eq('id', id_simulado).single())
@@ -265,7 +261,6 @@ def corrigir_simulado(id_simulado):
 @simulado_bp.route('/aluno/simulados/excluir/<id_simulado>', methods=['POST'])
 @limiter.exempt
 @aluno_required
-@premium_required
 def excluir_simulado(id_simulado):
     try:
         res = safe_execute(supabase.table('simulados').select('id_criador').eq('id', id_simulado).single())
@@ -285,7 +280,6 @@ def excluir_simulado(id_simulado):
 @simulado_bp.route('/aluno/simulados/ranking/<id_simulado>')
 @limiter.exempt
 @aluno_required
-@premium_required
 def ver_ranking_simulado(id_simulado):
     try:
         res_simulado = safe_execute(
@@ -318,7 +312,6 @@ def ver_ranking_simulado(id_simulado):
 @simulado_bp.route('/simulado/<id_simulado>/pdf')
 @limiter.exempt 
 @aluno_required
-@premium_required
 def baixar_pdf_simulado(id_simulado):
     try:
         res_simulado = safe_execute(

@@ -67,8 +67,7 @@ def visualizar_caderno(id_caderno):
                                questoes=questoes_lista,
                                id_caderno=id_caderno,
                                ids_acertos=ids_acertos,
-                               ids_erros=ids_erros,
-                                is_premium=True)
+                               ids_erros=ids_erros)
     except Exception as e:
         print(f"❌ ERRO CRÍTICO NO CADERNO: {str(e)}")
         return redirect(url_for('caderno.meus_cadernos'))
