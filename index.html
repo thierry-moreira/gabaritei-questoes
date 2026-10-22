@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-mail confirmado | Gabaritei Questões</title>
+    <meta name="robots" content="noindex">
+
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --primary-purple: #7c3aed;
+            --text-main: #1e293b;
+            --text-secondary: #475569;
+            --border-main: #e2e8f0;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f1f5f9;
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            overflow-x: hidden;
+            letter-spacing: -0.02em;
+        }
+        h1 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.03em; margin: 0.75rem 0 0.5rem; }
+        .screen { min-height: 100vh; display: flex; flex-direction: column; position: relative; }
+        .bg-decor { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+        .blob-1 {
+            position: absolute; top: -10%; right: -10%; width: 70vw; height: 70vw;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.08) 0%, transparent 70%);
+            filter: blur(60px);
+        }
+        .blob-2 {
+            position: absolute; bottom: -10%; left: -10%; width: 60vw; height: 60vw;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.05) 0%, transparent 70%);
+            filter: blur(60px);
+        }
+        header.custom-nav { padding: 2rem 3rem; display: flex; align-items: center; gap: 0.75rem; }
+        .logo-badge {
+            background: rgba(37, 99, 235, 0.1); width: 42px; height: 42px; border-radius: 1rem;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .logo-badge .material-symbols-outlined { color: var(--primary-blue); font-size: 24px; }
+        .logo-nome { font-weight: 700; font-size: 1.25rem; }
+        main { flex-grow: 1; display: flex; align-items: center; justify-content: center; padding: 1rem 1rem 3rem; }
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            width: 100%; max-width: 480px;
+        }
+        .icon-hero { font-size: 44px; color: var(--primary-blue); display: block; }
+        .icon-hero.erro { color: #dc2626; }
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-purple) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; color: transparent; display: inline-block;
+        }
+        p.lead { color: var(--text-secondary); font-size: 0.95rem; margin: 0 0 1.5rem; line-height: 1.6; }
+        .btn-premium {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-purple) 100%);
+            color: white; font-weight: 700; height: 3.5rem; border-radius: 1rem; border: none;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+            width: 100%; font-size: 0.95rem; cursor: pointer; text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+        }
+        .btn-premium:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(37, 99, 235, 0.45); filter: brightness(1.1); color: white; }
+        .btn-premium:disabled { opacity: 0.6; cursor: wait; transform: none; }
+        .form-label-premium { font-size: 0.85rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem; display: block; padding-left: 0.25rem; }
+        .input-wrapper { position: relative; margin-bottom: 1.25rem; }
+        .form-control-premium {
+            height: 3.5rem; border-radius: 1rem; padding-left: 3.25rem; padding-right: 1rem;
+            border: 1px solid var(--border-main); background: white; color: var(--text-main);
+            font-size: 0.95rem; width: 100%; transition: all 0.2s ease; font-family: 'Outfit', sans-serif;
+        }
+        .form-control-premium:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); outline: none; }
+        .input-icon { position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 1.25rem; }
+        .hint { color: #94a3b8; font-size: 0.8rem; margin-top: 1rem; }
+        .feedback { font-size: 0.9rem; margin: 0.75rem 0 0; min-height: 1.2em; }
+        .feedback.ok { color: #16a34a; font-weight: 600; }
+        .feedback.erro { color: #dc2626; }
+        footer { padding: 1.5rem 3rem; border-top: 1px solid rgba(0,0,0,0.05); color: var(--text-secondary); font-size: 0.85rem; }
+        footer .fw-bold { color: var(--text-main); font-weight: 700; }
+        .d-none { display: none !important; }
+        @media (max-width: 576px) {
+            .glass-card { padding: 2rem 1.5rem; border-radius: 1.75rem; }
+            header.custom-nav { padding: 1.25rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="screen">
+        <div class="bg-decor">
+            <div class="blob-1"></div>
+            <div class="blob-2"></div>
+        </div>
+
+        <header class="custom-nav">
+            <div class="logo-badge"><span class="material-symbols-outlined">school</span></div>
+            <span class="logo-nome">Gabaritei Questões</span>
+        </header>
+
+        <main>
+            <div class="glass-card">
+                <!-- ESTADO: confirmação de e-mail concluída (redirect padrão pós-clique) -->
+                <div id="estado-sucesso" class="estado">
+                    <span class="material-symbols-outlined icon-hero">mark_email_read</span>
+                    <h1>E-mail <span class="gradient-text">confirmado!</span></h1>
+                    <p class="lead">Sua conta está ativa. Volte ao aplicativo e entre com seu e-mail e senha para continuar seus estudos.</p>
+                    <a class="btn-abrir-app btn-premium d-none" href="http://127.0.0.1:5000/aluno/login">
+                        ENTRAR NO APLICATIVO
+                        <span class="material-symbols-outlined">open_in_new</span>
+                    </a>
+                    <p class="hint">O botão só aparece se o aplicativo estiver aberto neste computador. Caso contrário, abra o aplicativo normalmente — sua conta já está pronta.</p>
+                </div>
+
+                <!-- ESTADO: link expirado/inválido + reenvio da confirmação -->
+                <div id="estado-erro" class="estado d-none">
+                    <span class="material-symbols-outlined icon-hero erro">error</span>
+                    <h1>Link <span class="gradient-text">inválido</span></h1>
+                    <p class="lead" id="msg-erro">Este link de verificação expirou ou já foi usado. Solicite um novo e-mail abaixo.</p>
+                    <form id="form-reenviar" novalidate>
+                        <label class="form-label-premium" for="email-reenviar">E-mail cadastrado</label>
+                        <div class="input-wrapper">
+                            <span class="material-symbols-outlined input-icon">mail</span>
+                            <input type="email" id="email-reenviar" class="form-control-premium" placeholder="seu@email.com" autocomplete="email" required>
+                        </div>
+                        <button type="submit" class="btn-premium">
+                            REENVIAR E-MAIL DE CONFIRMAÇÃO
+                            <span class="material-symbols-outlined">send</span>
+                        </button>
+                        <p class="feedback" id="msg-reenvio"></p>
+                    </form>
+                </div>
+
+                <!-- ESTADO: redefinição de senha (link de recuperação) -->
+                <div id="estado-senha" class="estado d-none">
+                    <span class="material-symbols-outlined icon-hero">lock_reset</span>
+                    <h1>Defina uma <span class="gradient-text">nova senha</span></h1>
+                    <p class="lead">Você pediu a recuperação de senha. Escolha a nova senha da sua conta — depois volte ao aplicativo e entre com ela.</p>
+                    <form id="form-senha" novalidate>
+                        <label class="form-label-premium" for="senha-nova">Nova senha (mínimo 8 caracteres)</label>
+                        <div class="input-wrapper">
+                            <span class="material-symbols-outlined input-icon">lock</span>
+                            <input type="password" id="senha-nova" class="form-control-premium" placeholder="••••••••" autocomplete="new-password" required>
+                        </div>
+                        <label class="form-label-premium" for="senha-confirma">Confirmar nova senha</label>
+                        <div class="input-wrapper">
+                            <span class="material-symbols-outlined input-icon">lock</span>
+                            <input type="password" id="senha-confirma" class="form-control-premium" placeholder="••••••••" autocomplete="new-password" required>
+                        </div>
+                        <button type="submit" class="btn-premium">
+                            SALVAR NOVA SENHA
+                            <span class="material-symbols-outlined">check</span>
+                        </button>
+                        <p class="feedback" id="msg-senha"></p>
+                    </form>
+                </div>
+
+                <!-- ESTADO: senha redefinida com sucesso -->
+                <div id="estado-senha-ok" class="estado d-none">
+                    <span class="material-symbols-outlined icon-hero">check_circle</span>
+                    <h1>Senha <span class="gradient-text">redefinida!</span></h1>
+                    <p class="lead">Tudo pronto. Volte ao aplicativo e entre com sua nova senha.</p>
+                    <a class="btn-abrir-app btn-premium d-none" href="http://127.0.0.1:5000/aluno/login">
+                        ENTRAR NO APLICATIVO
+                        <span class="material-symbols-outlined">open_in_new</span>
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <span class="fw-bold">Gabaritei Questões</span> © 2026. Software livre.
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+    'use strict';
+
+// ---- Config (chaves públicas por design — o RLS é a barreira de segurança) ----
+var SUPABASE_URL = 'https://ivhuaevrrkrnagbqmnwc.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2aHVhZXZycmtybmFnYnFtbndjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NTIzNDcsImV4cCI6MjA4ODIyODM0N30.6_XLnAn2XGNtP5bTQpWVMWVs600cES16rOGd_JtOYcE';
+var URL_APP_LOCAL = 'http://127.0.0.1:5000/aluno/login';
+
+// O processamento do redirect é manual (detectSessionInUrl desligado):
+// capturamos os parâmetros em memória e limpamos a URL imediatamente,
+// para não deixar tokens na barra de endereço/histórico.
+var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { flowType: 'implicit', detectSessionInUrl: false, autoRefreshToken: false }
+});
+var URL_PAGINA = window.location.origin + window.location.pathname; // destino dos e-mails reenviados
+
+// ---- Helpers de UI ----
+function mostrar(id) {
+    document.querySelectorAll('.estado').forEach(function (e) { e.classList.add('d-none'); });
+    var alvo = document.getElementById(id);
+    if (alvo) alvo.classList.remove('d-none');
+}
+function feedback(id, msg, ok) {
+    var el = document.getElementById(id);
+    el.textContent = msg || '';
+    el.className = 'feedback ' + (ok ? 'ok' : 'erro');
+}
+
+// ---- Tradução de erros do GoTrue ----
+function traduzErro(codigo, descricao) {
+    codigo = (codigo || '').toLowerCase();
+    var desc = (descricao || '').toLowerCase();
+    if (codigo.indexOf('otp_expired') >= 0 || desc.indexOf('expired') >= 0)
+        return 'O link de verificação expirou (válido por 1 hora). Solicite um novo e-mail abaixo.';
+    if (codigo.indexOf('access_denied') >= 0 || codigo.indexOf('403') >= 0)
+        return 'O link não é mais válido. Solicite um novo e-mail abaixo.';
+    if (codigo.indexOf('user_not_found') >= 0 || desc.indexOf('not found') >= 0)
+        return 'Não encontramos uma conta para este link. Cadastre-se no aplicativo.';
+    return 'Não foi possível validar este link (' + (descricao || codigo || 'erro desconhecido') + '). Solicite um novo e-mail abaixo.';
+}
+
+// ---- Fluxo principal: interpreta como o redirect do e-mail chegou ----
+async function init() {
+    var q = new URLSearchParams(window.location.search);
+    var frag = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+
+    var erro = q.get('error'), erroDesc = q.get('error_description');
+    var code = q.get('code'), token = q.get('token'), tipo = q.get('type');
+    var hashAccess = frag.get('access_token'), hashRefresh = frag.get('refresh_token'), hashTipo = frag.get('type');
+
+    // Higiene: tokens capturados em memória — some da URL agora.
+    try { window.history.replaceState(null, '', window.location.pathname); } catch (e) { /* ignore */ }
+
+    if (erro) {
+        document.getElementById('msg-erro').textContent = traduzErro(erro, erroDesc);
+        mostrar('estado-erro');
+        return;
+    }
+    if (code) { // fluxo PKCE (browser/CLI): troca o code por sessão
+        try {
+            var r = await sb.auth.exchangeCodeForSession(code);
+            if (r.error) throw r.error;
+            mostrar(tipo === 'recovery' ? 'estado-senha' : 'estado-sucesso');
+        } catch (e) {
+            document.getElementById('msg-erro').textContent = traduzErro('code', e && e.message);
+            mostrar('estado-erro');
+        }
+        return;
+    }
+    if (token && tipo === 'recovery') { // fluxo token_hash: troca o token de recuperação por sessão
+        try {
+            var v = await sb.auth.verifyOtp({ type: 'recovery', token_hash: token });
+            if (v.error) throw v.error;
+            mostrar('estado-senha');
+        } catch (e) {
+            document.getElementById('msg-erro').textContent = traduzErro('otp', e && e.message);
+            mostrar('estado-erro');
+        }
+        return;
+    }
+    if (hashAccess && hashRefresh) { // fluxo implícito (app server-side): tokens no fragmento
+        try {
+            var s = await sb.auth.setSession(hashAccess, hashRefresh);
+            if (s.error) throw s.error;
+            mostrar(hashTipo === 'recovery' ? 'estado-senha' : 'estado-sucesso');
+        } catch (e) {
+            document.getElementById('msg-erro').textContent = traduzErro('session', e && e.message);
+            mostrar('estado-erro');
+        }
+        return;
+    }
+    // Padrão: redirect limpo após confirmação de cadastro
+    mostrar('estado-sucesso');
+}
+
+// ---- Form: nova senha (link de recuperação) ----
+document.getElementById('form-senha').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var s1 = document.getElementById('senha-nova').value;
+    var s2 = document.getElementById('senha-confirma').value;
+    if (s1.length < 8) { feedback('msg-senha', 'A senha precisa ter no mínimo 8 caracteres.', false); return; }
+    if (s1 !== s2) { feedback('msg-senha', 'As senhas não conferem.', false); return; }
+    feedback('msg-senha', 'Salvando...', true);
+    try {
+        var r = await sb.auth.updateUser({ password: s1 });
+        if (r.error) throw r.error;
+        await sb.auth.signOut(); // higiene: a sessão desta página não é a sessão do aplicativo
+        mostrar('estado-senha-ok');
+        detectarAppLocal();
+    } catch (e) {
+        feedback('msg-senha', (e && e.message) ? e.message : 'Não foi possível salvar. Tente novamente.', false);
+    }
+});
+
+// ---- Form: reenvio do e-mail de confirmação ----
+document.getElementById('form-reenviar').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var email = (document.getElementById('email-reenviar').value || '').trim().toLowerCase();
+    if (!email || email.indexOf('@') < 0) { feedback('msg-reenvio', 'Informe um e-mail válido.', false); return; }
+    feedback('msg-reenvio', 'Enviando...', true);
+    try {
+        var r = await sb.auth.resend({ type: 'signup', email: email, options: { email_redirect_to: URL_PAGINA } });
+        if (r.error) throw r.error;
+        feedback('msg-reenvio', 'Novo e-mail de confirmação enviado! Confira sua caixa de entrada (e o spam).', true);
+    } catch (e) {
+        var m = (e && e.message) || 'Não foi possível reenviar.';
+        if (/rate|limit/i.test(m)) m = 'Muitos e-mails em pouco tempo. Aguarde alguns minutos e tente de novo.';
+        if (/not found|same email|already/i.test(m)) m = 'Não encontramos um cadastro pendente para este e-mail. Tente entrar no aplicativo.';
+        feedback('msg-reenvio', m, false);
+    }
+});
+
+// ---- Detecta o app local (mostra o botão "entrar no aplicativo") ----
+async function detectarAppLocal() {
+    try {
+        var ctrl = new AbortController();
+        var t = setTimeout(function () { ctrl.abort(); }, 1500);
+        await fetch(URL_APP_LOCAL, { mode: 'no-cors', cache: 'no-store', signal: ctrl.signal });
+        clearTimeout(t);
+        document.querySelectorAll('.btn-abrir-app').forEach(function (b) { b.classList.remove('d-none'); });
+    } catch (e) { /* aplicativo fechado — segue só com a mensagem */ }
+}
+
+init();
+detectarAppLocal();
+    </script>
+</body>
+</html>
