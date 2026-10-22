@@ -11,6 +11,9 @@
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <!-- Bootstrap Icons (ícone do GitHub no rodapé) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
     <!-- Custom Premium CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth_premium.css') }}?v=4.0">
 </head>
@@ -106,7 +109,7 @@
 
                         <!-- MODO: CRIAR CONTA -->
                         <div id="box-criar" class="d-none flex-column gap-4">
-                            <form method="POST" action="{{ url_for('auth.criar_usuario') }}" class="d-flex flex-column gap-4">
+                            <form id="form-criar" method="POST" action="{{ url_for('auth.criar_usuario') }}" class="d-flex flex-column gap-4">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <div>
                                     <label class="form-label-premium" for="username">Como quer ser chamado?</label>
@@ -126,8 +129,16 @@
                                     <label class="form-label-premium" for="senha2">Senha (mínimo 8 caracteres)</label>
                                     <div class="input-wrapper">
                                         <span class="material-symbols-outlined input-icon">lock</span>
-                                        <input type="password" name="senha" id="senha2" class="form-control-premium" placeholder="Crie uma senha forte" required minlength="8">
+                                        <input type="password" name="senha" id="senha2" class="form-control-premium" placeholder="Crie uma senha forte" required minlength="8" autocomplete="new-password">
                                     </div>
+                                </div>
+                                <div>
+                                    <label class="form-label-premium" for="confirmar_senha">Confirmar senha</label>
+                                    <div class="input-wrapper">
+                                        <span class="material-symbols-outlined input-icon">lock</span>
+                                        <input type="password" name="confirmar_senha" id="confirmar_senha" class="form-control-premium" placeholder="Digite a senha novamente" required minlength="8" autocomplete="new-password">
+                                    </div>
+                                    <p id="feedback-criar" class="small text-danger d-none mb-0 mt-2 ps-1"></p>
                                 </div>
                                 <button type="submit" class="btn btn-premium">
                                     CRIAR CONTA
@@ -171,6 +182,10 @@
                     <span class="fw-bold text-dark">Gabaritei Questões</span>
                     <span class="ms-1">© 2026. Software livre.</span>
                 </div>
+                <a href="https://github.com/thierry-moreira/gabaritei-questoes" target="_blank" rel="noopener noreferrer"
+                   class="text-decoration-none fw-bold d-inline-flex align-items-center gap-1" style="color: #1E293B !important;">
+                    <i class="bi bi-github"></i> Código-fonte
+                </a>
             </div>
         </footer>
     </div>
@@ -190,6 +205,18 @@
             document.getElementById('link-esqueci').addEventListener('click', function (e) { e.preventDefault(); mostrarBox('box-esqueci'); });
             document.getElementById('link-voltar-login').addEventListener('click', function (e) { e.preventDefault(); mostrarBox('box-entrar'); });
             document.getElementById('link-voltar-login2').addEventListener('click', function (e) { e.preventDefault(); mostrarBox('box-entrar'); });
+            // Confirmação de senha: bloqueia o submit na hora (sem POST) se os campos diferirem
+            var formCriar = document.getElementById('form-criar');
+            formCriar.addEventListener('submit', function (e) {
+                var fb = document.getElementById('feedback-criar');
+                if (formCriar.senha.value !== formCriar.confirmar_senha.value) {
+                    e.preventDefault();
+                    fb.textContent = 'As senhas não conferem — digite a mesma senha nos dois campos.';
+                    fb.classList.remove('d-none');
+                } else {
+                    fb.classList.add('d-none');
+                }
+            });
         });
     </script>
 </body>

@@ -8,6 +8,7 @@
 ## Rotas Ativas
 
 ### 1. Tela de Login / Sessão Lembrada (`/aluno/login`, GET)
+*   **Portão de entrada**: a raiz `/` (ex-landing de apresentação, aposentada) redireciona para esta tela; alunos logados seguem direto à área do aluno.
 *   **Redirecionamento de autenticados**: alunos logados vão direto à área do aluno.
 *   **Sessão lembrada**: se houver um refresh token salvo na sessão Flask (`auth_refresh_token` — gravado no login), o client Supabase é reautenticado (`restaurar_sessao`) e o aluno entra sem redigitar a senha; o perfil é reconstituído via `usuarios.auth_id`. Refresh inválido/expirado → token descartado e tela normal.
 *   **Client reautenticado a cada boot**: o `before_request` de `app.py` reaplica o JWT do aluno logado quando o processo Flask reinicia (o client global perde a sessão em memória; o refresh token vive no cookie de sessão Flask, persistido pela `FLASK_SECRET_KEY` fixa do shell).
@@ -19,7 +20,7 @@
 *   **Falha**: credenciais inválidas → flash "E-mail ou senha incorretos."
 
 ### 3. Criar Conta (`/aluno/criar`, POST)
-*   **Formulário**: `username` (como quer ser chamado) + `email` + `senha` (mínimo 8 caracteres, validado antes de chamar o Auth).
+*   **Formulário**: `username` (como quer ser chamado) + `email` + `senha` (mínimo 8 caracteres, validado antes de chamar o Auth) + `confirmar_senha` — os dois campos precisam conferir (validação inline no browser e no servidor, antes do Auth, para evitar conta criada com senha digitada errada).
 *   **Fluxo**: `criar_conta_auth` (Supabase Auth) → `_criar_perfil` (mesmo helper do login: adota a linha legada de mesmo e-mail se existir; sufixo `_hex` no username se colidir) → login direto.
 *   **"Confirm email" ligado** (dashboard do Auth): a conta nasce sem sessão — o aluno recebe flash pedindo confirmação pelo e-mail e entra depois. O link do e-mail redireciona para a **página pública** (`site/`, GitHub Pages — ver seção 6): a confirmação acontece no servidor do Supabase ao clicar.
 *   **E-mail já cadastrado**: flash orientando login ou recuperação de senha.
@@ -29,7 +30,7 @@
 
 ### 5. Encerramento de Sessão (`/logout`)
 *   Limpa a identidade do client Supabase (`sair_auth`), executa `logout_user()` e remove da sessão Flask **apenas as chaves não administrativas** (preserva `admin_*`), incluindo o `auth_refresh_token`.
-*   Redireciona para a página de apresentação (`aluno.index`).
+*   Redireciona para a tela de login (`auth.login_aluno`) — a ex-página de apresentação foi aposentada com o fim do modelo pago.
 
 ### 6. Página Pública de Confirmação (`site/` → GitHub Pages)
 O app é local (`127.0.0.1:5000`), então os links dos e-mails do Supabase Auth (confirmação de cadastro e recuperação de senha) não podem redirecionar para a própria máquina. Eles apontam para uma **página estática publicada no GitHub Pages** (`https://thierry-moreira.github.io/gabaritei-questoes/`, fonte em `site/`, branch `gh-pages`):

@@ -168,12 +168,16 @@ def criar_usuario():
     username = (request.form.get('username') or '').strip()
     email = (request.form.get('email') or '').strip().lower()
     senha = request.form.get('senha') or ''
+    confirmar_senha = request.form.get('confirmar_senha') or ''
 
     if not username or not email or not senha:
         flash("Preencha nome, e-mail e senha para criar sua conta.", "warning")
         return redirect(url_for('auth.login_aluno'))
     if len(senha) < MIN_SENHA:
         flash(f"A senha precisa ter no mínimo {MIN_SENHA} caracteres.", "warning")
+        return redirect(url_for('auth.login_aluno'))
+    if senha != confirmar_senha:
+        flash("As senhas não conferem. Digite a mesma senha nos dois campos.", "warning")
         return redirect(url_for('auth.login_aluno'))
 
     try:
@@ -231,4 +235,4 @@ def logout():
     for k in keys_to_remove:
         session.pop(k, None)
 
-    return redirect(url_for('aluno.index'))
+    return redirect(url_for('auth.login_aluno'))

@@ -50,6 +50,7 @@ Garante o correto funcionamento de funções de suporte críticas e segurança d
 Valida as proteções preventivas contra acessos automatizados indevidos.
 - **Rotas testadas:**
   - `/admin`, `/admin/` e `/admin/login` (honeypot de segurança que bloqueia acessos maliciosos com 404).
+  - `/` (raiz redireciona à tela de login — ex-landing de apresentação aposentada).
 
 ### 4. Autenticação e Sessões (`test_auth.py`)
 Valida o fluxo completo de controle de acesso do aluno à plataforma.
@@ -57,7 +58,7 @@ Valida o fluxo completo de controle de acesso do aluno à plataforma.
   - Tela de login (`/aluno/login`): sem sessão salva renderiza a tela com e-mail/senha; com refresh token salvo restaura a sessão e redireciona ao `/aluno/painel`; refresh expirado/revogado limpa o token e mostra o login normal.
   - `POST /aluno/entrar` (credenciais corretas entram e redirecionam; conta sem perfil cria/re-linka e entra; e-mail/senha vazios e credenciais inválidas retornam flash de erro).
   - `_criar_perfil` (adota a linha legada `auth_id IS NULL` em vez de duplicar; cria linha nova com o `auth_id` do JWT quando não há legado; colisão de username `23505` tenta sufixo `_hex`; falha não-recuperável retorna `None` sem propagar exceção — flash amigável na rota).
-  - `POST /aluno/criar` (cadastro completo cria conta Auth + perfil e entra; senha curta bloqueada antes do Auth; "Confirm email" ligado pede confirmação; e-mail já cadastrado orienta login/recuperação).
+  - `POST /aluno/criar` (cadastro completo cria conta Auth + perfil e entra; senha curta bloqueada antes do Auth; senhas que não conferem bloqueiam antes do Auth; "Confirm email" ligado pede confirmação; e-mail já cadastrado orienta login/recuperação).
   - `POST /aluno/esqueci` (dispara o reset de senha com e-mail normalizado; e-mail vazio bloqueado).
   - `/logout` limpa a sessão do aluno (incluindo o refresh token) e preserva sessões administrativas protegidas.
 - **Mocks importantes:**

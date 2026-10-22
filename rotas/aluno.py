@@ -15,14 +15,16 @@ aluno_bp = Blueprint('aluno', __name__)
 @aluno_bp.route('/')
 @limiter.exempt
 def index():
-    # Se o aluno já estiver logado, você pode redirecionar direto para o dashboard
+    # Portão de entrada do app (ex-landing de apresentação, aposentada com o
+    # fim do modelo pago): a raiz leva direto à tela de login — a versão
+    # instalável (Electron) abre aqui. Alunos logados seguem à área do aluno.
     if current_user.is_authenticated:
         if current_user.role != 'aluno':
             logout_user()
             flash("A área administrativa roda em aplicativo dedicado (app_admin.py).", "warning")
             return redirect(url_for('auth.login_aluno'))
         return redirect(url_for('questao.resolver_questoes'))
-    return render_template('public/index.html')
+    return redirect(url_for('auth.login_aluno'))
 
 
 

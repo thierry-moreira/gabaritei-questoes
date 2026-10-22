@@ -162,10 +162,18 @@ class TestAuthComSenha(unittest.TestCase):
     def test_criar_senha_curta_bloqueia(self):
         """Senha < 8 caracteres: bloqueada antes de chamar o Auth."""
         with patch('rotas.auth.criar_conta_auth') as m_signup:
-            r = self.client.post('/aluno/criar', data={'username': 'Aluno', 'email': 'a@b.com', 'senha': '123'})
+            r = self.client.post('/aluno/criar', data={'username': 'Aluno', 'email': 'a@b.com', 'senha': '123', 'confirmar_senha': '123'})
             self.assertEqual(r.status_code, 302)
             m_signup.assert_not_called()
         self.assertTrue(any('mínimo' in m for m in self._flashes()))
+
+    @patch('rotas.auth.criar_conta_auth')
+    def test_criar_senhas_diferentes_bloqueia(self, m_signup):
+        """Senha e confirmação diferentes: bloqueada antes de chamar o Auth."""
+        r = self.client.post('/aluno/criar', data={'username': 'Aluno', 'email': 'a@b.com', 'senha': 'senha12345', 'confirmar_senha': 'outra12345'})
+        self.assertEqual(r.status_code, 302)
+        m_signup.assert_not_called()
+        self.assertTrue(any('não conferem' in m for m in self._flashes()))
 
     @patch('rotas.auth._entrar_flask')
     @patch('rotas.auth._criar_perfil', return_value=_linha_fake(9))
@@ -174,7 +182,7 @@ class TestAuthComSenha(unittest.TestCase):
     def test_criar_ok(self, m_signup, m_sess, m_perfil, m_entrar):
         """Cadastro completo: cria conta Auth, perfil e entra."""
         m_sess.return_value = _sessao_auth_fake()
-        r = self.client.post('/aluno/criar', data={'username': 'Novo Aluno', 'email': 'novo@teste.com', 'senha': 'senha12345'})
+        r = self.client.post('/aluno/criar', data={'username': 'Novo Aluno', 'email': 'novo@teste.com', 'senha': 'senha12345', 'confirmar_senha': 'senha12345'})
         self.assertEqual(r.status_code, 302)
         m_signup.assert_called_once_with('novo@teste.com', 'senha12345')
         m_perfil.assert_called_once_with('Novo Aluno', 'novo@teste.com')
@@ -184,14 +192,14 @@ class TestAuthComSenha(unittest.TestCase):
     @patch('rotas.auth.criar_conta_auth')
     def test_criar_aguardando_confirmacao_email(self, m_signup, m_sess):
         """'Confirm email' ligado no Auth: conta criada, sessão não — pede confirmação."""
-        r = self.client.post('/aluno/criar', data={'username': 'Aluno', 'email': 'x@y.com', 'senha': 'senha12345'})
+        r = self.client.post('/aluno/criar', data={'username': 'Aluno', 'email': 'x@y.com', 'senha': 'senha12345', 'confirmar_senha': 'senha12345'})
         self.assertEqual(r.status_code, 302)
         self.assertTrue(any('Confirme seu e-mail' in m for m in self._flashes()))
 
     @patch('rotas.auth.criar_conta_auth', side_effect=Exception('User already registered'))
     def test_criar_email_ja_existente(self, m_signup):
         """E-mail duplicado: avisa para logar ou recuperar a senha."""
-        r = self.client.post('/aluno/criar', data={'username': 'Aluno', 'email': 'x@y.com', 'senha': 'senha12345'})
+        r = self.client.post('/aluno/criar', data={'username': 'Aluno', 'email': 'x@y.com', 'senha': 'senha12345', 'confirmar_senha': 'senha12345'})
         self.assertEqual(r.status_code, 302)
         self.assertTrue(any('já tem conta' in m for m in self._flashes()))
 

@@ -31,5 +31,14 @@ class TestRotasFlask(unittest.TestCase):
                 response = self.client.get(rota)
                 self.assertEqual(response.status_code, 404)
 
+    # -------------------------------------------------------------------------
+    # Página inicial (/) — portão de entrada
+    # -------------------------------------------------------------------------
+    def test_index_redireciona_para_login(self):
+        """Sem sessão: a raiz (/) leva direto à tela de login (ex-landing aposentada)."""
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/aluno/login', response.headers['Location'])
+
 if __name__ == '__main__':
     unittest.main()

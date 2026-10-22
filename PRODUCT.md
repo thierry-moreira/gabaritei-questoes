@@ -49,7 +49,7 @@ Restrições técnicas confirmadas:
 - CSP rigorosa via Talisman; gzip automático; rate limiting global; logging estruturado
 - Licença MIT (`LICENSE`) — nota: `package.json` ainda declara ISC (divergência menor a corrigir)
 
-**Fato confirmado de produto:** o modelo é **software livre total** — todo aluno autenticado tem acesso completo, sem paywall, trial ou planos. O legado freemium foi removido do código e da copy: a landing não menciona mais planos ou trials, as páginas públicas de questões funcionam como vitrine (visitante lê, mas só aluno cadastrado responde — o card mostra "Cadastre-se para responder"), e a flag `is_premium` não existe mais no código. Trabalhos futuros não podem reintroduzir planos, preços, trials ou muros que o produto não tem.
+**Fato confirmado de produto:** o modelo é **software livre total** — todo aluno autenticado tem acesso completo, sem paywall, trial ou planos. O legado freemium foi removido do código e da copy: a landing de apresentação foi aposentada (a raiz `/` abre direto o login), as páginas públicas de questões funcionam como vitrine (visitante lê, mas só aluno cadastrado responde — o card mostra "Cadastre-se para responder"), e a flag `is_premium` não existe mais no código. Trabalhos futuros não podem reintroduzir planos, preços, trials ou muros que o produto não tem.
 
 ## Brand Commitments
 
@@ -62,7 +62,7 @@ Restrições técnicas confirmadas:
 ## Evidence on Hand
 
 - Screenshots reais do produto em `static/imagens/index/`: `painel_aluno_fiel.webp`, `flashcards.webp` e capturas de tela do fluxo de index (2026-04-30)
-- Landing real e completa em `templates/public/index.html` (copy parcialmente desatualizada — ver fato confirmado acima)
+- Landing de apresentação removida (out/2026): a raiz `/` abre direto a tela de login; o link "Código-fonte" (GitHub) migrou para o rodapé do login. Screenshots históricos da ex-landing permanecem em `static/imagens/index/`
 - Documentação técnica completa: `README.md`, `docs/app.md`, `docs/desktop.md`, `docs/banco_dados.md`, `docs/rotas/*.md`
 - **Ausências que futuros trabalhos não devem fabricar:** não há depoimentos de alunos, taxas de aprovação comprovadas, números de usuários, estudos de caso, matérias de imprensa ou prêmios. Nenhuma superfície pode inventar essas provas.
 
