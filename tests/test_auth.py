@@ -8,6 +8,8 @@ os.environ['FLASK_ENV'] = 'development'
 os.environ.setdefault('FLASK_SECRET_KEY', 'teste-chave-secreta-provisoria')
 
 from app import app
+from rotas import auth as rotas_auth
+import banco_dados_aluno as bda
 
 
 def _sessao_auth_fake(user_email='aluno@teste.com'):
@@ -90,6 +92,70 @@ class TestAuthComSenha(unittest.TestCase):
         self.assertEqual(r.status_code, 302)
         self.assertTrue(any('Informe e-mail e senha' in m for m in self._flashes()))
 
+    @patch('rotas.auth._entrar_flask')
+    @patch('rotas.auth._criar_perfil', return_value=_linha_fake(9))
+    @patch('rotas.auth._linha_do_usuario_auth', return_value=None)
+    @patch('rotas.auth.entrar_com_senha')
+    def test_entrar_sem_perfil_cria_e_entra(self, m_login, m_linha, m_perfil, m_entrar):
+        """Conta Auth ok mas sem perfil (ex.: legado): cria/re-linka e entra."""
+        r = self.client.post('/aluno/entrar', data={'email': 'legado@teste.com', 'senha': 'senha12345'})
+        self.assertEqual(r.status_code, 302)
+        m_perfil.assert_called_once_with('legado', 'legado@teste.com')
+        m_entrar.assert_called_once()
+
+    # ------------------------------------------------------------------
+    # _criar_perfil: re-link de perfil legado + fallback de username
+    # ------------------------------------------------------------------
+    def test_criar_perfil_relink_legado(self):
+        """Perfil legado (auth_id NULL) de mesmo e-mail: adota em vez de duplicar."""
+        legado = _linha_fake(50)
+        with patch('rotas.auth.sessao_atual', return_value=_sessao_auth_fake()):
+            with patch('rotas.auth.supabase') as m_sb:
+                m_sb.table.return_value.update.return_value.is_.return_value.execute.return_value = MagicMock(data=[legado])
+                linha = rotas_auth._criar_perfil('Novo', 'aluno@teste.com')
+        self.assertEqual(linha, legado)
+        m_sb.table.return_value.update.assert_called_once_with({'auth_id': 'uuid-teste-123'})
+        m_sb.table.return_value.insert.assert_not_called()
+
+    def test_criar_perfil_sem_legado_insere(self):
+        """Sem perfil legado: insere linha nova com auth_id do JWT."""
+        nova = _linha_fake(99)
+        with patch('rotas.auth.sessao_atual', return_value=_sessao_auth_fake()):
+            with patch('rotas.auth.supabase') as m_sb:
+                m_sb.table.return_value.update.return_value.is_.return_value.execute.return_value = MagicMock(data=[])
+                m_sb.table.return_value.insert.return_value.execute.return_value = MagicMock(data=[nova])
+                linha = rotas_auth._criar_perfil('Novo', 'novo@teste.com')
+        self.assertEqual(linha, nova)
+        inserido = m_sb.table.return_value.insert.call_args[0][0]
+        self.assertEqual(inserido['auth_id'], 'uuid-teste-123')
+        self.assertEqual(inserido['username'], 'Novo')
+
+    def test_criar_perfil_username_ocupado_tenta_sufixo(self):
+        """Colisão de username (23505): segunda tentativa usa sufixo _hex (padrão legado)."""
+        nova = _linha_fake(98)
+        with patch('rotas.auth.sessao_atual', return_value=_sessao_auth_fake()):
+            with patch('rotas.auth.supabase') as m_sb:
+                m_sb.table.return_value.update.return_value.is_.return_value.execute.return_value = MagicMock(data=[])
+                m_sb.table.return_value.insert.return_value.execute.side_effect = [
+                    Exception("{'message': 'duplicate key value violates unique constraint \"usuarios_username_key\"', 'code': '23505'}"),
+                    MagicMock(data=[nova]),
+                ]
+                linha = rotas_auth._criar_perfil('Novo', 'novo@teste.com')
+        self.assertEqual(linha, nova)
+        self.assertEqual(m_sb.table.return_value.insert.call_count, 2)
+        segundo = m_sb.table.return_value.insert.call_args_list[1][0][0]
+        self.assertTrue(segundo['username'].startswith('Novo_'))
+
+    def test_criar_perfil_falha_persisvel_retorna_none(self):
+        """Falha não-recuperável no INSERT: sem exceção propagada — flash amigável."""
+        with patch('rotas.auth.sessao_atual', return_value=_sessao_auth_fake()):
+            with patch('rotas.auth.supabase') as m_sb:
+                m_sb.table.return_value.update.return_value.is_.return_value.execute.return_value = MagicMock(data=[])
+                m_sb.table.return_value.insert.return_value.execute.side_effect = Exception("{'code': '42501', 'message': 'new row violates row-level security policy'}")
+                linha = rotas_auth._criar_perfil('Novo', 'novo@teste.com')
+        self.assertIsNone(linha)
+
+
     # ------------------------------------------------------------------
     # POST /aluno/criar (cadastro)
     # ------------------------------------------------------------------
@@ -159,6 +225,23 @@ class TestAuthComSenha(unittest.TestCase):
         with self.client.session_transaction() as sess:
             self.assertIn('admin_flag', sess)
             self.assertNotIn('auth_refresh_token', sess)
+
+    # ------------------------------------------------------------------
+    # E-mails do Auth → página pública de confirmação (GitHub Pages)
+    # ------------------------------------------------------------------
+    def test_emails_auth_redirecionam_para_pagina_publica(self):
+        """Signup e recuperação apontam os links dos e-mails para a página pública."""
+        self.assertTrue(bda.URL_POS_EMAIL.startswith('https://thierry-moreira.github.io/'))
+        with patch('banco_dados_aluno.supabase') as m_sb:
+            bda.criar_conta_auth('a@b.com', 'senha12345')
+            m_sb.auth.sign_up.assert_called_once_with({
+                'email': 'a@b.com',
+                'password': 'senha12345',
+                'options': {'email_redirect_to': bda.URL_POS_EMAIL},
+            })
+            bda.pedir_reset_senha('a@b.com')
+            m_sb.auth.reset_password_for_email.assert_called_once_with(
+                'a@b.com', options={'redirect_to': bda.URL_POS_EMAIL})
 
 
 if __name__ == '__main__':

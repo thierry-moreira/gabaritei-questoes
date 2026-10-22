@@ -1,4 +1,5 @@
 import logging
+import secrets
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, current_user
@@ -44,17 +45,63 @@ def _entrar_flask(linha):
     logger.info(f"LOGIN: user_id={linha['id']}")
 
 
-def _criar_perfil(username, email):
-    """Cria a linha usuarios vinculada à conta Auth logada."""
+def _relinkar_perfil_legado():
+    """Adota o perfil legado (auth_id NULL) de mesmo e-mail — 1º login pós-Auth.
+
+    Alunos do sistema antigo (web/passwordless) ficaram sem auth_id. A policy
+    `relink_perfil_legado` (migration relink_perfil_legado_usuarios) só deixa
+    o UPDATE passar quando o e-mail CONFIRMADO do JWT bate com o e-mail da
+    linha — o filtro de e-mail é feito pelo próprio RLS (case-insensitive);
+    aqui só restringimos a linhas ainda sem vínculo (auth_id IS NULL).
+    """
     s = sessao_atual()
     if not s or not s.user:
         return None
-    res = safe_execute(supabase.table("usuarios").insert({
-        "auth_id": s.user.id,
-        "username": username,
-        "email": email,
-    }))
-    return res.data[0] if res and res.data else None
+    try:
+        res = safe_execute(
+            supabase.table("usuarios")
+            .update({"auth_id": s.user.id})
+            .is_("auth_id", "null")
+        )
+        return res.data[0] if res and res.data else None
+    except Exception as e:
+        logger.warning(f"Re-link de perfil legado falhou para {s.user.email}: {e}")
+        return None
+
+
+def _criar_perfil(username, email):
+    """Garante a linha `usuarios` da conta Auth logada.
+
+    Ordem: (1) perfil legado sem auth_id de mesmo e-mail → re-link (evita
+    duplicar o aluno e colidir nas uniques de username/e-mail — causa do
+    500 no login após a migração para Supabase Auth); (2) cria linha nova
+    — se o username colidir (ex.: dois e-mails com o mesmo prefixo), tenta
+    com sufixo _hex (padrão do cadastro antigo do site).
+    """
+    s = sessao_atual()
+    if not s or not s.user:
+        return None
+
+    linha = _relinkar_perfil_legado()
+    if linha:
+        return linha
+
+    base = (username or 'Estudante').strip() or 'Estudante'
+    for sufixo in ("", "_" + secrets.token_hex(2)):
+        try:
+            res = safe_execute(supabase.table("usuarios").insert({
+                "auth_id": s.user.id,
+                "username": base + sufixo,
+                "email": email,
+            }))
+            return res.data[0] if res and res.data else None
+        except Exception as e:
+            if "23505" in str(e) and not sufixo:
+                logger.warning(f"Username '{base}' já existe; tentando com sufixo.")
+                continue
+            logger.error(f"Criação de perfil falhou para {s.user.email}: {e}", exc_info=True)
+            return None
+    return None
 
 
 @auth_bp.route('/aluno/login')

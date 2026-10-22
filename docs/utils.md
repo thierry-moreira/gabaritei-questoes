@@ -10,7 +10,8 @@ O módulo `utils.py` é o núcleo de inteligência auxiliar, segurança e utilit
 ### `safe_execute(query_func)`
 - **Propósito**: Camada de resiliência sobre chamadas síncronas ao Supabase (PostgREST).
 - **Lógica de Retentativa (Retry)**: Tenta executar a consulta fornecida até 3 vezes caso ocorra uma falha técnica momentânea de rede ou conexão.
-- **Delay Exponencial**: Aplica uma pausa estática de `0.5` segundos entre tentativas malsucedidas.
+- **Sem retry para erros determinísticos** (`ERROS_SEM_RETRY`): códigos cujo resultado não muda com nova tentativa — `23505` (unique violation), `23503` (FK), `23502` (not null), `23514` (check), `42501` (RLS), `42703` (coluna inexistente), `22P02` (tipo inválido) — falham logo na 1ª ocorrência com `logger.error` (retentar constraint/RLS só adiciona atraso e ruído de log).
+- **Delay**: Pausa estática de `0.5` segundos entre tentativas malsucedidas.
 - **Tratamento de Exceções**: Se a falha persistir após a terceira tentativa, o sistema registra um log de erro crítico (`logger.error`) detalhado e propaga o erro de forma visível para facilitar o diagnóstico de auditoria.
 
 ---

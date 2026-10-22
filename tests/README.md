@@ -55,7 +55,8 @@ Valida as proteções preventivas contra acessos automatizados indevidos.
 Valida o fluxo completo de controle de acesso do aluno à plataforma.
 - **Fluxos testados (login real com e-mail + senha, Supabase Auth):**
   - Tela de login (`/aluno/login`): sem sessão salva renderiza a tela com e-mail/senha; com refresh token salvo restaura a sessão e redireciona ao `/aluno/painel`; refresh expirado/revogado limpa o token e mostra o login normal.
-  - `POST /aluno/entrar` (credenciais corretas entram e redirecionam; e-mail/senha vazios e credenciais inválidas retornam flash de erro).
+  - `POST /aluno/entrar` (credenciais corretas entram e redirecionam; conta sem perfil cria/re-linka e entra; e-mail/senha vazios e credenciais inválidas retornam flash de erro).
+  - `_criar_perfil` (adota a linha legada `auth_id IS NULL` em vez de duplicar; cria linha nova com o `auth_id` do JWT quando não há legado; colisão de username `23505` tenta sufixo `_hex`; falha não-recuperável retorna `None` sem propagar exceção — flash amigável na rota).
   - `POST /aluno/criar` (cadastro completo cria conta Auth + perfil e entra; senha curta bloqueada antes do Auth; "Confirm email" ligado pede confirmação; e-mail já cadastrado orienta login/recuperação).
   - `POST /aluno/esqueci` (dispara o reset de senha com e-mail normalizado; e-mail vazio bloqueado).
   - `/logout` limpa a sessão do aluno (incluindo o refresh token) e preserva sessões administrativas protegidas.
@@ -63,6 +64,7 @@ Valida o fluxo completo de controle de acesso do aluno à plataforma.
   - `@patch('rotas.auth.entrar_com_senha')` / `@patch('rotas.auth.criar_conta_auth')` / `@patch('rotas.auth.pedir_reset_senha')` para simular o Supabase Auth (login, cadastro e reset).
   - `@patch('rotas.auth.sessao_atual')` / `@patch('rotas.auth.restaurar_sessao')` para os fluxos de sessão lembrada entre execuções.
   - `@patch('rotas.auth._linha_do_usuario_auth')` / `@patch('rotas.auth._criar_perfil')` / `@patch('rotas.auth._entrar_flask')` para o vínculo Auth↔perfil do aluno.
+  - `@patch('rotas.auth.supabase')` para os testes unitários de `_criar_perfil` (cadeia `table().update().is_().execute()` do re-link e `table().insert().execute()` da criação).
 
 ### 5. Ecossistema do Aluno e Questões (`test_aluno_questoes.py`) [Fase 4 - Consolidada]
 Valida os dashboards de estatísticas do aluno e a lógica de resolução de questões com streaks.

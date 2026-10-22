@@ -35,6 +35,20 @@ supabase: Client = create_client(url, anon_key, options=opts)
 
 
 # ---------------------------------------------------------------------------
+# E-MAILS DO AUTH → PÁGINA PÚBLICA (GitHub Pages)
+# ---------------------------------------------------------------------------
+# O app é local (127.0.0.1), então o link dos e-mails do Supabase Auth
+# (confirmação de cadastro e recuperação de senha) não pode apontar para o
+# Site URL local. O clique confirma a conta no servidor do Supabase e
+# redireciona para esta página pública, que informa o aluno (e, no caso de
+# recuperação de senha, permite definir a nova senha direto nela).
+# Fonte da página: site/ do repo — publicada em https://...github.io (ver
+# site/README.md). A URL também deve estar na allow list "Redirect URLs"
+# do dashboard do Auth (Authentication > URL Configuration).
+URL_POS_EMAIL = "https://thierry-moreira.github.io/gabaritei-questoes/"
+
+
+# ---------------------------------------------------------------------------
 # AUTH COM SENHA (Supabase Auth) — identidade real por usuário
 # ---------------------------------------------------------------------------
 # O client é ÚNICO e a identidade muda com o login: o SDK encadeia o
@@ -54,8 +68,13 @@ def entrar_com_senha(email: str, senha: str):
 
 def criar_conta_auth(email: str, senha: str):
     """Cria a conta no Supabase Auth. Com 'Confirm email' desligado devolve
-    sessão pronta; ligado, devolve user pendente de confirmação (sem sessão)."""
-    return supabase.auth.sign_up({"email": email, "password": senha})
+    sessão pronta; ligado, devolve user pendente de confirmação (sem sessão).
+    O e-mail de confirmação redireciona para a página pública (URL_POS_EMAIL)."""
+    return supabase.auth.sign_up({
+        "email": email,
+        "password": senha,
+        "options": {"email_redirect_to": URL_POS_EMAIL},
+    })
 
 
 def restaurar_sessao(refresh_token: str):
@@ -81,5 +100,7 @@ def sair_auth():
 
 def pedir_reset_senha(email: str):
     """Dispara o e-mail de recuperação do Supabase (requer SMTP configurado
-    no dashboard do projeto)."""
-    supabase.auth.reset_password_for_email(email)
+    no dashboard do projeto). O link redireciona para a página pública
+    (URL_POS_EMAIL), onde o aluno define a nova senha."""
+    supabase.auth.reset_password_for_email(
+        email, options={"redirect_to": URL_POS_EMAIL})

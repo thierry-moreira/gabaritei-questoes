@@ -10,11 +10,27 @@ from banco_dados_aluno import supabase
 
 logger = logging.getLogger(__name__)
 
+# Códigos de erro determinísticos (Postgres/PostgREST) nos quais retentar é
+# inútil — a falha não depende de timing: 23505 unique violation, 23503 FK,
+# 23502 not null, 23514 check, 42501 RLS, 42703 coluna inexistente,
+# 22P02 tipo inválido. Falhas de rede/timeout/5xx continuam com retry.
+ERROS_SEM_RETRY = ("23505", "23503", "23502", "23514", "42501", "42703", "22P02")
+
+
+def _erro_deterministico(e: Exception) -> bool:
+    """True quando retentar não muda o resultado (constraint/RLS/typo de query)."""
+    texto = str(e)
+    return any(codigo in texto for codigo in ERROS_SEM_RETRY)
+
+
 def safe_execute(query_func: Any) -> Any:
     for tentativa in range(3):
         try:
             return query_func.execute()
         except Exception as e:
+            if _erro_deterministico(e):
+                logger.error(f"❌ Erro determinístico na consulta Supabase (sem retry): {e}")
+                raise e
             if tentativa < 2:
                 logger.warning(f"⚠️ Erro na consulta Supabase (Tentativa {tentativa+1}): {e}. Tentando novamente...")
                 time.sleep(0.5)
