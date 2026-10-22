@@ -141,6 +141,7 @@
                         </button>
                         <p class="feedback" id="msg-reenvio"></p>
                     </form>
+                    <p class="hint">O formulário acima reenvia o e-mail de <strong>confirmação de cadastro</strong>. Se você estava redefinindo sua senha, peça um novo link pelo aplicativo em "Esqueci minha senha" — e lembre-se: cada link vale um único clique.</p>
                 </div>
 
                 <!-- ESTADO: redefinição de senha (link de recuperação) -->
@@ -218,8 +219,8 @@ function feedback(id, msg, ok) {
 function traduzErro(codigo, descricao) {
     codigo = (codigo || '').toLowerCase();
     var desc = (descricao || '').toLowerCase();
-    if (codigo.indexOf('otp_expired') >= 0 || desc.indexOf('expired') >= 0)
-        return 'O link de verificação expirou (válido por 1 hora). Solicite um novo e-mail abaixo.';
+    if (codigo.indexOf('otp_expired') >= 0 || desc.indexOf('expired') >= 0 || desc.indexOf('already') >= 0)
+        return 'Este link expirou ou já foi usado (cada link vale um único clique). Solicite um novo e-mail abaixo.';
     if (codigo.indexOf('access_denied') >= 0 || codigo.indexOf('403') >= 0)
         return 'O link não é mais válido. Solicite um novo e-mail abaixo.';
     if (codigo.indexOf('user_not_found') >= 0 || desc.indexOf('not found') >= 0)
@@ -266,13 +267,16 @@ async function init() {
         }
         return;
     }
-    if (hashAccess && hashRefresh) { // fluxo implícito (app server-side): tokens no fragmento
+    if (hashAccess || hashRefresh) { // fluxo implícito (app server-side): tokens no fragmento
         try {
-            var s = await sb.auth.setSession(hashAccess, hashRefresh);
+            if (!hashAccess || !hashRefresh)
+                throw new Error('O link chegou incompleto — solicite um novo e-mail.');
+            // ATENÇÃO: setSession recebe um ÚNICO objeto { access_token, refresh_token }
+            var s = await sb.auth.setSession({ access_token: hashAccess, refresh_token: hashRefresh });
             if (s.error) throw s.error;
             mostrar(hashTipo === 'recovery' ? 'estado-senha' : 'estado-sucesso');
         } catch (e) {
-            document.getElementById('msg-erro').textContent = traduzErro('session', e && e.message);
+            document.getElementById('msg-erro').textContent = (e && e.message) || 'Não foi possível validar este link.';
             mostrar('estado-erro');
         }
         return;

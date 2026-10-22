@@ -48,3 +48,18 @@ Abra `site/index.html` direto no browser (ou `python -m http.server` dentro de `
 - `...index.html?token=invalido&type=recovery` → tentativa de sessão → cai no estado de erro (token inválido)
 
 O fluxo completo (e-mail real → clique → redirect) só é testável com a página publicada e o SMTP (Zoho) configurado.
+
+## Resolução de problemas
+
+### "The custom domain ... is not properly formatted" (GitHub Pages)
+Esse erro aparece quando a URL do site é colada no campo **Custom domain** (Settings → Pages). Esse campo é **apenas para domínios próprios comprados** (ex.: `meudominio.com`) — o endereço `thierry-moreira.github.io/...` é o padrão de projeto e **não deve** ser cadastrado lá. Configuração correta:
+1. Settings → Pages → **Custom domain: vazio** (remova qualquer valor que chegou a ser salvo).
+2. **Build and deployment → Source**: "Deploy from a branch" → branch **gh-pages**, pasta **/(root)**.
+3. Salve — em ~1 min o site responde em `https://thierry-moreira.github.io/gabaritei-questoes/`.
+
+### "Link inválido" ao reabrir o e-mail
+Cada link do Auth é de **uso único** (one-time token): o primeiro clique já consome o token. Se o form de nova senha apareceu e você recarregou ou clicou no link de novo, o segundo clique retorna 403 ("One-time token not found") — comportamento normal do Supabase. Peça um novo e-mail e use **apenas o link novo**, sem reabrir o antigo.
+
+### Erros que a página pode mostrar e o significado
+- `Auth session missing!`: era um bug da página com a assinatura de `setSession` (corrigido em out/2026 — recebe um objeto `{access_token, refresh_token}`); se reaparecer, republicar a branch `gh-pages` com a versão atual de `site/`.
+- `403`/`access_denied` sem `?error_description`: a URL da página provavelmente não está na allow list **Redirect URLs** do Supabase (Authentication → URL Configuration).
