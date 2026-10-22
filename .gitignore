@@ -33,3 +33,7 @@ dist_backend/
 
 # Coverage
 coverage
+
+# Pastas de agents (IA)
+.agent/
+.agents/
