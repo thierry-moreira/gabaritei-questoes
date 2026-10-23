@@ -73,23 +73,27 @@ Valida os dashboards de estatísticas do aluno e a lógica de resolução de que
   - `/aluno/painel` (ofensiva/streak em Brasília, dados agregados por data, taxas de acerto).
   - `/aluno/dashboard_detalhado` (esquecimento, melhor matéria, redirecionamento se histórico estiver vazio).
   - `/aluno/responder` e `/api/responder` (envio de respostas e incremento de streak no banco).
-  - `/api/comentarios` (moderação contra palavras inadequadas antes da inserção).
+  - `/api/comentarios` (blocklist local de moderação antes da inserção — sem IA).
+  - `/api/comentarios/<id>/reportar` (denúncia para triagem no painel do admin: motivo obrigatório, uuid validado, 1 denúncia por comentário/aluno → 409 duplicado, 404 inexistente).
 - **Mocks importantes:**
   - Simulação de histórico de respostas e tabelas do banco de dados no Supabase.
 
 ### 6. Integração com IA (`test_ia_chat.py`) [Fase 6 - Consolidada]
 Valida a lógica dos fluxos acionados por Inteligência Artificial na plataforma.
 - **Fluxos testados:**
-  - `/api/ia_explica` (validação de cache local `explicacoes_ia` e geração bem-sucedida via OpenAI com limpeza de strings desnecessárias).
-  - `/api/ia/gerar_estudo` (criação de resumos e flashcards, validação de cache de usuário em `resumos_estudo` ou `flashcards`, consulta a cache global `ia_cache_estudo` e gravação correta de novos materiais gerados).
+  - `/api/ia_explica` (validação de cache local `explicacoes_ia` e geração via camada BYOK com limpeza de strings desnecessárias — com regressão dos parâmetros congelados: temperature=0.0, top_p=0.1, presence/frequency=0.0).
+  - `/api/ia/gerar_estudo` (criação de resumos e flashcards, validação de cache de usuário em `resumos_estudo` ou `flashcards`, consulta a cache global `ia_cache_estudo` e gravação correta de novos materiais gerados; TEMPERATURE_GPT=0.3 congelada).
 - **Mocks importantes:**
-  - Mock rigoroso do cliente oficial OpenAI (`client_gpt` em `rotas.questao`), cobrindo `chat.completions.create` retornando estruturas de escolhas e conteúdos fiéis.
+  - Mock da camada BYOK (`chamar_ia` e `ia_configurada` em `rotas.questao`) substituindo o antigo cliente global `client_gpt`.
   - Mock de banco de dados nas consultas de cache e persistência de materiais de IA.
+  - Banco local da chave de IA isolado em tmpdir via `GABARITEI_LOCAL_DIR` (setUp/tearDown).
 
 ### 7. Painel da Conta do Usuário (`test_conta.py`)
 Valida as rotas de atualização de informações cadastrais do aluno, redefinição de dados de estudo e exclusão permanente de conta.
 - **Fluxos testados:**
-  - `/aluno/conta/` (GET para exibição da tela e POST para atualização de username e e-mail).
+  - `/aluno/conta/` (GET com o card "Inteligência Artificial" e status mascarado da chave; POST para atualização de username e e-mail).
+  - `/api/ia/config` (BYOK: provedor validado contra as listas oficiais, chave testada por ping gratuito, salvamento local — resposta só com a máscara; rejeita provedor não suportado e chave curta).
+  - `/api/ia/config/remover` (apaga a chave local — LGPD).
   - `/aluno/conta/resetar-dados` (validação de frase secreta "RESETAR MEUS DADOS" e exclusão em massa das tabelas do Supabase de progresso do aluno).
   - `/aluno/conta/excluir` (validação de frase secreta "EXCLUIR MINHA CONTA", exclusão física de registros e logout da sessão).
 - **Mocks importantes:**
@@ -136,6 +140,15 @@ Valida o agrupamento de resumos teóricos por matérias e a exclusão de resumos
   - `/aluno/resumos` (dashboard agrupando quantidades de resumos por disciplina).
   - `/aluno/resumos/materia/<id>` (detalhamento de resumos com data de criação com tratamento de erro 404).
   - `/api/resumos/excluir/<id>` (remoção física de arquivos e registros).
+
+### 12. Camada BYOK de IA (`test_provedores_ia.py`)
+Valida o núcleo do BYOK sem nenhuma rede real (pings e SDKs mockados).
+- **Fluxos testados:**
+  - Listas oficiais de modelos por provedor (regressão das listas aprovadas) e `TEMPERATURE_GPT = 0.3` congelada.
+  - `banco_local`: roundtrip salvar/ler/remover com DPAPI real em tmpdir, isolamento por usuário, máscara da chave e chave nunca em plaintext no arquivo.
+  - `chamar_ia`: erro amigável sem config; dispatch OpenAI (role `developer`), Gemini (base_url do Google, role `system`) e Anthropic (payload nativo com `x-api-key`, penalties omitidos, 401 → `chave_invalida`).
+  - `testar_chave`: pings 401/404/200 mockados e provedor desconhecido.
+  - Retry de parâmetros rejeitados por MODELO: 400 `unsupported_value` em `temperature` (família gpt-5/6 de raciocínio) → a 1ª chamada envia os calibrados, a 2ª vem sem o parâmetro rejeitado; 400 sem param conhecido propaga sem loop; caminho REST da Anthropic com a mesma guarda.
 
 ---
 

@@ -1,13 +1,18 @@
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify, abort, current_app, flash
 from flask_login import current_user, logout_user
 import re
+import uuid
 from typing import Any
 
 from postgrest import CountMethod
 
 from banco_dados_aluno import supabase
-from extensoes import MODELO_GPT, TEMPERATURE_GPT, csrf, client_gpt, limiter
+from extensoes import csrf, limiter
 from utils import safe_execute, aluno_required, slugify
+# BYOK (Bring Your Own Key): a IA roda com a PRÓPRIA chave do aluno, guardada
+# apenas localmente (banco_local.py). Os prompts e parâmetros calibrados das
+# respostas continuam definidos aqui nas rotas, sem qualquer alteração.
+from provedores_ia import chamar_ia, ia_configurada, MSG_NAO_CONFIGURADA, TEMPERATURE_GPT
 
 questao_bp = Blueprint('questao', __name__)
 
@@ -351,6 +356,51 @@ def salvar_comentario():
         return jsonify({"success": False, "error": "Não foi possível enviar seu comentário agora."}), 500
 
 
+@questao_bp.route('/api/comentarios/<id_comentario>/reportar', methods=['POST'])
+@limiter.limit("10 per minute")
+@aluno_required
+def reportar_comentario(id_comentario):
+    """
+    Denúncia de comentário da comunidade (sem moderação por IA): grava em
+    reports_comentarios (Supabase) para triagem no painel do admin. A blocklist
+    local (utils.verificar_texto_improprio) é a primeira barreira na publicação;
+    a denúncia é a segunda — humana.
+    """
+    dados = request.get_json() or {}
+    motivo = (dados.get('motivo') or '').strip()
+    if not motivo:
+        return jsonify({"success": False, "error": "Selecione um motivo para a denúncia."}), 400
+
+    try:
+        uuid.UUID(str(id_comentario))
+    except (ValueError, AttributeError):
+        return jsonify({"success": False, "error": "Comentário inválido."}), 400
+
+    res_c = safe_execute(
+        supabase.table("comentarios_questao")
+        .select("id_comentario")
+        .eq("id_comentario", id_comentario)
+        .maybe_single()
+    )
+    if not (res_c and res_c.data):
+        return jsonify({"success": False, "error": "Comentário não encontrado."}), 404
+
+    try:
+        safe_execute(supabase.table("reports_comentarios").insert({
+            "id_comentario": id_comentario,
+            "id_usuario": str(current_user.id),
+            "motivo": motivo
+        }))
+        return jsonify({"success": True})
+    except Exception as e:
+        if "23505" in str(e):
+            return jsonify({"success": False, "error": "Você já denunciou este comentário."}), 409
+        if current_app.config.get('TESTING'):
+            raise e
+        print(f"❌ Erro ao registrar denúncia de comentário: {e}")
+        return jsonify({"success": False, "error": "Não foi possível registrar a denúncia agora."}), 500
+
+
 @questao_bp.route('/api/feedback', methods=['POST'])
 @aluno_required
 @limiter.exempt
@@ -381,16 +431,19 @@ def sanitizar_latex(texto):
 @limiter.exempt
 @aluno_required
 def ia_explica():
-    if not client_gpt:
-        return jsonify({"explicacao": "IA não configurada."}), 500
-
     dados = request.json
     id_q = dados.get('id_questao')
 
     try:
+        # Cache global primeiro: explicação já gerada (por qualquer aluno) é
+        # servida do banco — funciona inclusive SEM chave de IA configurada.
         res_cache = safe_execute(supabase.table("explicacoes_ia").select("conteudo_explicacao").eq("id_questao", id_q))
         if res_cache.data:
             return jsonify({"explicacao": res_cache.data[0]['conteudo_explicacao']})
+
+        # Só a GERAÇÃO inédita exige a própria chave do aluno (BYOK).
+        if not ia_configurada(current_user.id):
+            return jsonify({"explicacao": MSG_NAO_CONFIGURADA}), 500
 
         res_q = safe_execute(supabase.table("questoes").select("*, textos_base(conteudo_texto)").eq("id_questao", id_q).single())
         q = res_q.data
@@ -467,19 +520,17 @@ def ia_explica():
         for url in urls_imagens:
             conteudo_gpt.append({"type": "image_url", "image_url": {"url": url}})
 
-        response = client_gpt.chat.completions.create(  # type: ignore[no-matching-overload]
-            model=MODELO_GPT,
-            messages=[
-                {"role": "developer", "content": system_prompt},
-                {"role": "user", "content": conteudo_gpt}  # type: ignore[arg-type]
-            ],
+        # Configurações calibradas preservadas: temperature=0.0, top_p=0.1,
+        # presence/frequency_penalty=0.0 — agora via camada BYOK do aluno.
+        explicacao_gerada = chamar_ia(
+            current_user.id,
+            system_prompt=system_prompt,
+            conteudo=conteudo_gpt,
             temperature=0.0,
             top_p=0.1,
             presence_penalty=0.0,
             frequency_penalty=0.0
         )
-        
-        explicacao_gerada = response.choices[0].message.content or ""
 
         import re
         explicacao_final = re.sub(r'(?m)^[ \t]*[>|][ \t]*', r' ', explicacao_gerada)
@@ -497,9 +548,6 @@ def ia_explica():
 @limiter.exempt
 @aluno_required
 def ia_gerar_estudo():
-    if not client_gpt:
-        return jsonify({"success": False, "error": "IA não configurada."}), 500
-
     dados = request.json
     id_q = dados.get('id_questao')
     tipo = dados.get('tipo')
@@ -632,6 +680,11 @@ def ia_gerar_estudo():
             )
 
         if not cache_hit:
+            # Geração inédita exige a própria chave do aluno (BYOK). Materiais
+            # já existentes (caderno do aluno ou cache global) funcionam sem chave.
+            if not ia_configurada(current_user.id):
+                return jsonify({"success": False, "error": MSG_NAO_CONFIGURADA}), 500
+
             prompt_usuario = (
                 f"QUESTÃO: {q['enunciado']}\n"
                 f"TEXTO BASE: {q.get('texto_base') or 'N/A'}\n"
@@ -657,15 +710,14 @@ def ia_gerar_estudo():
             for url in urls_imagens:
                 conteudo_gpt.append({"type": "image_url", "image_url": {"url": url}})
 
-            response = client_gpt.chat.completions.create(  # type: ignore[no-matching-overload]
-                model=MODELO_GPT,
-                messages=[
-                    {"role": "developer", "content": system_prompt},
-                    {"role": "user", "content": conteudo_gpt}  # type: ignore[arg-type]
-                ],
+            # Configuração calibrada preservada: TEMPERATURE_GPT = 0.3 —
+            # agora via camada BYOK (própria chave do aluno).
+            conteudo_gerado = chamar_ia(
+                current_user.id,
+                system_prompt=system_prompt,
+                conteudo=conteudo_gpt,
                 temperature=TEMPERATURE_GPT
             )
-            conteudo_gerado = response.choices[0].message.content or ""
             
             if tipo == 'resumo':
                 conteudo_ia = {"conteudo": conteudo_gerado}

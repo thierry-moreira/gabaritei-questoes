@@ -248,5 +248,110 @@ class TestAlunoQuestaoFlask(unittest.TestCase):
         self.assertFalse(dados.get('success'))
         self.assertEqual(dados.get('error'), 'Linguajar inadequado detectado.')
 
+    # -------------------------------------------------------------------------
+    # Testes de Denúncia de Comentários (POST /api/comentarios/<id>/reportar)
+    # Moderação humana: a denúncia vai para o painel do admin — sem IA.
+    # -------------------------------------------------------------------------
+
+    @patch('utils.current_user')
+    @patch('rotas.questao.current_user')
+    def test_reportar_comentario_motivo_vazio(self, mock_questao_current_user, mock_utils_current_user):
+        """Sem motivo selecionado, a denúncia é rejeitada com 400."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        response = self.client.post(
+            '/api/comentarios/11111111-1111-1111-1111-111111111111/reportar',
+            json={'motivo': '   '}
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.get_json().get('success'))
+
+    @patch('utils.current_user')
+    @patch('rotas.questao.current_user')
+    def test_reportar_comentario_uuid_invalido(self, mock_questao_current_user, mock_utils_current_user):
+        """IDs fora do formato uuid são rejeitados com 400."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        response = self.client.post(
+            '/api/comentarios/nao-e-um-uuid/reportar',
+            json={'motivo': 'Spam ou propaganda'}
+        )
+        self.assertEqual(response.status_code, 400)
+
+    @patch('utils.current_user')
+    @patch('rotas.questao.current_user')
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    def test_reportar_comentario_sucesso(self, mock_supabase, mock_safe_execute, mock_questao_current_user, mock_utils_current_user):
+        """Denúncia válida grava em reports_comentarios e confirma ao aluno."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        mock_res_comentario = MagicMock()
+        mock_res_comentario.data = {'id_comentario': '11111111-1111-1111-1111-111111111111'}
+        mock_res_insert = MagicMock()
+        mock_safe_execute.side_effect = [mock_res_comentario, mock_res_insert]
+
+        response = self.client.post(
+            '/api/comentarios/11111111-1111-1111-1111-111111111111/reportar',
+            json={'motivo': 'Conteúdo ofensivo ou desrespeitoso'}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json().get('success'))
+
+    @patch('utils.current_user')
+    @patch('rotas.questao.current_user')
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    def test_reportar_comentario_nao_encontrado(self, mock_supabase, mock_safe_execute, mock_questao_current_user, mock_utils_current_user):
+        """Comentário inexistente responde 404 sem gravar nada."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        mock_res_comentario = MagicMock()
+        mock_res_comentario.data = None
+        mock_safe_execute.side_effect = [mock_res_comentario]
+
+        response = self.client.post(
+            '/api/comentarios/22222222-2222-2222-2222-222222222222/reportar',
+            json={'motivo': 'Spam ou propaganda'}
+        )
+        self.assertEqual(response.status_code, 404)
+
+    @patch('utils.current_user')
+    @patch('rotas.questao.current_user')
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    def test_reportar_comentario_duplicado_409(self, mock_supabase, mock_safe_execute, mock_questao_current_user, mock_utils_current_user):
+        """Segunda denúncia do mesmo aluno no mesmo comentário → 409 amigável."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        mock_res_comentario = MagicMock()
+        mock_res_comentario.data = {'id_comentario': '11111111-1111-1111-1111-111111111111'}
+        mock_safe_execute.side_effect = [
+            mock_res_comentario,
+            Exception('duplicate key value violates unique constraint "reports_comentarios_pkey" (23505)'),
+        ]
+
+        response = self.client.post(
+            '/api/comentarios/11111111-1111-1111-1111-111111111111/reportar',
+            json={'motivo': 'Spam ou propaganda'}
+        )
+        self.assertEqual(response.status_code, 409)
+        self.assertIn('já denunciou', response.get_json().get('error', ''))
+
 if __name__ == '__main__':
     unittest.main()

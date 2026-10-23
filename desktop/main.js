@@ -83,6 +83,9 @@ function iniciarBackend() {
       FLASK_SECRET_KEY: secretKeyPersistente(),
       FLASK_DEBUG: 'false',
       APP_TOKEN,
+      // Banco local de configurações sensíveis (BYOK: chave de IA do aluno):
+      // SQLite + DPAPI no userData — nunca sincronizado com o Supabase.
+      GABARITEI_LOCAL_DIR: app.getPath('userData'),
     },
   });
   backend.stdout.on('data', (d) => console.log(`[backend] ${d}`.trimEnd()));

@@ -1,5 +1,3 @@
-import os
-from openai import OpenAI
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_login import LoginManager
@@ -18,14 +16,8 @@ login_manager.login_view = 'auth.login_aluno' # type: ignore
 login_manager.login_message = "Por favor, faça login para acessar esta página."
 login_manager.login_message_category = "info"
 
-openai_key = os.getenv("OPENAI_API_KEY")
-MODELO_GPT = "gpt-5.4-mini"
-TEMPERATURE_GPT = 0.3
-client_gpt = None
-
-if openai_key:
-    try:
-        client_gpt = OpenAI(api_key=openai_key)
-        print(f"✅ Site: OpenAI Ativa (Modelo: {MODELO_GPT})")
-    except Exception as e:
-        print(f"❌ Erro ao configurar OpenAI para o site: {e}")
+# IA (BYOK): não existe mais cliente global de IA neste app — cada aluno usa a
+# PRÓPRIA chave de API (OpenAI, Google Gemini ou Anthropic), configurada em
+# Configurações da conta e guardada apenas localmente (DPAPI). As chamadas
+# passam pela camada provedores_ia.py; prompts e parâmetros calibrados vivem
+# nas rotas (rotas/questao.py), sem alteração.

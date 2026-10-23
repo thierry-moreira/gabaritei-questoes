@@ -32,12 +32,11 @@ Esta centralização é uma excelente prática arquitetural que permite o regist
 
 ---
 
-## Motores de Inteligência Artificial (OpenAI SDK)
+## Motores de Inteligência Artificial (BYOK)
 
-O arquivo centraliza a criação e o apontamento dos modelos GPT oficiais, tratando a conexão de forma fail-safe (segura contra falhas) para que a ausência de chaves de API não impeça a aplicação de subir localmente em modo de desenvolvimento.
+O app do aluno **não possui mais cliente global de IA** (o antigo `client_gpt` e a constante `MODELO_GPT` foram removidos): cada aluno usa a **própria chave de API** (OpenAI, Google Gemini ou Anthropic) — modelo BYOK (Bring Your Own Key).
 
-### 1. Cliente de IA Geral (Explicações e Resumos)
-- **Instância**: `client_gpt`
-- **Modelo Oficial**: `gpt-5.4-mini`
-- **Configurações de Geração**: Temperatura fixada em `0.3` (`TEMPERATURE_GPT = 0.3`). Esta escolha técnica garante um equilíbrio excepcional para fins pedagógicos: restringe a "criatividade/alucinação" do modelo, priorizando respostas com máxima exatidão técnica, lógica de negócios precisa e explicações didáticas assertivas.
-- **Fail-Safe**: Caso a variável `OPENAI_API_KEY` não seja localizada no ambiente, o sistema imprime logs de erro apropriados no console, mas permite que o servidor do Flask inicie suas demais operações normais.
+- **Camada de chamadas**: `provedores_ia.py` — listas oficiais de modelos por provedor, dispatch por provedor, tradução de payload/imagens e validação de chave por pings gratuitos (`GET /models`).
+- **Armazenamento da chave**: `banco_local.py` — SQLite local em `GABARITEI_LOCAL_DIR` (userData do Electron), com a chave cifrada pela **DPAPI do Windows** (legível só pelo próprio usuário do Windows). Nada é sincronizado com o Supabase.
+- **Parâmetros calibrados**: continuam definidos nas rotas (`rotas/questao.py`), sem alteração — `/api/ia_explica` usa `temperature=0.0, top_p=0.1, presence/frequency_penalty=0.0`; `/api/ia/gerar_estudo` usa `TEMPERATURE_GPT = 0.3` (constante migrada para `provedores_ia.py`).
+- Detalhes completos: [docs/ia.md](ia.md).

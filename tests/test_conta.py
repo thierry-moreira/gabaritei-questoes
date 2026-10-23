@@ -1,5 +1,6 @@
 import os
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
 
@@ -19,6 +20,14 @@ class TestContaBlueprint(unittest.TestCase):
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
         self.client = app.test_client()
+        # Banco local (BYOK — chave de IA) isolado em tmpdir: os testes jamais
+        # devem tocar o AppData real do desenvolvedor.
+        self._tmpdir = tempfile.TemporaryDirectory()
+        os.environ['GABARITEI_LOCAL_DIR'] = self._tmpdir.name
+
+    def tearDown(self):
+        self._tmpdir.cleanup()
+        os.environ.pop('GABARITEI_LOCAL_DIR', None)
 
     def _mock_aluno(self):
         mock_user = MagicMock()
@@ -81,10 +90,11 @@ class TestContaBlueprint(unittest.TestCase):
         """Garante a delecao em lote dos dados de estudo com a frase correta (sem senha)."""
         mock_get_user.return_value = self._mock_aluno()
 
-        # 1 update de meta + 11 deletes (3 novos: progresso de editais, com dono)
+        # 1 update de meta + 12 deletes (novos: progresso de editais e reports
+        # de comentários — ambos com dono)
         mock_res = MagicMock()
         mock_res.data = [{'id': 12345}]
-        mock_safe_execute.side_effect = [mock_res] * 12
+        mock_safe_execute.side_effect = [mock_res] * 13
 
         response = self.client.post('/aluno/conta/resetar-dados', data={
             'texto_confirmacao_reset': 'RESETAR MEUS DADOS'
@@ -120,7 +130,8 @@ class TestContaBlueprint(unittest.TestCase):
         mock_get_user.return_value = self._mock_aluno()
 
         mock_res_db = MagicMock()
-        mock_safe_execute.side_effect = [mock_res_db]
+        # 2 writes: delete de reports_comentarios + delete de usuarios
+        mock_safe_execute.side_effect = [mock_res_db, mock_res_db]
 
         response = self.client.post('/aluno/conta/excluir', data={
             'texto_confirmacao': 'EXCLUIR MINHA CONTA'
@@ -132,6 +143,85 @@ class TestContaBlueprint(unittest.TestCase):
         with self.client.session_transaction() as sess:
             flashes = sess.get('_flashes', [])
             self.assertTrue(any("excluída permanentemente" in msg[1] for msg in flashes))
+
+    # -------------------------------------------------------------------------
+    # Card de IA na tela de conta (renderização do BYOK)
+    # -------------------------------------------------------------------------
+    @patch('flask_login.utils._get_user')
+    def test_visualizar_conta_contem_card_ia(self, mock_get_user):
+        """A tela de configurações exibe o card 'Inteligência Artificial'."""
+        mock_get_user.return_value = self._mock_aluno()
+        response = self.client.get('/aluno/conta')
+        self.assertEqual(response.status_code, 200)
+        html = response.get_data(as_text=True)
+        self.assertIn('Inteligência Artificial', html)
+        self.assertIn('SUA CHAVE, SEU CONTROLE', html)
+
+    # -------------------------------------------------------------------------
+    # Configuração de IA — BYOK (/api/ia/config e /api/ia/config/remover)
+    # -------------------------------------------------------------------------
+    @patch('rotas.conta.testar_chave', return_value=(False, 'Chave de API inválida.'))
+    @patch('flask_login.utils._get_user')
+    def test_config_ia_provedor_nao_suportado(self, mock_get_user, mock_testar):
+        """Rejeita provedores fora da lista oficial (openai/gemini/anthropic)."""
+        mock_get_user.return_value = self._mock_aluno()
+        response = self.client.post('/api/ia/config', json={
+            'provedor': 'deepseek', 'modelo': 'x', 'chave': 'a' * 40
+        })
+        self.assertEqual(response.status_code, 400)
+        mock_testar.assert_not_called()
+
+    @patch('rotas.conta.testar_chave')
+    @patch('flask_login.utils._get_user')
+    def test_config_ia_chave_curta(self, mock_get_user, mock_testar):
+        """Rejeita chaves absurdamente curtas antes de qualquer rede."""
+        mock_get_user.return_value = self._mock_aluno()
+        response = self.client.post('/api/ia/config', json={
+            'provedor': 'openai', 'modelo': 'gpt-5.6-luna', 'chave': 'curta'
+        })
+        self.assertEqual(response.status_code, 400)
+        mock_testar.assert_not_called()
+
+    @patch('rotas.conta.testar_chave', return_value=(False, 'Chave de API inválida.'))
+    @patch('flask_login.utils._get_user')
+    def test_config_ia_ping_falha(self, mock_get_user, mock_testar):
+        """Chave rejeitada pelo provedor não é salva (400 + motivo)."""
+        mock_get_user.return_value = self._mock_aluno()
+        response = self.client.post('/api/ia/config', json={
+            'provedor': 'openai', 'modelo': 'gpt-5.6-luna', 'chave': 'sk-' + '1' * 40
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json().get('error'), 'Chave de API inválida.')
+
+    @patch('rotas.conta.ler_config_ia')
+    @patch('rotas.conta.salvar_config_ia')
+    @patch('rotas.conta.testar_chave', return_value=(True, ''))
+    @patch('flask_login.utils._get_user')
+    def test_config_ia_sucesso_sem_vazamento(self, mock_get_user, mock_testar, mock_salvar, mock_ler):
+        """Salva a config localmente e a resposta SÓ contém a máscara da chave."""
+        CHAVE = 'sk-11112222333344445555'
+        mock_get_user.return_value = self._mock_aluno()
+        mock_ler.return_value = {'provedor': 'openai', 'modelo': 'gpt-5.6-luna', 'chave': CHAVE}
+        response = self.client.post('/api/ia/config', json={
+            'provedor': 'openai', 'modelo': 'gpt-5.6-luna', 'chave': CHAVE
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json().get('success'))
+        mock_salvar.assert_called_once()
+        corpo = response.get_data(as_text=True)
+        self.assertNotIn(CHAVE, corpo)          # chave completa: NUNCA
+        # get_json decodifica os escapes do jsonify (\u2026 → …)
+        self.assertEqual(response.get_json()['status']['mascara'], 'sk-1…5555')
+
+    @patch('rotas.conta.remover_config_ia', return_value=True)
+    @patch('flask_login.utils._get_user')
+    def test_remover_config_ia(self, mock_get_user, mock_remover):
+        """Endpoint de remoção da chave local (LGPD)."""
+        mock_get_user.return_value = self._mock_aluno()
+        response = self.client.post('/api/ia/config/remover')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json().get('success'))
+        mock_remover.assert_called_once()
 
 if __name__ == '__main__':
     unittest.main()

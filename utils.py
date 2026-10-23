@@ -55,15 +55,9 @@ def verificar_texto_improprio(texto):
         if palavra in texto_limpo or palavra in texto_normalizado:
             return False, "Seu comentário contém termos que violam nossas diretrizes de comunidade. Por favor, mantenha o respeito."
 
-    try:
-        from extensoes import client_gpt
-        if client_gpt:
-            response = client_gpt.moderations.create(input=texto)
-            if response.results[0].flagged:
-                return False, "Sua mensagem foi identificada como inadequada pela nossa moderação automática."
-    except Exception as e:
-        print(f"⚠️ Falha na Moderação via API (seguindo com filtro local): {e}")
-
+    # Moderação sem IA (decisão de produto): a blocklist local acima é a
+    # primeira barreira; a segunda é a denúncia humana (🚩 em cada comentário,
+    # endpoint /api/comentarios/<id>/reportar → triagem no painel do admin).
     return True, ""
 
 def aluno_required(f):

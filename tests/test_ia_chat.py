@@ -1,5 +1,6 @@
 import os
 import sys
+import tempfile
 import unittest
 import json
 from unittest.mock import patch, MagicMock
@@ -20,6 +21,14 @@ class TestIAChatBlueprint(unittest.TestCase):
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
         self.client = app.test_client()
+        # Banco local (BYOK — chave de IA) isolado em tmpdir: os testes jamais
+        # devem tocar o AppData real do desenvolvedor.
+        self._tmpdir = tempfile.TemporaryDirectory()
+        os.environ['GABARITEI_LOCAL_DIR'] = self._tmpdir.name
+
+    def tearDown(self):
+        self._tmpdir.cleanup()
+        os.environ.pop('GABARITEI_LOCAL_DIR', None)
 
     # -------------------------------------------------------------------------
     # Testes da Rota de Explicação Pedagógica (/api/ia_explica)
@@ -30,7 +39,7 @@ class TestIAChatBlueprint(unittest.TestCase):
     @patch('rotas.questao.safe_execute')
     @patch('rotas.questao.supabase')
     def test_ia_explica_com_cache(self, mock_supabase, mock_safe_execute, mock_questao_user, mock_utils_user):
-        """Valida que o endpoint retorna explicação existente do cache global (explicacoes_ia) de imediato."""
+        """Cache global serve a explicação SEM chave de IA configurada (tmpdir vazio)."""
         for mock_user in [mock_questao_user, mock_utils_user]:
             mock_user.is_authenticated = True
             mock_user.id = '12345'
@@ -46,12 +55,32 @@ class TestIAChatBlueprint(unittest.TestCase):
         self.assertIn("Explicação já cacheada", response.get_json().get('explicacao', ''))
 
     @patch('utils.current_user')
-    @patch('rotas.questao.client_gpt')
     @patch('rotas.questao.current_user')
     @patch('rotas.questao.safe_execute')
     @patch('rotas.questao.supabase')
-    def test_ia_explica_geracao_sucesso(self, mock_supabase, mock_safe_execute, mock_questao_user, mock_client_gpt, mock_utils_user):
-        """Garante a geração inédita da explicação via OpenAI quando não há cache, tratando a limpeza e a gravação."""
+    def test_ia_explica_sem_chave_e_sem_cache(self, mock_supabase, mock_safe_execute, mock_questao_user, mock_utils_user):
+        """Sem chave E sem cache no banco → mensagem tratada de configuração (500)."""
+        for mock_user in [mock_questao_user, mock_utils_user]:
+            mock_user.is_authenticated = True
+            mock_user.id = '12345'
+            mock_user.role = 'aluno'
+
+        mock_res_cache = MagicMock()
+        mock_res_cache.data = []
+        mock_safe_execute.return_value = mock_res_cache
+
+        response = self.client.post('/api/ia_explica', json={'id_questao': 500})
+        self.assertEqual(response.status_code, 500)
+        self.assertIn("IA não configurada", response.get_json().get('explicacao', ''))
+
+    @patch('rotas.questao.ia_configurada', return_value=True)
+    @patch('utils.current_user')
+    @patch('rotas.questao.chamar_ia')
+    @patch('rotas.questao.current_user')
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    def test_ia_explica_geracao_sucesso(self, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
+        """Garante a geração inédita da explicação via camada BYOK quando não há cache, tratando a limpeza e a gravação."""
         for mock_user in [mock_questao_user, mock_utils_user]:
             mock_user.is_authenticated = True
             mock_user.id = '12345'
@@ -87,14 +116,8 @@ class TestIAChatBlueprint(unittest.TestCase):
             mock_res_insert
         ]
 
-        # Configura o retorno mock da OpenAI
-        mock_response = MagicMock()
-        mock_choice = MagicMock()
-        mock_message = MagicMock()
-        mock_message.content = "> A constituição brasileira de 1988 é classificada como rígida."
-        mock_choice.message = mock_message
-        mock_response.choices = [mock_choice]
-        mock_client_gpt.chat.completions.create.return_value = mock_response
+        # Retorno mock da camada BYOK (texto cru, como o provedor devolve)
+        mock_chamar_ia.return_value = "> A constituição brasileira de 1988 é classificada como rígida."
 
         response = self.client.post('/api/ia_explica', json={'id_questao': 500})
         self.assertEqual(response.status_code, 200)
@@ -104,7 +127,15 @@ class TestIAChatBlueprint(unittest.TestCase):
         
         # Garante que limpou o caractere '>' conforme regra sanitizar_latex/back-end safety
         self.assertNotIn("> ", dados.get('explicacao', ''))
-        mock_client_gpt.chat.completions.create.assert_called_once()
+        mock_chamar_ia.assert_called_once()
+
+        # Parâmetros calibrados CONGELADOS (regressão da configuração oficial):
+        # temperature=0.0, top_p=0.1, presence/frequency_penalty=0.0
+        kwargs = mock_chamar_ia.call_args.kwargs
+        self.assertEqual(kwargs.get('temperature'), 0.0)
+        self.assertEqual(kwargs.get('top_p'), 0.1)
+        self.assertEqual(kwargs.get('presence_penalty'), 0.0)
+        self.assertEqual(kwargs.get('frequency_penalty'), 0.0)
 
     # -------------------------------------------------------------------------
     # Testes do Gerador de Materiais (/api/ia/gerar_estudo)
@@ -115,7 +146,7 @@ class TestIAChatBlueprint(unittest.TestCase):
     @patch('rotas.questao.safe_execute')
     @patch('rotas.questao.supabase')
     def test_ia_gerar_estudo_resumo_cache_usuario(self, mock_supabase, mock_safe_execute, mock_questao_user, mock_utils_user):
-        """Valida que se o resumo de estudo já existir no caderno do próprio aluno, retorna a notificação de cache hit."""
+        """Resumo já no caderno do aluno → cache hit funciona SEM chave configurada."""
         for mock_user in [mock_questao_user, mock_utils_user]:
             mock_user.is_authenticated = True
             mock_user.id = '12345'
@@ -142,12 +173,56 @@ class TestIAChatBlueprint(unittest.TestCase):
         self.assertIn("já está no seu caderno", dados.get('mensagem', ''))
 
     @patch('utils.current_user')
-    @patch('rotas.questao.client_gpt')
+    @patch('rotas.questao.current_user')
+    @patch('rotas.questao.chamar_ia')
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    def test_ia_gerar_estudo_cache_global_sem_chave(self, mock_supabase, mock_safe_execute, mock_chamar_ia, mock_questao_user, mock_utils_user):
+        """Cache global hit: material gerado por outro aluno é entregue ao aluno
+        SEM chave configurada — a camada de IA jamais é acionada."""
+        for mock_user in [mock_questao_user, mock_utils_user]:
+            mock_user.is_authenticated = True
+            mock_user.id = '12345'
+            mock_user.role = 'aluno'
+
+        # 1. Questão | 2. Caderno do aluno (vazio) | 3. Cache global (com dado)
+        mock_res_q = MagicMock()
+        mock_res_q.data = {'id_questao': 500, 'id_materia': 1, 'nome_materia': 'Direito', 'enunciado': '...'}
+        mock_res_check = MagicMock()
+        mock_res_check.data = None
+        mock_res_global = MagicMock()
+        mock_res_global.data = {'conteudo_json': {'conteudo': 'Resumo vindo do cache global.'}}
+        # 4-6. Explicações (vazio), alternativas (vazio), prompts (vazio)
+        mock_res_exp = MagicMock()
+        mock_res_exp.data = []
+        mock_res_alt = MagicMock()
+        mock_res_alt.data = []
+        mock_res_prompt = MagicMock()
+        mock_res_prompt.data = []
+        # 7. Insert do resumo no caderno do aluno
+        mock_res_insert = MagicMock()
+
+        mock_safe_execute.side_effect = [
+            mock_res_q, mock_res_check, mock_res_global,
+            mock_res_exp, mock_res_alt, mock_res_prompt, mock_res_insert,
+        ]
+
+        response = self.client.post('/api/ia/gerar_estudo', json={'id_questao': 500, 'tipo': 'resumo'})
+        self.assertEqual(response.status_code, 200)
+        dados = response.get_json()
+        self.assertTrue(dados.get('success'))
+
+        # A IA nunca foi chamada — o conteúdo veio do cache global
+        mock_chamar_ia.assert_not_called()
+
+    @patch('rotas.questao.ia_configurada', return_value=True)
+    @patch('utils.current_user')
+    @patch('rotas.questao.chamar_ia')
     @patch('rotas.questao.current_user')
     @patch('rotas.questao.safe_execute')
     @patch('rotas.questao.supabase')
-    def test_ia_gerar_estudo_flashcard_geracao_nova(self, mock_supabase, mock_safe_execute, mock_questao_user, mock_client_gpt, mock_utils_user):
-        """Valida a geração inédita de flashcard pela OpenAI quando não há cache local ou global, salvando no banco."""
+    def test_ia_gerar_estudo_flashcard_geracao_nova(self, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
+        """Valida a geração inédita de flashcard pela camada BYOK quando não há cache local ou global, salvando no banco."""
         for mock_user in [mock_questao_user, mock_utils_user]:
             mock_user.is_authenticated = True
             mock_user.id = '12345'
@@ -200,14 +275,8 @@ class TestIAChatBlueprint(unittest.TestCase):
             mock_res_save_user
         ]
 
-        # Mock OpenAI completions
-        mock_response = MagicMock()
-        mock_choice = MagicMock()
-        mock_message = MagicMock()
-        mock_message.content = '{"pergunta": "Qual a característica X?", "resposta": "Característica Y."}'
-        mock_choice.message = mock_message
-        mock_response.choices = [mock_choice]
-        mock_client_gpt.chat.completions.create.return_value = mock_response
+        # Retorno mock da camada BYOK (texto cru do provedor)
+        mock_chamar_ia.return_value = '{"pergunta": "Qual a característica X?", "resposta": "Característica Y."}'
 
         response = self.client.post('/api/ia/gerar_estudo', json={
             'id_questao': 500,
@@ -218,8 +287,9 @@ class TestIAChatBlueprint(unittest.TestCase):
         self.assertTrue(dados.get('success'))
         self.assertNotIn("cache", dados)
         
-        # Garante chamada OpenAI
-        mock_client_gpt.chat.completions.create.assert_called_once()
+        # Garante chamada da camada BYOK e TEMPERATURE_GPT congelada (0.3)
+        mock_chamar_ia.assert_called_once()
+        self.assertEqual(mock_chamar_ia.call_args.kwargs.get('temperature'), 0.3)
 
 if __name__ == '__main__':
     unittest.main()

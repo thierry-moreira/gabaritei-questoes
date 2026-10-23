@@ -37,8 +37,23 @@ function chamarIA(botao) {
             id_materia: idMateria // Enviando matéria se disponível
         })
     })
-        .then(res => res.ok ? res.json() : Promise.reject())
-        .then(data => {
+        .then(res => res.json().then(d => ({ ok: res.ok, d })))
+        .then(({ ok, d }) => {
+            if (!ok) {
+                // Resposta tratada do back (ex.: IA não configurada — BYOK):
+                // exibe o motivo com destaque + atalho p/ Configurações da conta.
+                const msg = d.explicacao || d.erro || 'Não foi possível gerar a explicação agora.';
+                const btnConfig = msg.includes('não configurada')
+                    ? '<a href="/aluno/conta" class="btn btn-sm btn-premium-save mt-2">Configurar minha chave de IA</a>'
+                    : '';
+                divTexto.innerHTML =
+                    '<div class="alert alert-warning rounded-4 text-center py-4 px-3 mb-0">' +
+                    '<i class="bi bi-key-fill fs-2 d-block mb-2"></i>' +
+                    '<span class="small d-block">' + msg + '</span>' + btnConfig +
+                    '</div>';
+                return;
+            }
+            const data = d;
             let explicacaoConvertida = data.explicacao
                 .replace(/&lt;/g, '<')
                 .replace(/&gt;/g, '>')
@@ -207,11 +222,15 @@ function carregarComentarios(idQuestao) {
             let html = '';
             listaComentarios.forEach(comentario => {
                 const dataFormatada = comentario.criado_em ? new Date(comentario.criado_em).toLocaleDateString('pt-BR') : '';
+                const podeDenunciar = window.GABARITEI_AUTH && window.GABARITEI_AUTH.isAuthenticated;
+                const botaoDenuncia = (podeDenunciar && comentario.id_comentario)
+                    ? `<button type="button" class="btn btn-link btn-sm text-muted p-0 ms-1 btn-reportar-comentario" data-comentario-id="${comentario.id_comentario}" title="Denunciar comentário" aria-label="Denunciar comentário"><i class="bi bi-flag-fill"></i></button>`
+                    : '';
                 html += `
             <div class="mb-2 p-2 bg-white rounded border shadow-sm text-dark">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                     <strong class="small text-primary"><i class="bi bi-person-circle"></i> ${comentario.nome_usuario || 'Aluno'}</strong>
-                    <small class="text-muted" style="font-size: 0.75rem;">${dataFormatada}</small>
+                    <span class="d-flex align-items-center"><small class="text-muted" style="font-size: 0.75rem;">${dataFormatada}</small>${botaoDenuncia}</span>
                 </div>
                 <p class="mb-0 small">${comentario.texto_comentario || comentario.texto || ''}</p>
             </div>`;
@@ -287,6 +306,62 @@ function initQuestoes() {
         collapseEl.addEventListener('show.bs.collapse', function () {
             const idQuestao = this.id.replace('comentarios-', '');
             carregarComentarios(idQuestao);
+        });
+    });
+
+    // Denunciar comentário (🚩) — moderação humana: a denúncia chega ao painel
+    // do admin (tabela reports_comentarios). Sem moderação por IA.
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.btn-reportar-comentario');
+        if (!btn) return;
+        e.preventDefault();
+
+        const idComentario = btn.getAttribute('data-comentario-id');
+        Swal.fire({
+            title: 'Denunciar comentário',
+            text: 'Ajude a manter a comunidade respeitosa. Nossa equipe vai analisar.',
+            input: 'select',
+            inputOptions: {
+                'Conteúdo ofensivo ou desrespeitoso': 'Conteúdo ofensivo ou desrespeitoso',
+                'Discurso de ódio ou assédio': 'Discurso de ódio ou assédio',
+                'Spam ou propaganda': 'Spam ou propaganda',
+                'Informação ilegal ou perigosa': 'Informação ilegal ou perigosa',
+                'Outro motivo': 'Outro motivo'
+            },
+            inputPlaceholder: 'Selecione o motivo',
+            showCancelButton: true,
+            confirmButtonText: 'Denunciar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#dc3545',
+            preConfirm: (motivo) => {
+                if (!motivo) Swal.showValidationMessage('Selecione um motivo.');
+                return motivo;
+            }
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+            fetch(`/api/comentarios/${idComentario}/reportar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                },
+                body: JSON.stringify({ motivo: result.value })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Denúncia enviada',
+                            text: 'Obrigado por manter a comunidade respeitosa!',
+                            timer: 2200,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire({ icon: 'warning', title: 'Atenção', text: data.error || 'Não foi possível enviar a denúncia.' });
+                    }
+                })
+                .catch(() => Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro de conexão ao denunciar.' }));
         });
     });
 

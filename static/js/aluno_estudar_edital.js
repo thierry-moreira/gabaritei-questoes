@@ -155,7 +155,18 @@ async function chamarIA(btn) {
         });
 
         const data = await response.json();
-        if (data.explicacao) {
+        if (data.explicacao && !response.ok) {
+            // Mensagem tratada do back (ex.: IA não configurada — BYOK): destaque + atalho
+            const msg = data.explicacao;
+            const btnConfig = msg.includes('não configurada')
+                ? '<a href="/aluno/conta" class="btn btn-sm btn-premium-save mt-2">Configurar minha chave de IA</a>'
+                : '';
+            resultDiv.innerHTML =
+                '<div class="alert alert-warning rounded-4 text-center py-4 px-3 mb-0">' +
+                '<i class="bi bi-key-fill fs-2 d-block mb-2"></i>' +
+                '<span class="small d-block">' + msg + '</span>' + btnConfig +
+                '</div>';
+        } else if (data.explicacao) {
             // Assume que 'marked' está disponível globalmente via CDN
             if (window.marked) {
                 resultDiv.innerHTML = marked.parse(data.explicacao);

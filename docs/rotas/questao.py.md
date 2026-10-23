@@ -118,7 +118,8 @@ O motor generativo adota uma política de **tolerância zero contra alucinaçõe
 *   **Proteção Contra IDOR**:
     *   A deleção física de questões (`excluir_questao`) migrou para o ambiente administrativo (`rotas/admin_api.py`, blindada por `@admin_required` com trava de dispositivo único — ver `docs/rotas/admin.md` no repositório do painel administrativo). O blueprint de questões do aluno não expõe nenhuma rota destrutiva.
     *   A inserção de resumos e flashcards sempre resolve e força a propriedade ao UUID autenticado do aluno (`current_user.id`), inviabilizando qualquer injeção ou tentativa de alteração cruzada de dados por IDs arbitrários.
-*   **Moderação Híbrida**: O salvamento de novos comentários de alunos em questões passa pela camada local de moderação (`verificar_texto_improprio`) impedindo termos chulos ou ataques na comunidade de estudantes.
+*   **Moderação sem IA (blocklist + denúncia humana)**: o salvamento de novos comentários passa pela blocklist local (`verificar_texto_improprio`) — a antiga moderação por API de IA foi removida. A segunda barreira é a **denúncia** (`POST /api/comentarios/<id_comentario>/reportar`, botão 🚩 em cada comentário): grava em `reports_comentarios` (no máximo 1 por comentário/aluno → `409` duplicado amigável; uuid validado; comentário inexistente → `404`) e a triagem é **humana**, no painel do admin (repo separado).
+*   **IA com BYOK**: `/api/ia_explica` e `/api/ia/gerar_estudo` chamam a camada `provedores_ia.chamar_ia()` com a **própria chave do aluno** (OpenAI, Google Gemini ou Anthropic), guardada apenas localmente (SQLite + DPAPI). Os prompts e parâmetros calibrados permanecem idênticos; os caches (`explicacoes_ia`, `ia_cache_estudo`) e a gravação no banco seguem inalterados. Detalhes em [docs/ia.md](../ia.md).
 
 ---
 > [!NOTE]
