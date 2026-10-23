@@ -779,7 +779,13 @@ window.initFilterCascades = function () {
 };
 
 window.deletarFiltro = function (idFiltro) {
-    if (confirm("Tem certeza que deseja excluir este filtro?")) {
+    confirmarAcao({
+        tipo: 'danger',
+        title: 'Excluir filtro?',
+        text: 'Tem certeza que deseja excluir este filtro?',
+        confirmButtonText: 'Sim, excluir'
+    }).then((result) => {
+        if (!result.isConfirmed) return;
         fetch(`/aluno/excluir_filtro/${idFiltro}`, {
             method: 'POST',
             headers: {
@@ -795,7 +801,7 @@ window.deletarFiltro = function (idFiltro) {
                 }
             })
             .catch(() => alert("Erro na conexão ao excluir filtro."));
-    }
+    });
 };
 
 // Chamar init ao carregar

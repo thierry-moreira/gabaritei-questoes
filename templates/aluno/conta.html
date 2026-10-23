@@ -372,16 +372,23 @@
         });
 
         btnRemover.addEventListener('click', function () {
-            if (!confirm('Remover a chave de IA salva neste dispositivo?')) return;
-            btnRemover.disabled = true;
-            fetch('/api/ia/config/remover', {
-                method: 'POST',
-                headers: { 'X-CSRFToken': csrf() }
-            })
-                .then(r => r.json())
-                .then(d => { if (d.success) window.location.reload(); })
-                .catch(() => mostrar('Erro de conexão ao remover.', false))
-                .finally(() => { btnRemover.disabled = false; });
+            confirmarAcao({
+                tipo: 'danger',
+                title: 'Remover chave de IA?',
+                text: 'A chave salva neste dispositivo será apagada. A geração de conteúdo novo fica indisponível até salvar outra chave.',
+                confirmButtonText: 'Sim, remover'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+                btnRemover.disabled = true;
+                fetch('/api/ia/config/remover', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrf() }
+                })
+                    .then(r => r.json())
+                    .then(d => { if (d.success) window.location.reload(); })
+                    .catch(() => mostrar('Erro de conexão ao remover.', false))
+                    .finally(() => { btnRemover.disabled = false; });
+            });
         });
 
         popularModelos();
