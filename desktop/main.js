@@ -73,11 +73,21 @@ function configBackend() {
 function iniciarBackend() {
   const { cmd, args, cwd } = configBackend();
   console.log(`[shell] backend (dev=${ehDev}): ${cmd} ${args.join(' ')}`);
+
+  // GTK portátil (WeasyPrint/PDF): o bundle traz o runtime em
+  // resources/backend/gtk/bin (dev: dentro do backend PyInstaller local).
+  // O backend pré-carrega as DLLs via ctypes e aponta o FONTCONFIG_FILE.
+  const gtkBin = ehDev
+    ? path.join(__dirname, '..', 'dist_backend', 'GabariteiAluno', 'gtk', 'bin')
+    : path.join(process.resourcesPath, 'backend', 'gtk', 'bin');
+  const gtkEnv = fs.existsSync(gtkBin) ? { GABARITEI_GTK_BIN: gtkBin } : {};
+
   backend = spawn(cmd, args, {
     cwd,
     windowsHide: true,
     env: {
       ...process.env,
+      ...gtkEnv,
       SUPABASE_URL,
       SUPABASE_ANON_KEY,
       FLASK_SECRET_KEY: secretKeyPersistente(),

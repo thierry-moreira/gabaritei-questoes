@@ -1,7 +1,60 @@
 import os
+import sys
+import ctypes
 import random
 from flask import Blueprint, render_template, request, redirect, flash, make_response
 from flask_login import current_user
+
+
+# ---------------------------------------------------------------------------
+# GTK portátil (WeasyPrint/PDF): o instalador do app embarca um runtime GTK
+# (Pango/FontConfig/HarfBuzz — projeto GTK-for-Windows-Runtime, LGPL) na
+# pasta gtk/bin ao lado deste backend. O WeasyPrint carrega as DLLs com
+# LoadLibrary simples, que NÃO resolve dependências transitivas a partir da
+# pasta delas — por isso elas são PRÉ-CARREGADAS via ctypes (que usa
+# LOAD_WITH_ALTERED_SEARCH_PATH e resolve as deps na própria pasta): com os
+# módulos já no processo, os dlopen por nome-base do WeasyPrint os reutilizam.
+# Sem runtime presente (dev limpo/CI), tudo abaixo é no-op e o PDF degrada
+# normalmente (HTML = None).
+# ---------------------------------------------------------------------------
+def _pre_carregar_gtk_portatil():
+    candidatos = []
+    if os.environ.get("GABARITEI_GTK_BIN"):
+        candidatos.append(os.environ["GABARITEI_GTK_BIN"])
+    if getattr(sys, "frozen", False):  # backend empacotado (PyInstaller)
+        candidatos.append(os.path.join(os.path.dirname(sys.executable), "gtk", "bin"))
+
+    bin_gtk = next((p for p in candidatos if os.path.isdir(p)), None)
+    if not bin_gtk:
+        return
+
+    # Folhas primeiro; falha silenciosa degrada apenas o recurso de PDF.
+    ordem = (
+        "libwinpthread-1.dll", "libgcc_s_seh-1.dll", "libintl-8.dll",
+        "libffi-7.dll", "libpcre-1.dll", "libglib-2.0-0.dll",
+        "libgobject-2.0-0.dll", "libexpat-1.dll", "zlib1.dll",
+        "libbz2-1.dll", "liblzma-5.dll", "libzstd-1.dll",
+        "libbrotlicommon.dll", "libbrotlidec.dll", "libbrotlienc.dll",
+        "libpng16.dll", "libfreetype-6.dll", "libgraphite2.dll",
+        "libharfbuzz-0.dll", "libfontconfig-1.dll", "libfribidi-0.dll",
+        "libpango-1.0-0.dll", "libpangoft2-1.0-0.dll", "libpangowin32-1.0-0.dll",
+    )
+    for nome in ordem:
+        try:
+            ctypes.WinDLL(os.path.join(bin_gtk, nome))
+        except OSError:
+            pass
+
+    # FontConfig do bundle: o fonts.conf do runtime lista as fontes do
+    # Windows (WINDOWSFONTDIR). Sem isso, o fontconfig procuraria um
+    # caminho compilado do MSYS2 que não existe na máquina do usuário.
+    fonts_conf = os.path.normpath(os.path.join(bin_gtk, "..", "etc", "fonts", "fonts.conf"))
+    if os.path.exists(fonts_conf):
+        os.environ.setdefault("FONTCONFIG_FILE", fonts_conf)
+
+
+_pre_carregar_gtk_portatil()
+
 try:
     from weasyprint import HTML
 except (ImportError, OSError):

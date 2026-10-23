@@ -81,16 +81,14 @@ npm install
 npm start          # spawna o Flask do venv e abre a janela
 ```
 
-Gerar o executável do Windows (backend PyInstaller + instalador NSIS):
+Gerar o executável do Windows (backend PyInstaller + runtime GTK + instalador NSIS):
 
 ```powershell
-pip install pyinstaller
-venv\Scripts\pyinstaller --noconfirm --clean --name GabariteiAluno `
-  --distpath dist_backend --workpath build_backend `
-  --add-data "templates;templates" --add-data "static;static" app.py
-cd desktop
-npm run dist       # → dist\GabariteiAluno-Setup-x.y.z.exe (+ win-unpacked portátil)
+powershell -ExecutionPolicy Bypass -File desktop\build.ps1
+# → desktop\dist\GabariteiAluno-Setup-x.y.z.exe (+ win-unpacked portátil)
 ```
+
+> O PDF de simulados funciona **out-of-the-box**: o instalador embarca o runtime GTK (Pango/FontConfig, LGPL) junto ao backend — nada é instalado no sistema do usuário.
 
 > A ANON key é **pública por design** (vai embarcada no binário) — a segurança do produto vive nas policies RLS, não no segredo da chave. O `service_role` nunca é usado aqui. Detalhes completos do build: [docs/desktop.md](docs/desktop.md).
 

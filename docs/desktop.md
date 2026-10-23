@@ -28,28 +28,28 @@ npm start          # spawna o Flask do venv e abre a janela
 ```
 Requisitos: venv do repo ativo em `../venv` (o shell usa `venv/Scripts/python.exe` direto).
 
-## Build (fases)
+## Build (pipeline único: `desktop\build.ps1`)
 
-Pipeline validado de ponta a ponta (out/2026): backend PyInstaller sobe sozinho com HTTP 200 e o instalador NSIS instala shell + backend; o `main.js` detecta `app.isPackaged`, spawna `resources/backend/GabariteiAluno.exe`, o BrowserWindow carrega `http://127.0.0.1:5000/aluno/login` e o backend morre junto no encerramento (sem órfãos).
+```powershell
+powershell -ExecutionPolicy Bypass -File desktop\build.ps1
+```
 
-1. **Backend — PyInstaller** (a partir da raiz do repo, com o venv ativo):
-   ```powershell
-   pip install pyinstaller
-   venv\Scripts\pyinstaller --noconfirm --clean --name GabariteiAluno `
-     --distpath dist_backend --workpath build_backend `
-     --add-data "templates;templates" --add-data "static;static" app.py
-   ```
-   Gera `dist_backend/GabariteiAluno/GabariteiAluno.exe` (+ `_internal/`). O exe **mantém o console** de propósito: o shell o spawna com `windowsHide: true` (nenhuma janela aparece) e captura os logs do Flask pelos pipes — com `--noconsole` o `sys.stdout` seria `None` e os `print()` das rotas estourariam.
-   - `templates/` e `static/` entram via `--add-data`; o `.env` **não** entra — as credenciais chegam pelas variáveis de ambiente do shell.
-   - WeasyPrint segue o comportamento do dev: se o GTK/Pango não estiver na máquina, `rotas/simulado.py` já degrada com `HTML = None` (PDF indisponível com mensagem amigável) — nenhum crash.
-   - Teste standalone (simula o env que o shell passa): suba o exe com `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `APP_TOKEN`, `FLASK_SECRET_KEY` e `GABARITEI_LOCAL_DIR` no env e confira `http://127.0.0.1:5000/aluno/login` → 200.
+Fases (idempotentes — o runtime GTK baixa apenas na 1ª vez):
 
-2. **Instalador — electron-builder NSIS**:
-   ```powershell
-   cd desktop
-   npm install        # 1ª vez (baixa o Electron)
-   npm run dist
-   ```
-   Gera `desktop/dist/GabariteiAluno-Setup-x.y.z.exe` (+ `win-unpacked/` portátil). O `extraResources` copia `dist_backend/GabariteiAluno/` para `resources/backend/` (o caminho que o `main.js` espera), e o `token.local.js` entra no `app.asar` por design — o `main.js` o requer em runtime para injetar o `APP_TOKEN` no env do backend.
+1. **Runtime GTK portátil** — baixa o *GTK-for-Windows-Runtime-Installer* (tschoonj, LGPL, 47 MB) para `build_gtk/runtime` (gitignored);
+2. **Backend — PyInstaller** de `app.py` → `dist_backend/GabariteiAluno/GabariteiAluno.exe` (+ `_internal/`), com `templates/` e `static/` via `--add-data`. O exe mantém o console de propósito: o shell o spawna com `windowsHide` (nenhuma janela aparece) e captura os logs do Flask pelos pipes — com `--noconsole` o `sys.stdout` seria `None` e os `print()` das rotas estourariam. O `.env` não entra no bundle — as credenciais chegam pelas variáveis de ambiente do shell;
+3. **GTK dentro do bundle** — copia `bin/` (80 DLLs) + `etc/fonts` para `dist_backend/GabariteiAluno/gtk/`;
+4. **Instalador — electron-builder NSIS** → `desktop/dist/GabariteiAluno-Setup-x.y.z.exe` (+ `win-unpacked/` portátil). O `extraResources` leva o backend inteiro (com o GTK) para `resources/backend/`, e o `token.local.js` entra no `app.asar` por design — o `main.js` o requer em runtime para injetar o `APP_TOKEN` no env do backend.
+
+### GTK portátil — PDF out-of-the-box
+
+O PDF de simulados (WeasyPrint) funciona sem o usuário instalar nada: o runtime GTK (Pango/FontConfig/HarfBuzz) viaja **dentro do app**, em `resources/backend/gtk/`.
+
+- O WeasyPrint carrega as DLLs com `LoadLibrary` simples, que **não resolve dependências transitivas** a partir da pasta delas. Solução: `rotas/simulado.py` **pré-carrega** as DLLs via `ctypes` (que usa `LOAD_WITH_ALTERED_SEARCH_PATH` e resolve as deps na própria pasta), na ordem de dependência — com os módulos já no processo, os `dlopen` por nome-base do WeasyPrint os reutilizam;
+- O caminho vem de `GABARITEI_GTK_BIN` (injetado pelo `main.js`: `resources/backend/gtk/bin` em prod, o backend PyInstaller local em dev), com fallback auto-detect no exe empacotado (`sys.frozen`);
+- `FONTCONFIG_FILE` aponta para o `fonts.conf` do bundle (que lista `C:\Windows\Fonts` via `WINDOWSFONTDIR`) — sem isso o fontconfig procuraria um caminho compilado do MSYS2 que não existe na máquina do usuário;
+- Sem runtime presente (dev limpo/CI): tudo é no-op e o PDF degrada com `HTML = None` (mensagem amigável, nenhum crash).
+
+Validado de ponta a ponta (out/2026): PDF real gerado com o runtime portátil; o app empacotado sobe com HTTP 200 e o WeasyPrint importa limpo, sem o aviso de GTK ausente.
 
 Futuras melhorias: ícone `.ico` próprio (hoje o instalador usa o ícone padrão do Electron — converter `static/icone.webp` em `.ico` 256px e apontar em `build.icon`); code signing; `win-unpacked` como release portátil.
