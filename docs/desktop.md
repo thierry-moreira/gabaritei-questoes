@@ -52,4 +52,6 @@ O PDF de simulados (WeasyPrint) funciona sem o usuário instalar nada: o runtime
 
 Validado de ponta a ponta (out/2026): PDF real gerado com o runtime portátil; o app empacotado sobe com HTTP 200 e o WeasyPrint importa limpo, sem o aviso de GTK ausente.
 
-Futuras melhorias: ícone `.ico` próprio (hoje o instalador usa o ícone padrão do Electron — converter `static/icone.webp` em `.ico` 256px e apontar em `build.icon`); code signing; `win-unpacked` como release portátil.
+Futuras melhorias: code signing; `win-unpacked` como release portátil.
+
+O ícone do app (`static/icone.ico`) é aplicado ao executável e ao instalador via `build.icon` no `desktop/package.json`; o artefato do instalador é nomeado `Gabaritei.exe` via `nsis.artifactName`.

@@ -18,6 +18,7 @@
   "build": {
     "appId": "com.gabaritei.aluno",
     "productName": "Gabaritei Aluno",
+    "icon": "../static/icone.ico",
     "directories": {
       "output": "dist"
     },
@@ -39,7 +40,7 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "GabariteiAluno-Setup-${version}.${ext}"
+      "artifactName": "Gabaritei.${ext}"
     }
   }
 }

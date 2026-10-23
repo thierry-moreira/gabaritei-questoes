@@ -57,7 +57,7 @@ Restrições técnicas confirmadas:
 
 - Nome: **Gabaritei** (Gabaritei Questões)
 - Tagline: "Domine as questões, conquiste a vaga."
-- Assets de marca existentes: `static/logo.webp` (logo) e `static/icone.webp` (ícone/favicon)
+- Assets de marca existentes: `static/logo.webp` (logo), `static/icone.webp` (ícone/favicon web) e `static/icone.ico` (ícone do app desktop/instalador)
 - Voz: português do Brasil, motivacional e focada em aprovação
 - Compromissos públicos: software livre MIT; modelo de segurança documentado abertamente (`docs/banco_dados.md`); app do aluno sem nenhum código administrativo
 
