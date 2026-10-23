@@ -53,7 +53,7 @@ def verificar_texto_improprio(texto):
 
     for palavra in BLOCKLIST:
         if palavra in texto_limpo or palavra in texto_normalizado:
-            return False, "Seu comentário contém termos que violam nossas diretrizes de comunidade. Por favor, mantenha o respeito."
+            return False, "Seu comentário contém termos que violam as diretrizes da comunidade. Por favor, mantenha o respeito."
 
     # Moderação sem IA (decisão de produto): a blocklist local acima é a
     # primeira barreira; a segunda é a denúncia humana (🚩 em cada comentário,

@@ -319,7 +319,7 @@ function initQuestoes() {
         const idComentario = btn.getAttribute('data-comentario-id');
         Swal.fire({
             title: 'Denunciar comentário',
-            text: 'Ajude a manter a comunidade respeitosa. Nossa equipe vai analisar.',
+            text: 'Ajude a manter a comunidade respeitosa. A denúncia será registrada para análise.',
             input: 'select',
             inputOptions: {
                 'Conteúdo ofensivo ou desrespeitoso': 'Conteúdo ofensivo ou desrespeitoso',

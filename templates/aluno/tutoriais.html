@@ -121,7 +121,7 @@
                 </div>
                 <span class="step-number">Passo 01</span>
                 <h5 class="fw-bold">Localização Inteligente</h5>
-                <p class="text-secondary small mb-0">Utilize nossos filtros avançados para encontrar exatamente as questões que caem no seu concurso, separadas por disciplina e assunto.</p>
+                <p class="text-secondary small mb-0">Utilize os filtros avançados da plataforma para encontrar exatamente as questões que caem no seu concurso, separadas por disciplina e assunto.</p>
             </div>
         </div>
         <div class="col-md-4">
@@ -131,7 +131,7 @@
                 </div>
                 <span class="step-number">Passo 02</span>
                 <h5 class="fw-bold">Prática Deliberada</h5>
-                <p class="text-secondary small mb-0">Resolva simulados personalizados. Treine com o tempo real de prova e aprenda com o erro através dos comentários da nossa IA.</p>
+                <p class="text-secondary small mb-0">Resolva simulados personalizados. Treine com o tempo real de prova e aprenda com o erro através das explicações da IA e dos comentários da comunidade.</p>
             </div>
         </div>
         <div class="col-md-4">
@@ -385,7 +385,23 @@
                     <div class="p-5 rounded-4 border shadow-sm" style="background-color: var(--card-bg); border-color: var(--border-color) !important;">
                         <div class="text-center mb-5">
                             <h4 class="fw-bold"><i class="bi bi-stars text-warning me-2"></i> Seu Tutor Particular 24h</h4>
-                            <p class="text-secondary mx-auto" style="max-width: 700px;">Nossa IA não apenas dá respostas, ela ensina você a pensar. Conheça as ferramentas que automatizam seu aprendizado.</p>
+                            <p class="text-secondary mx-auto" style="max-width: 700px;">A inteligência artificial não apenas dá respostas, ela ensina o aluno a pensar. Conheça as ferramentas que automatizam o aprendizado.</p>
+                        </div>
+
+                        <!-- Formato da plataforma: IA com chave própria do aluno (BYOK) -->
+                        <div class="p-4 rounded-4 bg-primary bg-opacity-10 border border-primary border-opacity-20 mb-5">
+                            <h6 class="fw-bold mb-3"><i class="bi bi-key-fill text-primary me-2"></i> Como a IA funciona no Gabaritei</h6>
+                            <div class="row g-4">
+                                <div class="col-lg-4">
+                                    <p class="small text-secondary mb-0"><b>Chave própria do aluno:</b> a geração de conteúdo novo usa a chave de API do próprio aluno — <b>OpenAI</b>, <b>Google Gemini</b> ou <b>Anthropic</b> — configurada em <b>Conta → Inteligência Artificial</b>.</p>
+                                </div>
+                                <div class="col-lg-4">
+                                    <p class="small text-secondary mb-0"><b>Privacidade total:</b> a chave é armazenada apenas no computador do aluno, criptografada pelo DPAPI do Windows. A plataforma nunca a recebe, transmite ou sincroniza.</p>
+                                </div>
+                                <div class="col-lg-4">
+                                    <p class="small text-secondary mb-0"><b>Custo coletivo:</b> todo conteúdo gerado fica salvo no banco e é liberado para todos os alunos — inclusive para quem ainda não configurou chave. Apenas a primeira geração de cada questão consome créditos do provedor.</p>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="row g-4 mb-5">
@@ -444,7 +460,7 @@
                                 <div class="p-4 rounded-4 border h-100" style="background-color: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.1) !important;">
                                     <h6 class="fw-bold mb-3"><i class="bi bi-braces text-primary me-2"></i> Precisão Técnica e Fórmulas</h6>
                                     <p class="small text-secondary">
-                                        Nossa inteligência é treinada especificamente para concursos brasileiros. Ela reconhece e renderiza fórmulas complexas de Raciocínio Lógico e Matemática usando <b>LaTeX</b>, garantindo que você visualize cálculos como se estivessem em um livro físico.
+                                        A inteligência artificial é treinada especificamente para concursos brasileiros. Ela reconhece e renderiza fórmulas complexas de Raciocínio Lógico e Matemática usando <b>LaTeX</b>, garantindo cálculos com a fidelidade visual de um livro físico.
                                     </p>
                                     <div class="mt-3 p-3 bg-dark bg-opacity-25 rounded border border-white border-opacity-10 text-center">
                                         <div class="latex-render">
@@ -457,7 +473,7 @@
                                 <div class="p-4 rounded-4 border h-100" style="background-color: rgba(255, 193, 7, 0.1); border-color: rgba(255, 193, 7, 0.2) !important;">
                                     <h6 class="fw-bold mb-2 text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i> Anti-Alucinação</h6>
                                     <p class="small text-secondary mb-0">
-                                        Implementamos filtros que impedem a IA de "inventar" leis. Se um assunto estiver desatualizado no banco de dados, a IA emitirá um alerta de segurança legislativa para você.
+                                        A plataforma implementa filtros que impedem a IA de "inventar" leis. Se um assunto estiver desatualizado no banco de dados, a IA emitirá um alerta de segurança legislativa.
                                     </p>
                                 </div>
                             </div>
@@ -481,6 +497,18 @@
                 <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
                     <div class="accordion-body text-secondary pt-0 pb-4">
                         Com certeza. Cada clique e resposta é armazenado em seu perfil. Você pode acessar o menu <b>Histórico</b> a qualquer momento para refazer questões que errou ou revisar seus comentários salvos.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed py-4" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                        Preciso de uma chave de API para usar a IA? Isso tem custo?
+                    </button>
+                </h2>
+                <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#accordionFAQ">
+                    <div class="accordion-body text-secondary pt-0 pb-4">
+                        Explicações, resumos e flashcards <b>já gerados</b> ficam salvos no banco e são liberados para todos os alunos, sem custo — inclusive para quem ainda não configurou nenhuma chave. Apenas a <b>geração de conteúdo inédito</b> consome a chave de API do próprio aluno (OpenAI, Google Gemini ou Anthropic), cobrada diretamente pelo provedor escolhido. A chave é configurada em <b>Conta → Inteligência Artificial</b> e fica armazenada apenas no computador do aluno, criptografada pelo DPAPI do Windows.
                     </div>
                 </div>
             </div>
@@ -521,10 +549,13 @@
                         <i class="bi bi-headset text-primary fs-3"></i>
                     </div>
                     <div>
-                        <h6 class="fw-bold mb-1">Ainda precisa de suporte?</h6>
+                        <h6 class="fw-bold mb-1">Ainda precisa de ajuda?</h6>
                         <p class="small mb-0 opacity-75">
-                            Nossa equipe de suporte pedagógico e técnico está pronta para te ajudar. Abra um ticket pelo painel e ela entrará em contato com você.
+                            O Gabaritei Questões é um software livre. Dúvidas, sugestões e correções podem ser registradas como <i>issues</i> no repositório público no GitHub — qualquer pessoa pode consultar, reportar e contribuir.
                         </p>
+                        <a href="https://github.com/thierry-moreira/gabaritei-questoes" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="bi bi-github me-1"></i> Abrir o repositório no GitHub
+                        </a>
                     </div>
                 </div>
             </div>
