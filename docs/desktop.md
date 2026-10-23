@@ -29,5 +29,27 @@ npm start          # spawna o Flask do venv e abre a janela
 Requisitos: venv do repo ativo em `../venv` (o shell usa `venv/Scripts/python.exe` direto).
 
 ## Build (fases)
-1. **Backend**: PyInstaller do `app.py` → `dist_backend/GabariteiAluno.exe` (inclui `rotas/`, `templates/`, `static/`, `utils.py`, `extensoes.py`, `modelos.py`, `banco_dados_aluno.py`; o `APP_TOKEN` do bundle vem do `token.local.js` no build). *(a implementar)*
-2. **Instalador**: `npm run dist` → electron-builder NSIS (`desktop/dist/GabariteiAluno-Setup-x.y.z.exe`), que embala o shell + `extraResources` do backend. *(a implementar)*
+
+Pipeline validado de ponta a ponta (out/2026): backend PyInstaller sobe sozinho com HTTP 200 e o instalador NSIS instala shell + backend; o `main.js` detecta `app.isPackaged`, spawna `resources/backend/GabariteiAluno.exe`, o BrowserWindow carrega `http://127.0.0.1:5000/aluno/login` e o backend morre junto no encerramento (sem órfãos).
+
+1. **Backend — PyInstaller** (a partir da raiz do repo, com o venv ativo):
+   ```powershell
+   pip install pyinstaller
+   venv\Scripts\pyinstaller --noconfirm --clean --name GabariteiAluno `
+     --distpath dist_backend --workpath build_backend `
+     --add-data "templates;templates" --add-data "static;static" app.py
+   ```
+   Gera `dist_backend/GabariteiAluno/GabariteiAluno.exe` (+ `_internal/`). O exe **mantém o console** de propósito: o shell o spawna com `windowsHide: true` (nenhuma janela aparece) e captura os logs do Flask pelos pipes — com `--noconsole` o `sys.stdout` seria `None` e os `print()` das rotas estourariam.
+   - `templates/` e `static/` entram via `--add-data`; o `.env` **não** entra — as credenciais chegam pelas variáveis de ambiente do shell.
+   - WeasyPrint segue o comportamento do dev: se o GTK/Pango não estiver na máquina, `rotas/simulado.py` já degrada com `HTML = None` (PDF indisponível com mensagem amigável) — nenhum crash.
+   - Teste standalone (simula o env que o shell passa): suba o exe com `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `APP_TOKEN`, `FLASK_SECRET_KEY` e `GABARITEI_LOCAL_DIR` no env e confira `http://127.0.0.1:5000/aluno/login` → 200.
+
+2. **Instalador — electron-builder NSIS**:
+   ```powershell
+   cd desktop
+   npm install        # 1ª vez (baixa o Electron)
+   npm run dist
+   ```
+   Gera `desktop/dist/GabariteiAluno-Setup-x.y.z.exe` (+ `win-unpacked/` portátil). O `extraResources` copia `dist_backend/GabariteiAluno/` para `resources/backend/` (o caminho que o `main.js` espera), e o `token.local.js` entra no `app.asar` por design — o `main.js` o requer em runtime para injetar o `APP_TOKEN` no env do backend.
+
+Futuras melhorias: ícone `.ico` próprio (hoje o instalador usa o ícone padrão do Electron — converter `static/icone.webp` em `.ico` 256px e apontar em `build.icon`); code signing; `win-unpacked` como release portátil.

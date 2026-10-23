@@ -62,26 +62,37 @@ Electron (janela do app)  ──spawna──▶  Flask (127.0.0.1:5000)  ──H
 <a id="instalacao"></a>
 ## 🛠️ Instalação (dev)
 
-**Pré-requisitos:** Python 3.12+, Node.js (apenas para o shell Electron), um projeto Supabase e uma chave OpenAI (recursos de IA).
+**Pré-requisitos:** Python 3.12+, Node.js (apenas para o shell Electron) e um projeto Supabase. Os recursos de IA usam a chave do próprio aluno (BYOK — OpenAI, Google Gemini ou Anthropic, configurada pela UI da conta).
 
 ```powershell
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
-copy .env.example .env                       # preencha SUPABASE_URL, ANON key, APP_TOKEN, FLASK_SECRET_KEY e chave OpenAI
+copy .env.example .env                       # preencha SUPABASE_URL, ANON key, APP_TOKEN e FLASK_SECRET_KEY
 copy desktop\token.example.js desktop\token.local.js   # o MESMO APP_TOKEN do .env
 python app.py                                # http://127.0.0.1:5000
 ```
 
-Shell Electron (app instalável):
+Shell Electron (dev):
 
 ```powershell
 cd desktop
 npm install
-npm start
+npm start          # spawna o Flask do venv e abre a janela
 ```
 
-> A ANON key é **pública por design** (vai embarcada no binário) — a segurança do produto vive nas policies RLS, não no segredo da chave. O `service_role` nunca é usado aqui.
+Gerar o executável do Windows (backend PyInstaller + instalador NSIS):
+
+```powershell
+pip install pyinstaller
+venv\Scripts\pyinstaller --noconfirm --clean --name GabariteiAluno `
+  --distpath dist_backend --workpath build_backend `
+  --add-data "templates;templates" --add-data "static;static" app.py
+cd desktop
+npm run dist       # → dist\GabariteiAluno-Setup-x.y.z.exe (+ win-unpacked portátil)
+```
+
+> A ANON key é **pública por design** (vai embarcada no binário) — a segurança do produto vive nas policies RLS, não no segredo da chave. O `service_role` nunca é usado aqui. Detalhes completos do build: [docs/desktop.md](docs/desktop.md).
 
 <a id="testes"></a>
 ## ✅ Testes

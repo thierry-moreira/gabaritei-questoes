@@ -30,6 +30,8 @@ desktop/token.local.js
 desktop/dist/
 desktop/node_modules/
 dist_backend/
+build_backend/
+GabariteiAluno.spec
 
 # Coverage
 coverage

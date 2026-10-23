@@ -22,11 +22,12 @@
       "output": "dist"
     },
     "files": [
-      "main.js"
+      "main.js",
+      "token.local.js"
     ],
     "extraResources": [
       {
-        "from": "../dist_backend",
+        "from": "../dist_backend/GabariteiAluno",
         "to": "backend"
       }
     ],
