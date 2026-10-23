@@ -9,7 +9,6 @@ python-dotenv
 postgrest
 openai
 typing-extensions
-email-validator
 weasyprint
 requests
 pillow

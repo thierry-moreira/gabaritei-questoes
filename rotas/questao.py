@@ -7,7 +7,7 @@ from typing import Any
 from postgrest import CountMethod
 
 from banco_dados_aluno import supabase
-from extensoes import csrf, limiter
+from extensoes import limiter
 from utils import safe_execute, aluno_required, slugify
 # BYOK (Bring Your Own Key): a IA roda com a PRÓPRIA chave do aluno, guardada
 # apenas localmente (banco_local.py). Os prompts e parâmetros calibrados das

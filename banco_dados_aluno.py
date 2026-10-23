@@ -83,11 +83,6 @@ def restaurar_sessao(refresh_token: str):
     return supabase.auth.refresh_session(refresh_token)
 
 
-def definir_sessao(access_token: str, refresh_token: str):
-    """Reaplica tokens (relogin silencioso sem nova ida ao servidor Auth)."""
-    return supabase.auth.set_session(access_token, refresh_token)
-
-
 def sessao_atual():
     """Sessão Auth corrente (None se o client está anônimo/expirado)."""
     return supabase.auth.get_session()

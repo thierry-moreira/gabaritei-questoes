@@ -364,7 +364,7 @@ def baixar_pdf_simulado(id_simulado):
             
             q['letra_gabarito'] = letra_certa if letra_certa else 'N/A' # type: ignore
 
-        caminho_logo = os.path.abspath('static/logo.png')
+        caminho_logo = os.path.abspath('static/logo.webp')
         caminho_css = os.path.abspath('static/css/pdf_style.css')
         
         logo_uri = f"file:///{caminho_logo.replace(os.sep, '/')}"

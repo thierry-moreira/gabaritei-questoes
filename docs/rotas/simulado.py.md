@@ -125,7 +125,7 @@ graph TD
 ### 1. Resolução Física de Assets Locais
 Para renderizar a logomarca da plataforma e carregar a folha de estilos CSS (`pdf_style.css`), o código obtém o caminho físico absoluto do sistema de arquivos no computador do servidor, adaptando a formatação de barras para que o compilador PDF consiga acessá-los localmente sem onerar a rede:
 ```python
-caminho_logo = os.path.abspath('static/logo.png')
+caminho_logo = os.path.abspath('static/logo.webp')
 caminho_css = os.path.abspath('static/css/pdf_style.css')
 
 logo_uri = f"file:///{caminho_logo.replace(os.sep, '/')}"

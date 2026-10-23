@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime
 import os
 import sys
 import time
@@ -37,7 +37,7 @@ mimetypes.add_type('application/javascript', '.js')
 from banco_dados_aluno import supabase
 from modelos import User
 from extensoes import login_manager, limiter, csrf
-from utils import safe_execute, calcular_ofensiva_usuario
+from utils import calcular_ofensiva_usuario
 
 from rotas.auth import auth_bp
 from rotas.api import api_bp

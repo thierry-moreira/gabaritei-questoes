@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify
+from flask import Blueprint, render_template, request, redirect, flash, jsonify
 from flask_login import current_user, logout_user
 
 from banco_dados_aluno import supabase

@@ -1,6 +1,6 @@
 from typing import Any
 from datetime import datetime
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for, abort
+from flask import Blueprint, render_template, jsonify, abort
 from flask_login import login_required, current_user
 from banco_dados_aluno import supabase
 from utils import safe_execute, aluno_required

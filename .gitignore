@@ -37,3 +37,9 @@ coverage
 # Pastas de agents (IA)
 .agent/
 .agents/
+
+# Cache da skill impeccable (UI live — regenerado localmente)
+.impeccable/
+
+# Lockfile das skills de agente (regenerado localmente)
+skills-lock.json

@@ -2,7 +2,7 @@ import os
 import sys
 import unittest
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import patch, MagicMock, ANY
 
 # Adiciona o diretório raiz ao sys.path para garantir que as importações funcionem

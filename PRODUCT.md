@@ -63,8 +63,8 @@ Restrições técnicas confirmadas:
 
 ## Evidence on Hand
 
-- Screenshots reais do produto em `static/imagens/index/`: `painel_aluno_fiel.webp`, `flashcards.webp` e capturas de tela do fluxo de index (2026-04-30)
-- Landing de apresentação removida (out/2026): a raiz `/` abre direto a tela de login; o link "Código-fonte" (GitHub) migrou para o rodapé do login. Screenshots históricos da ex-landing permanecem em `static/imagens/index/`
+- Screenshot real do produto em `static/imagens/index/`: `painel_aluno_fiel.webp` (usado na README); capturas históricas da ex-landing foram removidas na limpeza de out/2026
+- Landing de apresentação removida (out/2026): a raiz `/` abre direto a tela de login; o link "Código-fonte" (GitHub) migrou para o rodapé do login
 - Documentação técnica completa: `README.md`, `docs/app.md`, `docs/desktop.md`, `docs/banco_dados.md`, `docs/rotas/*.md`
 - **Ausências que futuros trabalhos não devem fabricar:** não há depoimentos de alunos, taxas de aprovação comprovadas, números de usuários, estudos de caso, matérias de imprensa ou prêmios. Nenhuma superfície pode inventar essas provas.
 
