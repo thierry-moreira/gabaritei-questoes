@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 import sys
 import time
@@ -78,6 +78,13 @@ app.config.update(
     SESSION_COOKIE_DOMAIN=None,
     PREFERRED_URL_SCHEME='http',    # URLs externas/e-mails gerados como http://
 )
+
+# Sessão eterna do desktop: o cookie de login carrega data de expiração
+# (session.permanent=True setado no login, em rotas/auth.py) — sem isso o
+# Chromium descarta o cookie ao fechar o app e o aluno logaria a cada
+# abertura. 10 anos = sem limite prático; o Flask renova a expiração a cada
+# request (SESSION_REFRESH_EACH_REQUEST). Deslogar = botão "Sair" (/logout).
+app.permanent_session_lifetime = timedelta(days=3650)
 
 @app.after_request
 def compress(response):
@@ -191,10 +198,33 @@ from banco_dados_aluno import sessao_atual as _sessao_auth_atual, restaurar_sess
 def _garantir_sessao_auth():
     if current_user.is_authenticated:
         try:
-            if _sessao_auth_atual() is None:
-                rt = session.get('auth_refresh_token')
-                if rt:
-                    _restaurar_sessao_auth(rt)
+            # Sessão eterna do desktop — regra da rotação: o Supabase tem
+            # refresh token rotation ativo (cada refresh emite um token NOVO
+            # e invalida o anterior), então toda restauração/renovação grava
+            # o novo token de volta em session['auth_refresh_token']. Sem
+            # isso o token salvo morre após a primeira renovação e o aluno é
+            # deslogado no boot seguinte.
+            s = _sessao_auth_atual()
+            rt_salvo = session.get('auth_refresh_token')
+            if s is None:
+                # Client anônimo (boot novo ou sessão perdida): reaplica o
+                # refresh token do cookie e persiste o NOVO da rotação.
+                if rt_salvo:
+                    _restaurar_sessao_auth(rt_salvo)
+                    s = _sessao_auth_atual()
+                    if s and s.refresh_token:
+                        session['auth_refresh_token'] = s.refresh_token
+                        session.permanent = True
+            elif rt_salvo:
+                # Renovação proativa: access token a expirar (< 2 min) →
+                # renova ANTES de falhar e persiste o novo refresh token.
+                expira_em = getattr(s, 'expires_at', 0) or 0
+                if expira_em and (expira_em - time.time()) < 120:
+                    _restaurar_sessao_auth(rt_salvo)
+                    s2 = _sessao_auth_atual()
+                    if s2 and s2.refresh_token:
+                        session['auth_refresh_token'] = s2.refresh_token
+                        session.permanent = True
         except Exception:
             pass
 

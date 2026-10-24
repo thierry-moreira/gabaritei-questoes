@@ -7,11 +7,11 @@
 
 ## Rotas Ativas
 
-### 1. Tela de Login / Sessão Lembrada (`/aluno/login`, GET)
+### 1. Tela de Login / Sessão Eterna (`/aluno/login`, GET)
 *   **Portão de entrada**: a raiz `/` (ex-landing de apresentação, aposentada) redireciona para esta tela; alunos logados seguem direto à área do aluno.
 *   **Redirecionamento de autenticados**: alunos logados vão direto à área do aluno.
-*   **Sessão lembrada**: se houver um refresh token salvo na sessão Flask (`auth_refresh_token` — gravado no login), o client Supabase é reautenticado (`restaurar_sessao`) e o aluno entra sem redigitar a senha; o perfil é reconstituído via `usuarios.auth_id`. Refresh inválido/expirado → token descartado e tela normal.
-*   **Client reautenticado a cada boot**: o `before_request` de `app.py` reaplica o JWT do aluno logado quando o processo Flask reinicia (o client global perde a sessão em memória; o refresh token vive no cookie de sessão Flask, persistido pela `FLASK_SECRET_KEY` fixa do shell).
+*   **Sessão eterna (desktop)**: o login grava o refresh token na sessão Flask (`auth_refresh_token`) e marca a sessão como **permanente** (`session.permanent = True` no `_entrar_flask` → cookie com data de expiração de 10 anos, `PERMANENT_SESSION_LIFETIME` no `app.py`). **Sem a permanência, o Chromium do Electron descarta o cookie de sessão ao fechar o app** e o aluno precisaria logar a cada abertura. Com ela: reabrir o app entra direto no painel, sem redigitar a senha; o perfil é reconstituído via `usuarios.auth_id`. Refresh inválido/expirado → token descartado e tela normal.
+*   **Rotação persistida + renovação proativa**: o `before_request` de `app.py` reaplica o JWT do aluno logado quando o processo Flask reinicia (o client global perde a sessão em memória; o refresh token vive no cookie persistido pela `FLASK_SECRET_KEY` fixa do shell) e **grava de volta o NOVO refresh token de cada rotação** — o Supabase tem refresh token rotation ativo (cada refresh emite um token novo e invalida o anterior; sem essa persistência o aluno seria deslogado no boot seguinte). Quando o access token está a menos de 2 minutos de expirar, ele é **renovado proativamente**. A única forma de encerrar a sessão é o botão **Sair** (`/logout`).
 
 ### 2. Entrar (`/aluno/entrar`, POST)
 *   **Formulário**: `email` (normalizado para minúsculas) + `senha`.
@@ -29,7 +29,8 @@
 *   Dispara o e-mail de reset do Supabase Auth (`reset_password_for_email`) — requer SMTP configurado no dashboard do projeto (Zoho). Mensagem neutra: "se este e-mail tiver conta, enviamos o link". O link redireciona para a **página pública** (`site/`), onde o aluno define a nova senha direto no navegador.
 
 ### 5. Encerramento de Sessão (`/logout`)
-*   Limpa a identidade do client Supabase (`sair_auth`), executa `logout_user()` e remove da sessão Flask **apenas as chaves não administrativas** (preserva `admin_*`), incluindo o `auth_refresh_token`.
+*   Limpa a identidade do client Supabase (`sair_auth` — **revoga o refresh token no servidor**), executa `logout_user()` e remove da sessão Flask **apenas as chaves não administrativas** (preserva `admin_*`), incluindo o `auth_refresh_token`.
+*   Com a sessão eterna do desktop, este é o **único** caminho de deslogar (o cookie não expira sozinho): reabrir o app após o logout mostra a tela de login normal.
 *   Redireciona para a tela de login (`auth.login_aluno`) — a ex-página de apresentação foi aposentada com o fim do modelo pago.
 
 ### 6. Página Pública de Confirmação (`site/` → GitHub Pages)

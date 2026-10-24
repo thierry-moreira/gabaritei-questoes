@@ -42,6 +42,12 @@ def _entrar_flask(linha):
     s = sessao_atual()
     if s and s.refresh_token:
         session['auth_refresh_token'] = s.refresh_token
+    # Sessão eterna do desktop: SEM session.permanent o Flask emite um
+    # "session cookie" (sem data de expiração) e o Chromium do Electron o
+    # DESCARTA ao fechar o app — o aluno teria que logar a cada abertura.
+    # Com permanent=True o cookie ganha Expires (permanent_session_lifetime,
+    # definido no app.py) e sobrevive indefinidamente.
+    session.permanent = True
     logger.info(f"LOGIN: user_id={linha['id']}")
 
 

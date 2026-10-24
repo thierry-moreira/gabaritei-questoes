@@ -67,6 +67,60 @@ class TestAuthComSenha(unittest.TestCase):
                 self.assertEqual(r.status_code, 200)
                 m_sair.assert_called_once()
 
+    @patch('rotas.auth.login_user')
+    @patch('rotas.auth.sessao_atual', return_value=_sessao_auth_fake())
+    @patch('rotas.auth._linha_do_usuario_auth', return_value=_linha_fake())
+    @patch('rotas.auth.restaurar_sessao')
+    def test_tela_login_persiste_novo_refresh_da_rotacao(self, m_rest, m_linha, m_sess, m_login_user):
+        """Sessão eterna: boot com rt salvo grava o NOVO refresh token da rotação
+        (o Supabase invalida o anterior a cada refresh) e deixa o cookie permanente."""
+        with self.client.session_transaction() as sess:
+            sess['auth_refresh_token'] = 'rt-salvo-antigo'
+        r = self.client.get('/aluno/login')
+        self.assertEqual(r.status_code, 302)
+        m_rest.assert_called_once_with('rt-salvo-antigo')
+        with self.client.session_transaction() as sess:
+            self.assertEqual(sess.get('auth_refresh_token'), 'refresh-teste',
+                             'o NOVO token da rotação deve substituir o antigo')
+            self.assertTrue(sess.get('_permanent'),
+                            'cookie deve ser permanente (sobrevive ao Electron fechar)')
+
+    # ------------------------------------------------------------------
+    # Sessão eterna do desktop — before_request do app.py
+    # ------------------------------------------------------------------
+    @patch('app._sessao_auth_atual')
+    @patch('app._restaurar_sessao_auth')
+    @patch('flask_login.utils._get_user')
+    def test_before_request_persiste_novo_refresh(self, m_user, m_restaurar, m_sessao):
+        """Client anônimo (boot novo): reaplica o rt do cookie e grava o NOVO."""
+        m_user.return_value.is_authenticated = True
+        m_sessao.side_effect = [None, _sessao_auth_fake()]
+        with self.client.session_transaction() as sess:
+            sess['auth_refresh_token'] = 'rt-velho'
+        self.client.get('/aluno/login')
+        m_restaurar.assert_called_once_with('rt-velho')
+        with self.client.session_transaction() as sess:
+            self.assertEqual(sess.get('auth_refresh_token'), 'refresh-teste')
+            self.assertTrue(sess.get('_permanent'))
+
+    @patch('app._sessao_auth_atual')
+    @patch('app._restaurar_sessao_auth')
+    @patch('flask_login.utils._get_user')
+    def test_before_request_renova_access_token_a_expirar(self, m_user, m_restaurar, m_sessao):
+        """Renovação proativa: access token a expirar (<2 min) é renovado ANTES de falhar,
+        com o novo refresh token persistido na sessão."""
+        import time as _t
+        m_user.return_value.is_authenticated = True
+        s_expirando = _sessao_auth_fake()
+        s_expirando.expires_at = _t.time() + 60
+        m_sessao.side_effect = [s_expirando, _sessao_auth_fake()]
+        with self.client.session_transaction() as sess:
+            sess['auth_refresh_token'] = 'rt-velho'
+        self.client.get('/aluno/login')
+        m_restaurar.assert_called_once_with('rt-velho')
+        with self.client.session_transaction() as sess:
+            self.assertEqual(sess.get('auth_refresh_token'), 'refresh-teste')
+
     # ------------------------------------------------------------------
     # POST /aluno/entrar
     # ------------------------------------------------------------------
@@ -79,6 +133,20 @@ class TestAuthComSenha(unittest.TestCase):
         self.assertEqual(r.status_code, 302)
         m_login.assert_called_once_with('aluno@teste.com', 'senha12345')
         m_entrar_flask.assert_called_once()
+
+    @patch('rotas.auth.login_user')
+    @patch('rotas.auth.sessao_atual', return_value=_sessao_auth_fake())
+    @patch('rotas.auth._linha_do_usuario_auth', return_value=_linha_fake())
+    @patch('rotas.auth.entrar_com_senha')
+    def test_entrar_deixa_sessao_permanente_e_salva_refresh(self, m_login_auth, m_linha, m_sess, m_login_user):
+        """Sessão eterna: login com senha grava cookie permanente + refresh token
+        (o _entrar_flask roda REAL — é ele quem persiste o token e a permanência)."""
+        r = self.client.post('/aluno/entrar', data={'email': 'aluno@teste.com', 'senha': 'senha12345'})
+        self.assertEqual(r.status_code, 302)
+        with self.client.session_transaction() as sess:
+            self.assertTrue(sess.get('_permanent'), 'cookie deve ser permanente')
+            self.assertEqual(sess.get('auth_refresh_token'), 'refresh-teste')
+        m_login_user.assert_called_once()
 
     @patch('rotas.auth.entrar_com_senha', side_effect=Exception('Invalid login credentials'))
     def test_entrar_senha_errada(self, m_login):
