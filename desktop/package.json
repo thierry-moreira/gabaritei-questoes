@@ -1,7 +1,7 @@
 {
   "name": "gabaritei-aluno",
   "productName": "Gabaritei Aluno",
-  "version": "0.1.0",
+  "version": "1.0.1",
   "description": "App do aluno do Gabaritei Questões — shell Electron sobre o Flask local",
   "main": "main.js",
   "author": "Thierry Moreira",
