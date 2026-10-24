@@ -14,12 +14,13 @@
 // - O backend escuta apenas 127.0.0.1 (host do app.py).
 // ============================================================
 
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow, Menu, shell, ipcMain, dialog } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 const http = require('http');
 const crypto = require('crypto');
 const fs = require('fs');
+const os = require('os');
 
 // --- Configuração (anon key pública, protegida por RLS) ---
 const SUPABASE_URL = 'https://ivhuaevrrkrnagbqmnwc.supabase.co';
@@ -135,15 +136,81 @@ async function criarJanela() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      preload: path.join(__dirname, 'preload.js'),
     },
   });
   janela.once('ready-to-show', () => janela.show());
+
+  // Intercepta Ctrl+P — cancela o atalho de impressão nativo do Windows
+  // e dispara o nosso gerador de PDF nativo.
+  janela.webContents.on('before-input-event', (event, input) => {
+    const isCtrlP = (input.control || input.meta) && input.key.toLowerCase() === 'p';
+    if (isCtrlP && input.type === 'keyDown') {
+      event.preventDefault();
+      gerarPDF(janela.webContents);
+    }
+  });
+
+  // Após cada navegação, injeta um override de window.print() no contexto
+  // da página para que qualquer chamada programática também seja interceptada.
+  janela.webContents.on('did-finish-load', () => {
+    janela.webContents.executeJavaScript(`
+      if (!window.__gabariteiPrintPatched) {
+        window.__gabariteiPrintPatched = true;
+        const _originalPrint = window.print.bind(window);
+        window.print = function() {
+          if (window.electronAPI && typeof window.electronAPI.printToPDF === 'function') {
+            window.electronAPI.printToPDF();
+          } else {
+            _originalPrint();
+          }
+        };
+      }
+    `).catch(() => {});
+  });
+
   janela.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
   });
   await janela.loadURL(`http://${HOST}:${PORTA}/aluno/login`);
 }
+
+// Gera PDF da página atual e abre com o leitor padrão do sistema.
+async function gerarPDF(webContents) {
+  try {
+    const pdfBuffer = await webContents.printToPDF({
+      printBackground: true,
+      pageSize: 'A4',
+      margins: { marginType: 'custom', top: 0.5, bottom: 0.5, left: 0.5, right: 0.5 },
+      landscape: false,
+    });
+    // Salva em arquivo temporário com nome legível
+    const nomeArquivo = `Gabaritei_${Date.now()}.pdf`;
+    const caminho = path.join(os.tmpdir(), nomeArquivo);
+    fs.writeFileSync(caminho, pdfBuffer);
+    // Abre com o leitor de PDF padrão do sistema
+    const erro = await shell.openPath(caminho);
+    if (erro) console.error('[pdf] Erro ao abrir PDF:', erro);
+  } catch (e) {
+    console.error('[pdf] Erro ao gerar PDF:', e);
+    dialog.showErrorBox(
+      'Erro ao gerar PDF',
+      'Não foi possível gerar o PDF. Detalhes:\n' + e.message
+    );
+  }
+}
+
+// Handler IPC: chamado pelo preload quando o renderer invoca electronAPI.printToPDF()
+ipcMain.handle('print-to-pdf', async () => {
+  if (!janela) return { ok: false, error: 'Janela não disponível' };
+  try {
+    await gerarPDF(janela.webContents);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+});
 
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(null);

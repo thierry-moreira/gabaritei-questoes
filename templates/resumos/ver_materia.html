@@ -69,7 +69,7 @@
         </div>
         
         <div class="d-flex gap-2">
-            <button onclick="window.print()" class="btn btn-primary d-flex align-items-center gap-2 px-4 shadow-sm border-0"
+            <button onclick="imprimirOuPDF()" class="btn btn-primary d-flex align-items-center gap-2 px-4 shadow-sm border-0"
                     style="border-radius: 12px; font-weight: 700; background: var(--premium-accent);">
                 <i class="bi bi-printer fs-5"></i> Imprimir / Salvar PDF
             </button>
@@ -229,6 +229,40 @@
                 });
             }
         });
+    }
+
+    /**
+     * Imprime / salva como PDF.
+     * - No app desktop (Electron): usa a API nativa printToPDF(), que gera um
+     *   arquivo PDF real e abre com o leitor padrão do sistema.
+     * - No browser: cai de volta para window.print() com o preview do Chromium.
+     */
+    async function imprimirOuPDF() {
+        if (window.electronAPI && typeof window.electronAPI.printToPDF === 'function') {
+            // Feedback visual no botão
+            const btn = document.querySelector('button[onclick="imprimirOuPDF()"]');
+            const textoOriginal = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="bi bi-hourglass-split fs-5"></i> Gerando PDF...';
+            }
+            try {
+                const resultado = await window.electronAPI.printToPDF();
+                if (!resultado.ok) {
+                    alert('Erro ao gerar PDF: ' + (resultado.error || 'Desconhecido'));
+                }
+            } catch (e) {
+                alert('Erro inesperado ao gerar PDF: ' + e.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = textoOriginal;
+                }
+            }
+        } else {
+            // Fallback: browser nativo com preview do Chromium
+            window.print();
+        }
     }
 </script>
 
