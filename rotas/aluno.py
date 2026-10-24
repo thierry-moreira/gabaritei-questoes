@@ -356,8 +356,8 @@ def dashboard_detalhado():
         pontos_atencao = sorted(pontos_atencao, key=lambda x: (x['taxa'], -int(x['total'])))[:10]
         alertas_revisao = sorted(alertas_revisao, key=lambda x: x['dias'], reverse=True)[:5] # Top 5 mais urgentes
         
-        # Filtro para Melhor Matéria: Deve ter pelo menos 5 questões respondidas (A pedido do usuário)
-        materias_para_melhor = [m for m in lista_materias if m['total'] >= 5]
+        # Filtro para Melhor Matéria: mínimo 5 questões respondidas E taxa de acerto >= 60%
+        materias_para_melhor = [m for m in lista_materias if m['total'] >= 5 and m['taxa'] >= 60]
         melhor_materia = max(materias_para_melhor, key=lambda x: (x['taxa'], x['total'])) if materias_para_melhor else None
 
         # 5. DADOS PARA O CALENDÁRIO DE METAS (Mês Atual)
