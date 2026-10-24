@@ -140,6 +140,11 @@ async function criarJanela() {
     },
   });
   janela.once('ready-to-show', () => janela.show());
+  // Marca as requisições do renderer como vindas do app desktop: o backend
+  // entrega a prévia navegável do PDF do simulado (botão de PDF nativo) em
+  // vez de application/pdf inline, que o Chromium do Electron não renderiza.
+  const uaBase = janela.webContents.getUserAgent();
+  janela.webContents.setUserAgent(uaBase + ' GabariteiDesktop');
 
   // Intercepta Ctrl+P — cancela o atalho de impressão nativo do Windows
   // e dispara o nosso gerador de PDF nativo.

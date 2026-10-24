@@ -2,7 +2,7 @@ import os
 import sys
 import ctypes
 import random
-from flask import Blueprint, render_template, request, redirect, flash, make_response
+from flask import Blueprint, render_template, request, redirect, flash, make_response, url_for
 from flask_login import current_user
 
 
@@ -416,6 +416,20 @@ def baixar_pdf_simulado(id_simulado):
                         break
             
             q['letra_gabarito'] = letra_certa if letra_certa else 'N/A' # type: ignore
+
+
+        # App desktop (Electron): o Chromium do Electron não renderiza
+        # application/pdf inline (a tela fica em branco). Pelo marcador no
+        # User-Agent, entregamos uma prévia navegável da prova com o botão
+        # "Imprimir / Salvar PDF" - PDF nativo via electronAPI.printToPDF(),
+        # a mesma experiência implementada nos resumos.
+        if 'GabariteiDesktop' in request.headers.get('User-Agent', ''):
+            return render_template(
+                'simulados/pdf_preview.html',
+                simulado=simulado,
+                questoes=questoes,
+                logo_uri=url_for('static', filename='logo.webp'),
+            )
 
         caminho_logo = os.path.abspath('static/logo.webp')
         caminho_css = os.path.abspath('static/css/pdf_style.css')
