@@ -85,6 +85,31 @@ class SimuladoPdfDesktopPreview(unittest.TestCase):
         self.assertIn(b'Imprimir / Salvar PDF', resposta.data)
         self.assertIn(b'Gabarito Oficial', resposta.data)
 
+    @patch('rotas.simulado.HTML', None)
+    @patch('utils.current_user')
+    @patch('rotas.simulado.current_user')
+    @patch('rotas.simulado.safe_execute')
+    @patch('rotas.simulado.supabase')
+    def test_pdf_browser_sem_weasyprint_degrada_para_previa(self, mock_supabase, mock_safe_execute, mock_rotas_cu, mock_utils_cu):
+        """Navegador (sem UA do app) + WeasyPrint indisponível: prévia navegável em vez de erro."""
+        for u in (mock_rotas_cu, mock_utils_cu):
+            u.is_authenticated = True
+            u.role = 'aluno'
+
+        res_simulado = MagicMock()
+        res_simulado.data = {'id': '10955679-f9c8-4e55-b971-7bd0ff00bd99', 'titulo': 'Simulado de Teste'}
+        res_sq = MagicMock()
+        res_sq.data = [{'id_questao': 1}]
+        res_questoes = MagicMock()
+        res_questoes.data = [{'id_questao': 1, 'enunciado': 'Quanto é 2+2?', 'ano': 2026}]
+        res_alts = MagicMock()
+        res_alts.data = []
+        mock_safe_execute.side_effect = [res_simulado, res_sq, res_questoes, res_alts]
+
+        resposta = self.client.get('/simulado/10955679-f9c8-4e55-b971-7bd0ff00bd99/pdf')
+        self.assertEqual(resposta.status_code, 200)
+        self.assertIn(b'Imprimir / Salvar PDF', resposta.data)
+
 
 if __name__ == '__main__':
     unittest.main()

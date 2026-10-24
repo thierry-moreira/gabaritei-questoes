@@ -23,6 +23,10 @@ def _pre_carregar_gtk_portatil():
         candidatos.append(os.environ["GABARITEI_GTK_BIN"])
     if getattr(sys, "frozen", False):  # backend empacotado (PyInstaller)
         candidatos.append(os.path.join(os.path.dirname(sys.executable), "gtk", "bin"))
+    else:  # dev: runtime portátil baixado pelo build (desktop/build.ps1)
+        candidatos.append(os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+            "build_gtk", "runtime", "bin"))
 
     bin_gtk = next((p for p in candidatos if os.path.isdir(p)), None)
     if not bin_gtk:
@@ -446,7 +450,14 @@ def baixar_pdf_simulado(id_simulado):
         )
 
         if HTML is None:
-            raise RuntimeError("WeasyPrint indisponível neste ambiente (bibliotecas GTK/Pango ausentes no Windows).")
+            # Degradação graciosa: sem GTK/WeasyPrint neste ambiente, entrega a
+            # mesma prévia navegável — no navegador, o botão usa window.print().
+            return render_template(
+                'simulados/pdf_preview.html',
+                simulado=simulado,
+                questoes=questoes,
+                logo_uri=url_for('static', filename='logo.webp'),
+            )
 
         pdf = HTML(string=html_renderizado).write_pdf()
 
