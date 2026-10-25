@@ -196,7 +196,15 @@ from banco_dados_aluno import sessao_atual as _sessao_auth_atual, restaurar_sess
 
 @app.before_request
 def _garantir_sessao_auth():
-    if current_user.is_authenticated:
+    # ⚠️ A guarda NÃO pode ser current_user.is_authenticated: o acesso ao
+    # proxy dispara o load_user ANTES de o client Supabase ser restaurado.
+    # No 1º request pós-boot (client anônimo), a consulta do perfil morre
+    # no RLS (0 linhas) → load_user=None → is_authenticated=False → esta
+    # restauração NUNCA rodava e o usuário logado era barrado com 302 para
+    # o login (ex.: o PDF do simulado aberto no 1º clique pós-boot). A
+    # chave _user_id é a MESMA que o Flask-Login usa para chamar o
+    # user_loader — testamos a sessão Flask diretamente, sem tocar no proxy.
+    if session.get('_user_id'):
         try:
             # Sessão eterna do desktop — regra da rotação: o Supabase tem
             # refresh token rotation ativo (cada refresh emite um token NOVO
@@ -238,7 +246,7 @@ app.jinja_env.filters['slugify'] = slugify
 
 @app.context_processor
 def inject_global_data():
-    if not current_user.is_authenticated:
+    if not current_user or not current_user.is_authenticated:
         return dict(global_streak=0)
 
     total_flashcards = 0
@@ -275,10 +283,35 @@ def load_user(user_id):
             
             res = supabase.table("usuarios").select("*").eq("id", user_id_int).execute()
             logger.info(f"🔍 load_user: query result count={len(res.data) if res.data else 0}")
-            
-            if res.data and isinstance(res.data[0], dict):
-                u: dict[str, Any] = res.data[0]
-                
+
+            linha = res.data[0] if res.data and isinstance(res.data[0], dict) else None
+
+            if linha is None:
+                # Self-heal (mesmo fluxo do /aluno/login): perfil invisível
+                # quase sempre = client anônimo ou com token morto — o RLS
+                # filtra as linhas e a query volta vazia (200 com 0 rows),
+                # em vez de falhar. Restaura a sessão pelo refresh token da
+                # sessão Flask e reconsulta UMA única vez, persistindo o
+                # NOVO token da rotação. Sem isso o usuário logado virava
+                # "deslogado" no 1º request pós-boot (bug do 302 no PDF).
+                rt = session.get('auth_refresh_token')
+                if rt:
+                    try:
+                        logger.info("🔍 load_user: perfil vazio — restaurando sessão Supabase pelo refresh token")
+                        _restaurar_sessao_auth(rt)
+                        s = _sessao_auth_atual()
+                        if s and s.refresh_token:
+                            session['auth_refresh_token'] = s.refresh_token
+                            session.permanent = True
+                        res = supabase.table("usuarios").select("*").eq("id", user_id_int).execute()
+                        logger.info(f"🔍 load_user: query result count={len(res.data) if res.data else 0} (pós-restauração)")
+                        linha = res.data[0] if res.data and isinstance(res.data[0], dict) else None
+                    except Exception as e2:
+                        logger.warning(f"⚠️ load_user: restauração pelo refresh token falhou: {e2}")
+
+            if linha is not None:
+                u: dict[str, Any] = linha
+
                 logger.info(f"🔍 load_user: Returning User id={u['id']} (aluno)")
                 return User(
                     id=u['id'],
@@ -286,7 +319,7 @@ def load_user(user_id):
                     username=u.get('username') or u.get('nome') or 'Estudante',
                     role='aluno',
                     tema=u.get('tema', 'light')
-                ) 
+                )
             logger.warning(f"🔍 load_user: No user data found for id={user_id_int}")
             return None
         except Exception as e: 

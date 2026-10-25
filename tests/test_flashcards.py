@@ -143,6 +143,39 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         response = self.client.get('/aluno/flashcards/estudar/todos')
         self.assertEqual(response.status_code, 200)
 
+    @patch('flask_login.utils._get_user')
+    def test_estudar_sem_categoria_redireciona_para_todos(self, mock_get_user):
+        """A URL sem categoria redireciona para a sessão de estudo de todas as categorias."""
+        mock_user = MagicMock()
+        mock_user.is_authenticated = True
+        mock_user.role = 'aluno'
+        mock_user.id = 12345
+        mock_get_user.return_value = mock_user
+
+        response = self.client.get('/aluno/flashcards/estudar')
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.location.endswith('/aluno/flashcards/estudar/todos'))
+
+    @patch('rotas.flashcards.supabase')
+    @patch('flask_login.utils._get_user')
+    def test_estudar_sem_cards_nao_exibe_aguardando(self, mock_get_user, mock_supabase):
+        """O estado vazio não deve exibir a frase de carregamento 'Aguardando...'."""
+        mock_user = MagicMock()
+        mock_user.is_authenticated = True
+        mock_user.role = 'aluno'
+        mock_user.id = 12345
+        mock_get_user.return_value = mock_user
+
+        mock_res_cards = MagicMock()
+        mock_res_cards.data = []
+        mock_supabase.table.return_value.select.return_value.eq.return_value.lte.return_value.execute.return_value = mock_res_cards
+
+        response = self.client.get('/aluno/flashcards/estudar/todos')
+        self.assertEqual(response.status_code, 200)
+        conteudo = response.data.decode('utf-8')
+        self.assertIn('Tudo revisado por aqui!', conteudo)
+        self.assertNotIn('Aguardando...', conteudo)
+
     # -------------------------------------------------------------------------
     # Testes das APIs (Criação e Exclusão)
     # -------------------------------------------------------------------------
@@ -240,7 +273,7 @@ class TestFlashcardsBlueprint(unittest.TestCase):
             "intervalo": 4,
             "facilidade": 2.5
         }
-        mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.single.return_value.execute.return_value = mock_res_select
+        mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.maybe_single.return_value.execute.return_value = mock_res_select
 
         response = self.client.post('/api/flashcards/revisar', json={
             "id_flashcard": 10,
@@ -275,7 +308,7 @@ class TestFlashcardsBlueprint(unittest.TestCase):
             "intervalo": 10,
             "facilidade": 2.0
         }
-        mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.single.return_value.execute.return_value = mock_res_select
+        mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.maybe_single.return_value.execute.return_value = mock_res_select
 
         response = self.client.post('/api/flashcards/revisar', json={
             "id_flashcard": 10,
@@ -315,7 +348,7 @@ class TestFlashcardsBlueprint(unittest.TestCase):
         mock_res_select_c = MagicMock()
         mock_res_select_c.data = {"id_flashcard": 10, "id_usuario": 12345, "intervalo": 4, "facilidade": 2.5}
 
-        mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.single.return_value.execute.side_effect = [
+        mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.maybe_single.return_value.execute.side_effect = [
             mock_res_select_a, mock_res_select_b, mock_res_select_c
         ]
 
@@ -348,7 +381,7 @@ class TestFlashcardsBlueprint(unittest.TestCase):
             "intervalo": 4,
             "facilidade": 2.2
         }
-        mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.single.return_value.execute.return_value = mock_res_select
+        mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.maybe_single.return_value.execute.return_value = mock_res_select
 
         response = self.client.post('/api/flashcards/revisar', json={
             "id_flashcard": 10,
@@ -365,6 +398,45 @@ class TestFlashcardsBlueprint(unittest.TestCase):
             "facilidade": 2.35,
             "proxima_revisao": ANY
         })
+
+    @patch('rotas.flashcards.supabase')
+    @patch('flask_login.utils._get_user')
+    def test_revisar_card_inexistente(self, mock_get_user, mock_supabase):
+        """Retorna 404 quando o card não existe ou não pertence ao aluno."""
+        mock_user = MagicMock()
+        mock_user.is_authenticated = True
+        mock_user.role = 'aluno'
+        mock_user.id = 12345
+        mock_get_user.return_value = mock_user
+
+        mock_supabase.table.return_value.select.return_value.eq.return_value.eq.return_value.maybe_single.return_value.execute.return_value = None
+
+        response = self.client.post('/api/flashcards/revisar', json={
+            "id_flashcard": 999,
+            "qualidade": 2
+        })
+        self.assertEqual(response.status_code, 404)
+        dados = response.get_json()
+        self.assertFalse(dados["success"])
+        self.assertIn("não encontrado", dados["error"])
+
+    @patch('flask_login.utils._get_user')
+    def test_revisar_qualidade_invalida(self, mock_get_user):
+        """Rejeita qualidades fora da escala 0-3 antes de consultar o banco."""
+        mock_user = MagicMock()
+        mock_user.is_authenticated = True
+        mock_user.role = 'aluno'
+        mock_user.id = 12345
+        mock_get_user.return_value = mock_user
+
+        response = self.client.post('/api/flashcards/revisar', json={
+            "id_flashcard": 10,
+            "qualidade": 5
+        })
+        self.assertEqual(response.status_code, 400)
+        dados = response.get_json()
+        self.assertFalse(dados["success"])
+        self.assertIn("Qualidade inválida", dados["error"])
 
     # -------------------------------------------------------------------------
     # Testes de Remoção

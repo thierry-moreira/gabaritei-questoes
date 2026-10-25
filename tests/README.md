@@ -31,7 +31,7 @@ caminho_do_projeto\tests\
 ├── test_ia_chat.py        # Testes de IA, explicações, resumos e flashcards (Fase 6)
 ├── test_conta.py          # Testes de atualização de perfil, reset de dados e exclusão de conta
 ├── test_api.py            # Testes de cascata de matérias, cargos e preferências de tema
-├── test_flashcards.py     # Testes do sistema de flashcards e algoritmo Anki SM-2
+├── test_flashcards.py     # Testes do sistema de flashcards e algoritmo SM-2 customizado
 ├── test_caderno.py        # Testes de coleções de questões e criação de cadernos
 └── test_resumos.py        # Testes do painel de resumos por matéria e exclusão
 ```
@@ -111,17 +111,21 @@ Valida os endpoints secundários que fornecem dados estruturados JSON e salvam p
   - Simulação de updates e selects de preferências do perfil do usuário no Supabase.
 
 ### 9. Repetição Espaçada e Flashcards (`test_flashcards.py`)
-Valida a segurança das rotas de usuários autenticados, a criação de cards/categorias de estudo e a integridade matemática do algoritmo SM-2 (Anki).
+Valida a segurança das rotas de usuários autenticados, a criação de cards/categorias de estudo e a integridade matemática do algoritmo SM-2 customizado.
 - **Fluxos testados:**
   - `/aluno/flashcards` (dashboard inicial com listagem e contador de revisão).
   - `/aluno/flashcards/categoria/<id>` (gerenciamento e listagem de cards).
   - `/aluno/flashcards/estudar/<id>` (carregamento de cartões agendados).
+  - `/aluno/flashcards/estudar` (alias que redireciona com `302` para `/aluno/flashcards/estudar/todos`).
+  - `/aluno/flashcards/estudar/todos` sem cards vencidos (estado vazio renderizado com “Tudo revisado por aqui!” e sem a frase “Aguardando...”).
   - `/api/flashcards/categoria/nova` e `/api/flashcards/criar` (criação e validação de nomes/perguntas).
-  - `/api/flashcards/revisar` (algoritmo adaptativo SM-2 ajustando dinamicamente intervalo e fator de facilidade para qualidades 0, 1, 2 e 3).
+  - `/api/flashcards/revisar` (algoritmo adaptativo SM-2 ajustando dinamicamente intervalo e fator de facilidade para qualidades 0, 1, 2 e 3; card inexistente/de outro aluno → `404`; qualidade fora de 0–3 → `400`).
   - Exclusão via APIs de categorias e cartões individuais.
 - **Mocks importantes:**
   - Mock de `flask_login.utils._get_user` simulando o usuário autenticado.
-  - Simulação de retornos de inserção, deleção e queries de intervalo Supabase.
+  - Simulação de retornos de inserção, deleção e queries de intervalo no Supabase.
+  - A revisão usa `safe_execute()` + `maybe_single()`; os mocks refletem essa cadeia, inclusive o retorno `None` para card inexistente.
+- **Validação complementar (manual):** o comportamento JavaScript do progresso vazio (`0 cards`), o flip, a trava de duplo clique e o alerta de erro de rede são validados no navegador, pois não fazem parte do teste de renderização do Flask.
 
 ### 10. Coleções de Questões (`test_caderno.py`)
 Valida a criação de cadernos e a gestão individual de pastas de questões.

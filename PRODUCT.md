@@ -12,7 +12,7 @@ O usuário primário é o **aluno concurseiro brasileiro**: estuda para concurso
 
 ## Product Purpose
 
-O Gabaritei Questões acelera a aprovação em concursos públicos. Ele dá ao aluno: banco de questões reais com gabarito comentado e discussões; simulados completos com pontuação, ranking e PDF; flashcards com repetição espaçada (SRS) e revisões do dia; resumos por matéria gerados por IA; cadernos de questões personalizados; análise estruturada de editais; e estatísticas de desempenho. Sucesso = o aluno mantém uma rotina de estudo constante (ofensiva/streak diário, revisões em dia) e gabarita a prova alvo.
+O Gabaritei Questões acelera a aprovação em concursos públicos. Ele dá ao aluno: banco de questões reais com gabarito comentado e discussões; simulados completos com pontuação, ranking e PDF; flashcards com repetição espaçada (SRS), revisões do dia e sessão de estudo com flip e avaliação 0–3; resumos por matéria gerados por IA; cadernos de questões personalizados; análise estruturada de editais; e estatísticas de desempenho. Sucesso = o aluno mantém uma rotina de estudo constante (ofensiva/streak diário, revisões em dia) e gabarita a prova alvo.
 
 ## Positioning
 
@@ -39,7 +39,7 @@ Funcionalidades confirmadas (11 blueprints em `rotas/`):
 - **filtro** — filtros complexos de disciplinas, bancas e anos
 - **simulado** — criação, resposta, pontuação, ranking, resultado e PDF
 - **edital** — exibição e análise estruturada de editais de concursos
-- **flashcards** — SRS: repetição espaçada, revisões do dia, status dos cartões
+- **flashcards** — SRS: repetição espaçada, revisões do dia, sessão de estudo com estados vazio/final e avaliação 0–3
 - **resumos** — cadernos de resumos por matéria, com geração automática via IA BYOK (chave própria do aluno: OpenAI, Google Gemini ou Anthropic — ver `provedores_ia.py`) e exclusão individual ou total
 - **conta** — perfil, preferências, reset dos dados de estudo, exclusão da conta e configuração local da chave de IA (BYOK, DPAPI)
 - **api** — endpoints assíncronos internos do frontend

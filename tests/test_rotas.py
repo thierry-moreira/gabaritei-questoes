@@ -42,13 +42,14 @@ class TestRotasFlask(unittest.TestCase):
         self.assertIn('/aluno/login', response.headers['Location'])
 
 
-class SimuladoPdfDesktopPreview(unittest.TestCase):
-    """Prévia navegável do PDF do simulado no app desktop (Electron).
+class SimuladoPdfPreview(unittest.TestCase):
+    """Prévia navegável do PDF do simulado (navegador E app desktop).
 
-    No desktop, o Chromium do Electron não renderiza application/pdf inline:
-    com o marcador GabariteiDesktop no User-Agent, /simulado/<id>/pdf entrega
-    uma página HTML com o botão "Imprimir / Salvar PDF" (PDF nativo via
-    electronAPI.printToPDF()) - a mesma experiência dos resumos.
+    /simulado/<id>/pdf entrega SEMPRE a página navegável com o botão
+    "Imprimir / Salvar PDF" — o padrão unificado dos resumos: no desktop
+    (Electron) o botão gera PDF nativo via electronAPI.printToPDF(); no
+    navegador, window.print() abre o preview de impressão nativo
+    (Salvar como PDF). Não existe mais o PDF inline do WeasyPrint.
     """
 
     def setUp(self):
@@ -85,13 +86,13 @@ class SimuladoPdfDesktopPreview(unittest.TestCase):
         self.assertIn(b'Imprimir / Salvar PDF', resposta.data)
         self.assertIn(b'Gabarito Oficial', resposta.data)
 
-    @patch('rotas.simulado.HTML', None)
     @patch('utils.current_user')
     @patch('rotas.simulado.current_user')
     @patch('rotas.simulado.safe_execute')
     @patch('rotas.simulado.supabase')
-    def test_pdf_browser_sem_weasyprint_degrada_para_previa(self, mock_supabase, mock_safe_execute, mock_rotas_cu, mock_utils_cu):
-        """Navegador (sem UA do app) + WeasyPrint indisponível: prévia navegável em vez de erro."""
+    def test_pdf_browser_retorna_previa_navegavel(self, mock_supabase, mock_safe_execute, mock_rotas_cu, mock_utils_cu):
+        """Navegador (sem UA do app): a MESMA prévia navegável com o botão
+        "Imprimir / Salvar PDF" — HTML navegável, nunca application/pdf inline."""
         for u in (mock_rotas_cu, mock_utils_cu):
             u.is_authenticated = True
             u.role = 'aluno'
@@ -109,6 +110,7 @@ class SimuladoPdfDesktopPreview(unittest.TestCase):
         resposta = self.client.get('/simulado/10955679-f9c8-4e55-b971-7bd0ff00bd99/pdf')
         self.assertEqual(resposta.status_code, 200)
         self.assertIn(b'Imprimir / Salvar PDF', resposta.data)
+        self.assertIn('text/html', resposta.headers['Content-Type'])
 
 
 if __name__ == '__main__':

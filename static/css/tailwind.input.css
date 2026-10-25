@@ -1,0 +1,17 @@
+/*
+   Tailwind CSS — Header de Metadados da Questão
+   Gere o CSS com `npm run build:question-header`.
+   O preflight do Tailwind fica desligado para não conflitar com o Bootstrap.
+*/
+
+/* Reset de bordas escopado: o preflight do Tailwind fica desligado para não conflitar com o Bootstrap. */
+.question-header,
+.question-header *,
+.question-header *::before,
+.question-header *::after {
+  border-width: 0;
+  border-style: solid;
+  border-color: rgb(226 232 240 / 0.7);
+}
+
+@tailwind utilities;

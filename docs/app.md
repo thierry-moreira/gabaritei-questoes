@@ -43,7 +43,7 @@ A aplicação do aluno é decomposta em 11 Blueprints independentes organizados 
 7.  **`caderno`**: Funcionalidades de cadernos de questões agrupadas sob medida pelo estudante.
 8.  **`filtro`**: Controle e aplicação de filtros complexos de disciplinas, bancas e anos.
 9.  **`questao`**: Fluxo de exibição, resposta, gabaritos comentados e discussões de questões isoladas.
-10. **`flashcards`**: Sistema de memorização espaçada (SRS), listagem de revisões do dia e status de cartões.
+10. **`flashcards`**: Sistema de memorização espaçada (SRS), listagem de revisões do dia, sessão de estudo com estados vazio/final e avaliação 0–3.
 11. **`resumos`**: Caderno de resumos por matéria, com geração automática via IA e exclusão individual ou do caderno inteiro.
 
 > [!NOTE]

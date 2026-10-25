@@ -2,78 +2,12 @@
 loop_index=None) %}
 {% import 'components/ai_atoms.html' as ai with context %}
 {% import 'components/question_atoms.html' as atoms with context %}
+{% import 'components/question_header.html' as qh with context %}
 <div class="card shadow-sm border-0 mb-3 rounded-2 overflow-hidden">
     <div class="card-body p-3">
         {# HEADER DO CARD #}
         <div class="mb-2 pb-1 border-bottom w-100" style="min-width: 0;">
-            {# LINHA 1: ID da questão + badges #}
-            <div class="d-flex align-items-center flex-wrap gap-2 small">
-                <span class="fw-bold text-primary text-nowrap fs-5">
-                    {% if mode == 'prova' and loop_index %}
-                    Questão {{ loop_index }} <a
-                        href="{{ url_for('questao.visualizar_questao_seo', materia_slug=q.nome_materia|slugify, topico_slug=(q.nome_topico|slugify if q.nome_topico else 'assunto'), id_questao=q.id_questao) }}"
-                        class="text-decoration-none text-muted fs-6 ms-1 fw-normal">#{{ q.id_questao }}</a>
-                    {% else %}
-                    <a href="{{ url_for('questao.visualizar_questao_seo', materia_slug=q.nome_materia|slugify, topico_slug=(q.nome_topico|slugify if q.nome_topico else 'assunto'), id_questao=q.id_questao) }}"
-                        class="text-decoration-none text-primary">Questão #{{ q.id_questao }}</a>
-                    {% endif %}
-
-                    {# LÓGICA DE BADGES DE STATUS #}
-                    {% if mode == 'estudo' %}
-                    {% if ids_acertos and q.id_questao in ids_acertos %}
-                    <span class="badge bg-success ms-1 shadow-sm" title="Você acertou esta questão">
-                        <i class="bi bi-check-circle-fill"></i>
-                    </span>
-                    {% elif ids_erros and q.id_questao in ids_erros %}
-                    <span class="badge bg-danger ms-1 shadow-sm" title="Você errou esta questão">
-                        <i class="bi bi-x-circle-fill"></i>
-                    </span>
-                    {% endif %}
-                    {% endif %}
-
-                    {# BADGE DE DIFICULDADE (Taxa de Acerto) #}
-                    {% if q.taxa_acerto is defined and q.taxa_acerto is not none %}
-                        {% set taxa = q.taxa_acerto|float %}
-                        {% if taxa >= 70 %}
-                            <span class="badge bg-success ms-1 shadow-sm fs-7 fw-normal" title="Questão Fácil">
-                                <i class="bi bi-thermometer-low me-1"></i>{{ taxa|round|int }}%
-                            </span>
-                        {% elif taxa >= 40 %}
-                            <span class="badge bg-warning text-dark ms-1 shadow-sm fs-7 fw-normal" title="Questão Média">
-                                <i class="bi bi-thermometer-half me-1"></i>{{ taxa|round|int }}%
-                            </span>
-                        {% else %}
-                            <span class="badge bg-danger ms-1 shadow-sm fs-7 fw-normal" title="Questão Difícil">
-                                <i class="bi bi-thermometer-high me-1"></i>{{ taxa|round|int }}%
-                            </span>
-                        {% endif %}
-                    {% else %}
-                        <span class="badge bg-secondary opacity-50 ms-1 shadow-sm fs-7 fw-normal" title="Ainda não há respostas suficientes para calcular a dificuldade">
-                            <i class="bi bi-thermometer me-1"></i>--
-                        </span>
-                    {% endif %}
-                </span>
-
-                <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle text-nowrap">
-                    {{ q.nome_materia if q.nome_materia else 'Geral' }}
-                </span>
-
-                <span
-                    class="badge border border-secondary text-secondary fw-normal px-2 py-1 text-truncate d-none d-sm-inline-block"
-                    style="background: rgba(108, 117, 125, 0.1); max-width: 280px; flex-shrink: 1;"
-                    title="{{ q.nome_topico }}">
-                    {{ q.nome_topico if q.nome_topico else 'Assunto Geral' }}
-                </span>
-            </div>
-
-            {# LINHA 2: Metadados da questão (banca, órgão, cargo, ano, nível) #}
-            <div class="text-muted mt-1" style="font-size: 0.72rem; line-height: 1.4;">
-                {{ q.nome_banca }} - {{ q.nome_orgao }}
-                {% if q.nome_cargo %}
-                <span class="fw-semibold text-body-secondary">({{ q.nome_cargo }})</span>
-                {% endif %}
-                ({{ q.ano }}) | {{ q.descritivo_nivel }}
-            </div>
+            {{ qh.render_question_header(q, ids_acertos, ids_erros, mode=mode, loop_index=loop_index) }}
         </div>
 
         {# TEXTO DE APOIO (Componentizado) #}
@@ -211,7 +145,7 @@ loop_index=None) %}
 
             {# BOTÃO REPORTAR #}
             <div class="col-6 col-lg-auto">
-                <button type="button" class="btn-premium-danger btn-action-mobile" data-bs-toggle="modal"
+                <button type="button" class="btn-premium-warning btn-action-mobile" data-bs-toggle="modal"
                     data-bs-target="#modalFeedback" onclick="prepararFeedback('{{ q.id_questao }}')">
                     <i class="bi bi-flag me-1"></i> Reportar
                 </button>

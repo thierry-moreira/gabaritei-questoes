@@ -3,6 +3,7 @@
 {% import 'components/ai_atoms.html' as ai %}
 {% import 'components/question_atoms.html' as atoms with context %}
 {% import 'components/edital_components.html' as edital_comp %}
+{% import 'components/question_header.html' as qh with context %}
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/aluno_questoes.css') }}">
 
@@ -15,19 +16,8 @@
         <div class="card shadow-sm border-0 mb-4 rounded-4" id="card-questao-{{ questao.id_questao }}">
             <div class="card-body p-4">
                 
-                <div class="d-flex align-items-center mb-3 pb-1 border-bottom small w-100 gap-2">
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fw-bold">
-                        Questão #{{ questao.id_questao }}
-                    </span>
-                    
-                    <span class="badge bg-dark-subtle text-dark border border-secondary-subtle">
-                        {{ questao.nome_materia if questao.nome_materia else 'Geral' }}
-                    </span>
-
-                    <div class="ms-auto text-muted text-nowrap text-end d-none d-md-block">
-                        {{ questao.nome_banca }} - {{ questao.nome_orgao }} 
-                        ({{ questao.ano }})
-                    </div>
+                <div class="mb-3 pb-1 border-bottom w-100" style="min-width: 0;">
+                    {{ qh.render_question_header(questao, ids_acertos=[], ids_erros=[], mode='estudo', link_numero=False) }}
                 </div>
 
                     {# TEXTO DE APOIO (Componentizado) #}

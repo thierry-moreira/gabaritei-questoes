@@ -90,12 +90,18 @@ class TestAuthComSenha(unittest.TestCase):
     # ------------------------------------------------------------------
     @patch('app._sessao_auth_atual')
     @patch('app._restaurar_sessao_auth')
-    @patch('flask_login.utils._get_user')
-    def test_before_request_persiste_novo_refresh(self, m_user, m_restaurar, m_sessao):
-        """Client anônimo (boot novo): reaplica o rt do cookie e grava o NOVO."""
-        m_user.return_value.is_authenticated = True
+    def test_before_request_persiste_novo_refresh(self, m_restaurar, m_sessao):
+        """Client anônimo (boot novo): reaplica o rt do cookie e grava o NOVO.
+
+        Regressão do bug do 302 no /simulado/<id>/pdf: a guarda do
+        before_request NÃO pode ser current_user.is_authenticated (o
+        acesso ao proxy dispara o load_user ANTES da restauração; com
+        client anônimo o RLS filtra o perfil, load_user=None e a
+        restauração nunca rodava). A guarda é o _user_id da sessão Flask
+        — a mesma chave que o Flask-Login usa para chamar o user_loader."""
         m_sessao.side_effect = [None, _sessao_auth_fake()]
         with self.client.session_transaction() as sess:
+            sess['_user_id'] = '50'
             sess['auth_refresh_token'] = 'rt-velho'
         self.client.get('/aluno/login')
         m_restaurar.assert_called_once_with('rt-velho')
@@ -105,21 +111,64 @@ class TestAuthComSenha(unittest.TestCase):
 
     @patch('app._sessao_auth_atual')
     @patch('app._restaurar_sessao_auth')
-    @patch('flask_login.utils._get_user')
-    def test_before_request_renova_access_token_a_expirar(self, m_user, m_restaurar, m_sessao):
+    def test_before_request_renova_access_token_a_expirar(self, m_restaurar, m_sessao):
         """Renovação proativa: access token a expirar (<2 min) é renovado ANTES de falhar,
         com o novo refresh token persistido na sessão."""
         import time as _t
-        m_user.return_value.is_authenticated = True
         s_expirando = _sessao_auth_fake()
         s_expirando.expires_at = _t.time() + 60
         m_sessao.side_effect = [s_expirando, _sessao_auth_fake()]
         with self.client.session_transaction() as sess:
+            sess['_user_id'] = '50'
             sess['auth_refresh_token'] = 'rt-velho'
         self.client.get('/aluno/login')
         m_restaurar.assert_called_once_with('rt-velho')
         with self.client.session_transaction() as sess:
             self.assertEqual(sess.get('auth_refresh_token'), 'refresh-teste')
+
+    @patch('app._sessao_auth_atual')
+    @patch('app._restaurar_sessao_auth')
+    def test_before_request_anonimo_nao_restaura(self, m_restaurar, m_sessao):
+        """Sessão SEM _user_id (deslogado): o before_request não restaura
+        nem consulta o client Auth (princípio do menor privilégio)."""
+        with self.client.session_transaction() as sess:
+            sess['auth_refresh_token'] = 'rt-orfao'  # sem _user_id na sessão
+        r = self.client.get('/static/js/imprimir_ou_pdf.js')
+        self.assertEqual(r.status_code, 200)
+        m_restaurar.assert_not_called()
+        m_sessao.assert_not_called()
+
+    # ------------------------------------------------------------------
+    # Self-heal do load_user (perfil invisível = client morto → restaura)
+    # ------------------------------------------------------------------
+    @patch('app._sessao_auth_atual')
+    @patch('app._restaurar_sessao_auth')
+    @patch('app.supabase')
+    def test_load_user_self_heal_restaura_e_reconsulta(self, m_sb, m_restaurar, m_sessao):
+        """Regressão do 302: consulta do perfil vazia (client anônimo/token
+        morto — o RLS filtra as linhas) → load_user restaura pelo refresh
+        token da sessão, persiste o NOVO da rotação e reconsulta; o usuário
+        logado NÃO pode virar 'deslogado' no 1º request pós-boot."""
+        from app import load_user
+        from flask import session as flask_session
+        m_sessao.return_value = _sessao_auth_fake()
+
+        res_vazia = MagicMock()
+        res_vazia.data = []
+        res_ok = MagicMock()
+        res_ok.data = [_linha_fake(50)]
+        m_sb.table.return_value.select.return_value.eq.return_value.execute.side_effect = [res_vazia, res_ok]
+
+        with patch.dict(app.config, {'TESTING': False}):
+            with app.test_request_context('/'):
+                flask_session['auth_refresh_token'] = 'rt-morto'
+                u = load_user('50')
+
+                self.assertIsNotNone(u)
+                self.assertEqual(u.id, 50)
+                m_restaurar.assert_called_once_with('rt-morto')
+                self.assertEqual(flask_session.get('auth_refresh_token'), 'refresh-teste')
+                self.assertTrue(flask_session.get('_permanent'))
 
     # ------------------------------------------------------------------
     # POST /aluno/entrar

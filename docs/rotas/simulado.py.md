@@ -107,32 +107,25 @@ else:
 
 ---
 
-## A Engine de Exportação PDF (WeasyPrint)
+## Exportação PDF — Prévia Navegável Unificada (padrão dos resumos)
 
-A funcionalidade `/simulado/<id_simulado>/pdf` gera arquivos PDF com layout profissional. Para que o motor WeasyPrint processe e estilize o arquivo com alta fidelidade visual, adota-se os seguintes passos de infraestrutura:
+A rota `/simulado/<id_simulado>/pdf` entrega **sempre** a prévia navegável da prova (`simulados/pdf_preview.html`) com o botão **"Imprimir / Salvar PDF"** — a mesma experiência implementada nos resumos. O fluxo é client-side, sem renderização de PDF no servidor:
 
 ```mermaid
 graph TD
     A[Chamada de PDF] --> B[Recuperar Questões & Alternativas]
     B --> C[Aplicar Fallback de Gabarito]
-    C --> D[Carregar Assets Absolutos do Sistema]
-    D --> E[Converter Caminhos para URIs file:///]
-    E --> F[Renderizar Jinja2: simulados/pdf.html]
-    F --> G[Compilar PDF via WeasyPrint]
-    G --> H[Retornar binário make_response]
+    C --> D[Renderizar Jinja2: simulados/pdf_preview.html]
+    D --> E{imprimirOuPDF - imprimir_ou_pdf.js}
+    E -->|Desktop Electron| F[electronAPI.printToPDF → PDF nativo]
+    E -->|Navegador| G[window.print → Salvar como PDF]
 ```
 
-### 1. Resolução Física de Assets Locais
-Para renderizar a logomarca da plataforma e carregar a folha de estilos CSS (`pdf_style.css`), o código obtém o caminho físico absoluto do sistema de arquivos no computador do servidor, adaptando a formatação de barras para que o compilador PDF consiga acessá-los localmente sem onerar a rede:
-```python
-caminho_logo = os.path.abspath('static/logo.webp')
-caminho_css = os.path.abspath('static/css/pdf_style.css')
+*   **Desktop (Electron)**: o Chromium do Electron não renderiza `application/pdf` inline; `imprimir_ou_pdf.js` detecta o `electronAPI` e gera o PDF nativo (A4), aberto no leitor padrão do sistema.
+*   **Navegador**: `window.print()` abre o preview de impressão nativo — o `@media print` da página esconde a barra de ações e expande a folha A4; o aluno usa **"Salvar como PDF"**.
+*   O corpo da prova (`_pdf_corpo.html`) e a folha de estilos (`pdf_style.css`) são compartilhados: a folha renderizada na tela é a mesma que sai na impressão. (O antigo pipeline WeasyPrint — template `pdf.html`, URIs `file:///` e runtime GTK portátil — foi removido com a unificação.)
 
-logo_uri = f"file:///{caminho_logo.replace(os.sep, '/')}"
-css_uri = f"file:///{caminho_css.replace(os.sep, '/')}"
-```
-
-### 2. Algoritmo Específico de Fallback do Gabarito
+### Algoritmo Específico de Fallback do Gabarito
 Para garantir que o caderno impresso traga as respostas corretas de cada questão de forma impecável no final do documento (gabarito automático), foi projetada uma varredura hierárquica em dois níveis:
 ```python
 # 1º Nível: Procura metadados gravados na própria estrutura simplificada da questão
@@ -159,4 +152,4 @@ q['letra_gabarito'] = letra_certa if letra_certa else 'N/A'
 | **Blindagem de Ownership** | Prevenção a IDOR | Verificação compulsória de `current_user.id` em todas as rotas mutativas ou de simulados privados. |
 
 > [!WARNING]
-> A biblioteca **WeasyPrint** depende de componentes do sistema operacional (como compiladores GTK ou bibliotecas gráficas C). A renderização pode falhar localmente caso essas dependências externas do ecossistema local do desenvolvedor não estejam instaladas. Os erros críticos são capturados no bloco `try/except` exibindo mensagens flash amigáveis na tela e registrando no terminal com a marcação `❌ Erro ao gerar PDF: {e}`.
+> Falhas no carregamento da prévia (rede/Supabase) são capturadas no bloco `try/except` da rota, exibindo mensagens flash amigáveis na tela e registrando no terminal com a marcação `❌ Erro ao carregar o PDF do simulado: {e}`.

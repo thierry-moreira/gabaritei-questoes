@@ -59,6 +59,14 @@ def gerenciar_categoria(id_categoria):
     except Exception as e:
         return redirect(url_for('flashcards.index'))
 
+@flashcards_bp.route('/aluno/flashcards/estudar')
+@limiter.exempt
+@aluno_required
+def estudar_todos():
+    """Atalho para a sessão de estudo sem categoria explícita."""
+    return redirect(url_for('flashcards.estudar', id_categoria='todos'))
+
+
 @flashcards_bp.route('/aluno/flashcards/estudar/<id_categoria>')
 @limiter.exempt
 @aluno_required
@@ -132,13 +140,33 @@ def criar_card():
 @flashcards_bp.route('/api/flashcards/revisar', methods=['POST'])
 @aluno_required
 def revisar_card():
-    dados = request.get_json()
+    dados = request.get_json(silent=True) or {}
+
+    if not isinstance(dados, dict):
+        return jsonify({"success": False, "error": "Payload inválido."}), 400
+
     id_card = dados.get('id_flashcard')
-    qualidade = int(dados.get('qualidade', 0))
+
+    if not id_card:
+        return jsonify({"success": False, "error": "Flashcard não informado."}), 400
 
     try:
-        res_card = supabase.table("flashcards").select("*").eq("id_flashcard", id_card).eq("id_usuario", current_user.id).single().execute()
-        card = res_card.data
+        qualidade = int(dados.get('qualidade', 0))
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "Qualidade inválida."}), 400
+
+    if qualidade not in (0, 1, 2, 3):
+        return jsonify({"success": False, "error": "Qualidade inválida."}), 400
+
+    try:
+        res_card = safe_execute(
+            supabase.table("flashcards")
+            .select("*")
+            .eq("id_flashcard", id_card)
+            .eq("id_usuario", current_user.id)
+            .maybe_single()
+        )
+        card = res_card.data if res_card else None
 
         if not card:
             return jsonify({"success": False, "error": "Flashcard não encontrado."}), 404

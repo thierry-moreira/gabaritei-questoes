@@ -27,7 +27,7 @@ Plataforma de estudos para concursos com inteligência artificial — **questõe
 |---|---|
 | 📝 **Questões comentadas** | Explicação pedagógica gerada por IA para cada questão, além de comentários da comunidade com moderação automática |
 | 📋 **Simulados** | Monte simulados personalizados e acompanhe o desempenho por matéria |
-| 🧠 **Flashcards** | Revisão com repetição espaçada (algoritmo Anki SM-2) |
+| 🧠 **Flashcards** | Revisão com repetição espaçada (SM-2 customizado), sessão com flip, avaliação 0–3 e estados vazio/final |
 | 🤖 **IA de estudos (BYOK)** | Explicações, resumos e flashcards gerados pela **sua própria chave de API** (OpenAI, Google Gemini ou Anthropic), configurada em Configurações da conta e guardada só no seu dispositivo (cifrada com DPAPI) — explicações geradas ficam salvas no banco (cache global para todos os alunos) |
 | 📑 **Editais** | Trilha de estudo por edital, com progresso por tópico e ciclo de revisão |
 | 📚 **Cadernos e filtros** | Coleções de questões salvas e filtros de busca reutilizáveis |
@@ -99,7 +99,7 @@ powershell -ExecutionPolicy Bypass -File desktop\build.ps1
 .\rodar_testes.bat          # ou: python -m unittest discover -s tests
 ```
 
-Suíte 100% isolada (sem rede, sem banco real) cobrindo login e cadastro, re-link de perfis legados, questões e streaks, simulados, flashcards, editais, IA, cadernos, resumos e honeypots de segurança. Especificação completa em [tests/README.md](tests/README.md).
+Suíte 100% isolada (sem rede, sem banco real) cobrindo login e cadastro, re-link de perfis legados, questões e streaks, simulados, flashcards (incluindo rota global, estado vazio e validações da revisão), editais, IA, cadernos, resumos e honeypots de segurança. Especificação completa em [tests/README.md](tests/README.md).
 
 <a id="documentacao"></a>
 ## 📚 Documentação
@@ -107,6 +107,7 @@ Suíte 100% isolada (sem rede, sem banco real) cobrindo login e cadastro, re-lin
 | Documento | O quê |
 |---|---|
 | [docs/app.md](docs/app.md) | Arquitetura do app Flask |
+| [DESIGN.md](DESIGN.md) | Design system, temas e painel do aluno |
 | [docs/desktop.md](docs/desktop.md) | Shell Electron (app instalável) |
 | [docs/banco_dados.md](docs/banco_dados.md) | Banco, RLS e modelo de segurança |
 | [docs/rotas/](docs/rotas/) | Cada blueprint documentado |

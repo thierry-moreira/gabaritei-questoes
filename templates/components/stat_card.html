@@ -1,50 +1,62 @@
 {# 
-    Componente: Stat Card Premium
-    Versão: 1.2
-    Descrição: Renderiza cards de estatísticas com variantes.
+    Componente: Metric Card Minimalista
+    Versao: 2.0
+    Descricao: Cards de estatisticas do painel (contagem, progresso e ofensiva).
 #}
 
-{% macro render_stat_card(variant='count', title='', value='', icon='bi-check2-circle', badge=None, p_label=None, percentage=None, description=None) %}
-<div class="col-12 col-md-6 col-lg-4">
+{% macro render_stat_card(variant='count', title='', value='', icon='bi-check2-circle', badge=None, p_label=None, percentage=None, description=None, footer=None) %}
+<div class="col-12 col-md-6 col-lg-4 d-flex">
     {% if variant == 'count' %}
-        <div class="stat-card-premium">
-            {% if badge %}
-                <div class="badge-today">{{ badge }}</div>
-            {% endif %}
-            <div class="stat-icon-wrapper">
-                <i class="bi {{ icon }} text-primary opacity-75 fs-3"></i>
+        <article class="metric-card metric-card-count">
+            <div class="metric-card-top">
+                <span class="metric-icon"><i class="bi {{ icon }}"></i></span>
+                {% if badge %}
+                    <span class="metric-badge">{{ badge }}</span>
+                {% endif %}
             </div>
-            <div class="stat-label">{{ title }}</div>
-            <div class="stat-value">{{ value }}</div>
-        </div>
+            <div class="metric-card-body">
+                <p class="metric-label">{{ title }}</p>
+                <p class="metric-value">{{ value }}</p>
+            </div>
+        </article>
 
     {% elif variant == 'progress' %}
-        <div class="stat-card-premium">
-            <div class="d-flex align-items-center gap-4 stat-progress-wrapper">
-                <div class="circular-progress-mini" style="--progress-percent: {{ percentage|default(0) }}%;">
-                    {{ percentage|default(0) }}%
-                </div>
-                <div>
-                    <div class="stat-label mb-1">{{ title }}</div>
-                    {% if p_label %}
-                        <span class="performance-label">{{ p_label }}</span>
-                    {% endif %}
-                </div>
+        {% set percentual = percentage|default(0) %}
+        <article class="metric-card metric-card-progress">
+            <div class="metric-ring" role="img" aria-label="{{ title }}: {{ percentual }}%">
+                <svg viewBox="0 0 36 36" aria-hidden="true">
+                    <path class="metric-ring-track"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        pathLength="100"></path>
+                    <path class="metric-ring-value"
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        pathLength="100" style="stroke-dasharray: {{ percentual }} 100;"></path>
+                </svg>
+                <span class="metric-ring-label">{{ percentual }}%</span>
             </div>
-        </div>
+            <div class="metric-progress-text">
+                <p class="metric-label">{{ title }}</p>
+                {% if p_label %}
+                    <p class="metric-sublabel">{{ p_label }}</p>
+                {% endif %}
+                <p class="metric-hint">Média calculada sobre o total</p>
+            </div>
+        </article>
 
     {% elif variant == 'streak' %}
-        <div class="stat-card-premium stat-card-streak">
+        <article class="metric-card metric-card-streak">
             {% if icon %}
-                <i class="bi {{ icon }} fire-watermark"></i>
+                <i class="bi {{ icon }} metric-watermark" aria-hidden="true"></i>
             {% endif %}
-            <div class="stat-label">{{ title | upper }}</div>
-            <div class="stat-value">{{ value }}</div>
-            {% if description %}
-                <p class="mb-0 opacity-75">{{ description }}</p>
-            {% endif %}
-        </div>
+            <div class="metric-card-body">
+                <p class="metric-label">{{ title }}</p>
+                <p class="metric-streak-line">
+                    <span class="metric-streak-value">{{ value }}</span>
+                    <span class="metric-streak-unit">{{ description or 'Dias de estudo constante' }}</span>
+                </p>
+            </div>
+            <p class="metric-streak-footer">{{ footer or 'Complete 1 questão hoje para iniciar!' }}</p>
+        </article>
     {% endif %}
 </div>
 {% endmacro %}
-

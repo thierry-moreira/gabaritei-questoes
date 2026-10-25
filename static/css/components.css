@@ -3,134 +3,255 @@
    Centralizamos aqui o CSS de macros e elementos compartilhados.
 */
 
-/* 1. STAT CARDS (Cards de Estatística) */
-.stat-card-premium {
-    background: var(--card-bg);
-    border-radius: 20px;
-    border: 1px solid var(--border-color);
-    padding: 1.75rem;
-    height: 100%;
+/* 1. METRIC CARDS (Cards de Estatistica) */
+.metric-card {
     position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    color: var(--texto-principal);
-}
-
-.stat-card-premium:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-    border-color: var(--primary-color);
-}
-
-.stat-card-premium:not(.stat-card-streak):hover {
-    background: var(--primary-soft);
-}
-
-.stat-card-streak {
-    background: linear-gradient(135deg, #059669 0%, #064e3b 100%);
-    color: white !important;
-}
-
-[data-bs-theme="light"] .stat-card-streak {
-    background: linear-gradient(135deg, #6ee7b7 0%, #34d399 100%);
-}
-
-.stat-card-streak:hover {
-    filter: brightness(1.1);
-}
-
-.stat-card-streak .stat-label, 
-.stat-card-streak .stat-value,
-.stat-card-streak p {
-    color: white !important;
-}
-
-.stat-card-streak .stat-value {
-    font-size: 3.5rem;
-    margin-bottom: -5px;
-}
-
-.stat-icon-wrapper {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    background: rgba(99, 102, 241, 0.1);
+    width: 100%;
+    min-height: 148px;
+    padding: 1.25rem;
     display: flex;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    color: var(--texto-principal);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(38, 43, 39, 0.03), 0 4px 12px rgba(38, 43, 39, 0.02);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-card:hover {
+    border-color: var(--primary-border);
+    box-shadow: var(--premium-shadow);
+}
+
+.metric-card-count {
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.metric-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.metric-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 1.5rem;
+    flex-shrink: 0;
+    font-size: 1.05rem;
+    color: var(--primary-color);
+    background: var(--primary-soft);
+    border: 1px solid var(--primary-border);
 }
 
-.stat-label {
-    color: #94a3b8;
-    font-size: 0.95rem;
+.metric-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    color: var(--success-color);
+    background: var(--success-soft);
+    border: 1px solid var(--success-border);
+}
+
+.metric-card-body {
+    min-width: 0;
+}
+
+.metric-card-count .metric-card-body {
+    margin-top: 1.5rem;
+}
+
+.metric-label {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--texto-secundario);
+}
+
+.metric-value {
+    margin: 0.25rem 0 0;
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--texto-principal);
+}
+
+/* Card de progresso (Taxa de Acerto) */
+.metric-card-progress {
+    align-items: center;
+    gap: 1rem;
+}
+
+.metric-ring {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    flex: 0 0 64px;
+    display: grid;
+    place-items: center;
+}
+
+.metric-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    overflow: visible;
+}
+
+.metric-ring-track {
+    fill: none;
+    stroke: var(--ring-track);
+    stroke-width: 3.5;
+}
+
+.metric-ring-value {
+    fill: none;
+    stroke: var(--accent-color);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+}
+
+.metric-ring-label {
+    position: absolute;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--texto-principal);
+}
+
+.metric-sublabel {
+    margin: 0.2rem 0 0;
+    font-size: 0.875rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
+    color: var(--texto-principal);
 }
 
-.stat-value {
-    font-size: 2.8rem;
+.metric-hint {
+    margin: 0.1rem 0 0;
+    font-size: 0.6875rem;
+    color: var(--texto-secundario);
+}
+
+/* Card de ofensiva (Streak) */
+.metric-card-streak {
+    flex-direction: column;
+    justify-content: space-between;
+    background: linear-gradient(145deg, #f0f6f2 0%, #e6efe9 100%);
+    border-color: #d5e2d8;
+}
+
+.metric-card-streak .metric-label {
+    color: #2d6a4f;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+}
+
+.metric-streak-line {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0.9rem 0 0;
+}
+
+.metric-streak-value {
+    font-size: 2.25rem;
     font-weight: 800;
     line-height: 1;
-    color: var(--texto-principal);
+    letter-spacing: -0.02em;
+    color: #1e4333;
+}
+
+.metric-streak-unit {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #386641;
+}
+
+.metric-streak-footer {
+    margin: 0.75rem 0 0;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(45, 106, 79, 0.15);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: #2d6a4f;
+}
+
+.metric-watermark {
+    position: absolute;
+    right: -1rem;
+    bottom: -1rem;
+    font-size: 8rem;
+    line-height: 1;
+    color: rgba(45, 106, 79, 0.1);
+    pointer-events: none;
+    user-select: none;
+    animation: none;
+    filter: none;
+}
+
+[data-bs-theme="dark"] .metric-card-streak {
+    background: linear-gradient(145deg, #063428 0%, #032018 100%);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+[data-bs-theme="dark"] .metric-card-streak .metric-label {
+    color: #6ee7b7;
+}
+
+[data-bs-theme="dark"] .metric-streak-value {
+    color: #ffffff;
+}
+
+[data-bs-theme="dark"] .metric-streak-unit {
+    color: rgba(167, 243, 208, 0.8);
+}
+
+[data-bs-theme="dark"] .metric-streak-footer {
+    color: rgba(110, 231, 183, 0.7);
+    border-top-color: rgba(16, 185, 129, 0.15);
+}
+
+[data-bs-theme="dark"] .metric-watermark {
+    color: rgba(6, 52, 40, 0.55);
+}
+
+[data-bs-theme="dark"] .metric-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+[data-bs-theme="dark"] .metric-card:hover {
+    box-shadow: var(--premium-shadow);
 }
 
 @media (max-width: 576px) {
-    .stat-value {
+    .metric-card {
+        min-height: 132px;
+        padding: 1.1rem;
+    }
+
+    .metric-value {
+        font-size: 1.5rem;
+    }
+
+    .metric-streak-value {
         font-size: 2rem;
     }
-    .stat-card-streak .stat-value {
-        font-size: 2.5rem;
-    }
-}
 
-.fire-watermark {
-    position: absolute;
-    right: -5%;
-    bottom: -15%;
-    font-size: 12rem;
-    opacity: 0.2;
-    color: rgba(0, 0, 0, 0.4);
-    transform: rotate(-5deg);
-    pointer-events: none;
-}
-
-.badge-today {
-    position: absolute;
-    top: 1.75rem;
-    right: 1.75rem;
-    background: rgba(16, 185, 129, 0.2);
-    color: #10b981;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-}
-
-.circular-progress-mini {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    display: flex;
-    color: var(--texto-principal);
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    background: radial-gradient(closest-side, var(--card-bg) 79%, transparent 80% 100%), 
-                conic-gradient(var(--primary-color) var(--progress-percent, 0%), var(--border-color) 0);
-    flex-shrink: 0;
-}
-
-@media (max-width: 1200px) {
-    .stat-progress-wrapper {
-        gap: 1rem !important;
-    }
-}
-
-@media (max-width: 991px) {
-    .stat-card-premium {
-        padding: 1.25rem;
+    .metric-watermark {
+        font-size: 6.5rem;
     }
 }
 

@@ -55,7 +55,14 @@
 
     .nav-pills .nav-link.active {
         background-color: var(--primary-color) !important;
+        /* Fundo usa --primary-color; texto/ícone precisam de cor contrastante
+           (a regra global .nav-link.active também usa --primary-color). */
+        color: #fff !important;
         box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .nav-pills .nav-link.active i {
+        color: #fff !important;
     }
 
     .step-number {

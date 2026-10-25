@@ -1,6 +1,12 @@
 /* flashcards.css */
 :root {
     --card-min-height: 250px;
+    /* Usado no gradiente do verso do card; acompanha --primary-color. */
+    --primary-color-rgb: 61, 90, 128;
+}
+
+[data-bs-theme="dark"] {
+    --primary-color-rgb: 94, 106, 210;
 }
 
 /* 1. Dashboard Styles */
@@ -36,6 +42,7 @@
 
 .flashcard-inner {
     position: relative;
+    display: grid;
     width: 100%;
     min-height: var(--card-min-height);
     text-align: center;
@@ -47,10 +54,10 @@
     transform: rotateY(180deg);
 }
 
+/* As duas faces ocupam a mesma célula; a mais alta define a altura do card. */
 .card-front, .card-back {
-    position: absolute;
+    grid-area: 1 / 1;
     width: 100%;
-    height: 100%;
     min-height: var(--card-min-height);
     backface-visibility: hidden;
     display: flex;
@@ -73,6 +80,8 @@
     font-size: 1.25rem;
     line-height: 1.6;
     color: var(--texto-principal);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 /* Text Highlighting (Realce) */
