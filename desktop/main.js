@@ -230,6 +230,22 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => app.quit());
-app.on('before-quit', () => {
-  if (backend && !backend.killed) backend.kill();
-});
+
+function matarBackend() {
+  if (!backend || backend.killed) return;
+  const pid = backend.pid;
+  if (process.platform === 'win32') {
+    // No Windows, usa taskkill /F /T para matar a árvore inteira de processos
+    // (o backend Python/PyInstaller pode criar processos filhos)
+    const { spawn } = require('child_process');
+    spawn('taskkill', ['/F', '/T', '/PID', String(pid)], { windowsHide: true });
+  } else {
+    // No Linux/macOS, SIGTERM no grupo de processos costuma bastar
+    try { process.kill(-pid, 'SIGTERM'); } catch (_) { backend.kill('SIGTERM'); }
+  }
+  backend = null;
+}
+
+app.on('before-quit', matarBackend);
+// Fallback extra: garante limpeza mesmo se 'before-quit' não disparar
+app.on('quit', matarBackend);
