@@ -1,0 +1,333 @@
+2026-10-24 10:00:39 [WARNING] app: \u26a0\ufe0f ProxyFix DESATIVADO. Configure 'TRUSTED_PROXIES=1' no .env para habilitar o Rate Limiter.
+test_dashboard_detalhado_sucesso (test_aluno_questoes.TestAlunoQuestaoFlask.test_dashboard_detalhado_sucesso)
+Valida o processamento do dashboard detalhado por matéria, tópicos e curvas de esquecimento. ... C:\Users\Thierry\Downloads\Projetos Antigravity\Projetos Antigravity\gabaritei-questoes\tests\test_aluno_questoes.py:86: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  criado_antigo = datetime.utcnow() - timedelta(days=5) # 5 dias atrás (REVISAR)
+ok
+test_dashboard_detalhado_vazio (test_aluno_questoes.TestAlunoQuestaoFlask.test_dashboard_detalhado_vazio)
+Garante que alunos sem histórico sejam redirecionados para o painel principal com flash informando. ... ok
+test_painel_aluno_sucesso (test_aluno_questoes.TestAlunoQuestaoFlask.test_painel_aluno_sucesso)
+Valida que o painel do aluno calcula acertos, erros e streak de forma mockada com sucesso. ... ok
+test_reportar_comentario_duplicado_409 (test_aluno_questoes.TestAlunoQuestaoFlask.test_reportar_comentario_duplicado_409)
+Segunda denúncia do mesmo aluno no mesmo comentário \u2192 409 amigável. ... ok
+test_reportar_comentario_motivo_vazio (test_aluno_questoes.TestAlunoQuestaoFlask.test_reportar_comentario_motivo_vazio)
+Sem motivo selecionado, a denúncia é rejeitada com 400. ... ok
+test_reportar_comentario_nao_encontrado (test_aluno_questoes.TestAlunoQuestaoFlask.test_reportar_comentario_nao_encontrado)
+Comentário inexistente responde 404 sem gravar nada. ... ok
+test_reportar_comentario_sucesso (test_aluno_questoes.TestAlunoQuestaoFlask.test_reportar_comentario_sucesso)
+Denúncia válida grava em reports_comentarios e confirma ao aluno. ... ok
+test_reportar_comentario_uuid_invalido (test_aluno_questoes.TestAlunoQuestaoFlask.test_reportar_comentario_uuid_invalido)
+IDs fora do formato uuid são rejeitados com 400. ... ok
+test_responder_questao_aluno_sucesso (test_aluno_questoes.TestAlunoQuestaoFlask.test_responder_questao_aluno_sucesso)
+Valida que a rota POST de resposta processa a alternativa correta e insere histórico. ... ok
+test_salvar_comentario_bloqueado_moderacao (test_aluno_questoes.TestAlunoQuestaoFlask.test_salvar_comentario_bloqueado_moderacao)
+Garante que comentários contendo termos banidos sejam bloqueados com status 400. ... ok
+test_salvar_comentario_sucesso (test_aluno_questoes.TestAlunoQuestaoFlask.test_salvar_comentario_sucesso)
+Garante que comentários com linguajar aceitável sejam postados com sucesso. ... ok
+test_api_cargos_por_orgao_sucesso (test_api.TestAPIBlueprint.test_api_cargos_por_orgao_sucesso)
+Garante que retorne os cargos ordenados correspondentes àquele órgão. ... ok
+test_api_get_assuntos_cascata_sucesso (test_api.TestAPIBlueprint.test_api_get_assuntos_cascata_sucesso)
+Valida que monte a estrutura em árvore correlacionando tópicos a seus subtópicos. ... C:\Users\Thierry\Downloads\Projetos Antigravity\Projetos Antigravity\gabaritei-questoes\venv\Lib\site-packages\supabase\_sync\client.py:309: DeprecationWarning: The 'timeout' parameter is deprecated. Please configure it in the http client instead.
+  return SyncPostgrestClient(
+C:\Users\Thierry\Downloads\Projetos Antigravity\Projetos Antigravity\gabaritei-questoes\venv\Lib\site-packages\supabase\_sync\client.py:309: DeprecationWarning: The 'verify' parameter is deprecated. Please configure it in the http client instead.
+  return SyncPostgrestClient(
+ok
+test_api_get_assuntos_cascata_vazia (test_api.TestAPIBlueprint.test_api_get_assuntos_cascata_vazia)
+Retorna uma lista vazia se nenhuma matéria for informada. ... ok
+test_api_subtopicos_por_topico (test_api.TestAPIBlueprint.test_api_subtopicos_por_topico)
+Valida a listagem de subtópicos filtrados por tópico. ... ok
+test_api_topicos_por_materia (test_api.TestAPIBlueprint.test_api_topicos_por_materia)
+Valida a listagem de tópicos filtrados por matéria. ... ok
+test_salvar_preferencias_tema_invalido (test_api.TestAPIBlueprint.test_salvar_preferencias_tema_invalido)
+Retorna 400 se o usuário tentar salvar um tema não cadastrado. ... ok
+test_salvar_preferencias_tema_sucesso (test_api.TestAPIBlueprint.test_salvar_preferencias_tema_sucesso)
+Grava no banco a preferência do aluno (dark/light) com sucesso. ... ok
+test_before_request_anonimo_nao_restaura (test_auth.TestAuthComSenha.test_before_request_anonimo_nao_restaura)
+Sessão SEM _user_id (deslogado): o before_request não restaura ... C:\Users\Thierry\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py:1396: ResourceWarning: unclosed file <_io.BufferedReader name='C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos Antigravity\\gabaritei-questoes\\static/js/imprimir_ou_pdf.js'>
+  return func(*newargs, **newkeywargs)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_before_request_persiste_novo_refresh (test_auth.TestAuthComSenha.test_before_request_persiste_novo_refresh)
+Client anônimo (boot novo): reaplica o rt do cookie e grava o NOVO. ... ok
+test_before_request_renova_access_token_a_expirar (test_auth.TestAuthComSenha.test_before_request_renova_access_token_a_expirar)
+Renovação proativa: access token a expirar (<2 min) é renovado ANTES de falhar, ... ok
+test_criar_aguardando_confirmacao_email (test_auth.TestAuthComSenha.test_criar_aguardando_confirmacao_email)
+'Confirm email' ligado no Auth: conta criada, sessão não — pede confirmação. ... ok
+test_criar_email_ja_existente (test_auth.TestAuthComSenha.test_criar_email_ja_existente)
+E-mail duplicado: avisa para logar ou recuperar a senha. ... 2026-10-24 10:00:40 [WARNING] rotas.auth: Cadastro falhou para x@y.com: User already registered
+ok
+test_criar_ok (test_auth.TestAuthComSenha.test_criar_ok)
+Cadastro completo: cria conta Auth, perfil e entra. ... ok
+test_criar_perfil_falha_persisvel_retorna_none (test_auth.TestAuthComSenha.test_criar_perfil_falha_persisvel_retorna_none)
+Falha não-recuperável no INSERT: sem exceção propagada — flash amigável. ... 2026-10-24 10:00:40 [ERROR] utils: \u274c Erro determinístico na consulta Supabase (sem retry): {'code': '42501', 'message': 'new row violates row-level security policy'}
+2026-10-24 10:00:40 [ERROR] rotas.auth: Criação de perfil falhou para aluno@teste.com: {'code': '42501', 'message': 'new row violates row-level security policy'}
+Traceback (most recent call last):
+  File "C:\Users\Thierry\Downloads\Projetos Antigravity\Projetos Antigravity\gabaritei-questoes\rotas\auth.py", line 98, in _criar_perfil
+    res = safe_execute(supabase.table("usuarios").insert({
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Thierry\Downloads\Projetos Antigravity\Projetos Antigravity\gabaritei-questoes\utils.py", line 33, in safe_execute
+    raise e
+  File "C:\Users\Thierry\Downloads\Projetos Antigravity\Projetos Antigravity\gabaritei-questoes\utils.py", line 29, in safe_execute
+    return query_func.execute()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Thierry\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1139, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Thierry\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1143, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Thierry\AppData\Local\Programs\Python\Python312\Lib\unittest\mock.py", line 1198, in _execute_mock_call
+    raise effect
+Exception: {'code': '42501', 'message': 'new row violates row-level security policy'}
+ok
+test_criar_perfil_relink_legado (test_auth.TestAuthComSenha.test_criar_perfil_relink_legado)
+Perfil legado (auth_id NULL) de mesmo e-mail: adota em vez de duplicar. ... ok
+test_criar_perfil_sem_legado_insere (test_auth.TestAuthComSenha.test_criar_perfil_sem_legado_insere)
+Sem perfil legado: insere linha nova com auth_id do JWT. ... ok
+test_criar_perfil_username_ocupado_tenta_sufixo (test_auth.TestAuthComSenha.test_criar_perfil_username_ocupado_tenta_sufixo)
+Colisão de username (23505): segunda tentativa usa sufixo _hex (padrão legado). ... 2026-10-24 10:00:40 [ERROR] utils: \u274c Erro determinístico na consulta Supabase (sem retry): {'message': 'duplicate key value violates unique constraint "usuarios_username_key"', 'code': '23505'}
+2026-10-24 10:00:40 [WARNING] rotas.auth: Username 'Novo' já existe; tentando com sufixo.
+ok
+test_criar_senha_curta_bloqueia (test_auth.TestAuthComSenha.test_criar_senha_curta_bloqueia)
+Senha < 8 caracteres: bloqueada antes de chamar o Auth. ... ok
+test_criar_senhas_diferentes_bloqueia (test_auth.TestAuthComSenha.test_criar_senhas_diferentes_bloqueia)
+Senha e confirmação diferentes: bloqueada antes de chamar o Auth. ... ok
+test_emails_auth_redirecionam_para_pagina_publica (test_auth.TestAuthComSenha.test_emails_auth_redirecionam_para_pagina_publica)
+Signup e recuperação apontam os links dos e-mails para a página pública. ... ok
+test_entrar_campos_vazios (test_auth.TestAuthComSenha.test_entrar_campos_vazios) ... ok
+test_entrar_deixa_sessao_permanente_e_salva_refresh (test_auth.TestAuthComSenha.test_entrar_deixa_sessao_permanente_e_salva_refresh)
+Sessão eterna: login com senha grava cookie permanente + refresh token ... 2026-10-24 10:00:40 [INFO] rotas.auth: LOGIN: user_id=7
+ok
+test_entrar_ok (test_auth.TestAuthComSenha.test_entrar_ok)
+E-mail+senha corretos: entra e redireciona ao painel. ... ok
+test_entrar_sem_perfil_cria_e_entra (test_auth.TestAuthComSenha.test_entrar_sem_perfil_cria_e_entra)
+Conta Auth ok mas sem perfil (ex.: legado): cria/re-linka e entra. ... ok
+test_entrar_senha_errada (test_auth.TestAuthComSenha.test_entrar_senha_errada)
+Credenciais erradas: flash de erro e volta ao login. ... 2026-10-24 10:00:40 [WARNING] rotas.auth: Login negado para a@b.com: Invalid login credentials
+ok
+test_esqueci_dispara_reset (test_auth.TestAuthComSenha.test_esqueci_dispara_reset)
+Dispara o e-mail de recuperação (e-mail normalizado em minúsculas). ... ok
+test_esqueci_email_vazio (test_auth.TestAuthComSenha.test_esqueci_email_vazio) ... ok
+test_load_user_self_heal_restaura_e_reconsulta (test_auth.TestAuthComSenha.test_load_user_self_heal_restaura_e_reconsulta)
+Regressão do 302: consulta do perfil vazia (client anônimo/token ... 2026-10-24 10:00:40 [INFO] app: \U0001f50d load_user: user_id=50, user_id_int=50, tentativa=1
+2026-10-24 10:00:40 [INFO] app: \U0001f50d load_user: query result count=0
+2026-10-24 10:00:40 [INFO] app: \U0001f50d load_user: perfil vazio — restaurando sessão Supabase pelo refresh token
+2026-10-24 10:00:40 [INFO] app: \U0001f50d load_user: query result count=1 (pós-restauração)
+2026-10-24 10:00:40 [INFO] app: \U0001f50d load_user: Returning User id=50 (aluno)
+ok
+test_logout_limpa_sessao_e_preserva_admin (test_auth.TestAuthComSenha.test_logout_limpa_sessao_e_preserva_admin)
+Logout: limpa a sessão do aluno e preserva chaves admin_*. ... ok
+test_tela_login_persiste_novo_refresh_da_rotacao (test_auth.TestAuthComSenha.test_tela_login_persiste_novo_refresh_da_rotacao)
+Sessão eterna: boot com rt salvo grava o NOVO refresh token da rotação ... 2026-10-24 10:00:40 [INFO] rotas.auth: LOGIN: user_id=7
+ok
+test_tela_login_refresh_invalido_mostra_tela (test_auth.TestAuthComSenha.test_tela_login_refresh_invalido_mostra_tela)
+Refresh expirado/revogado: limpa o token e mostra o login normal. ... ok
+test_tela_login_restaura_sessao_salva (test_auth.TestAuthComSenha.test_tela_login_restaura_sessao_salva)
+Boot com refresh token salvo: restaura a sessão e vai ao painel. ... ok
+test_tela_login_sem_sessao_salva (test_auth.TestAuthComSenha.test_tela_login_sem_sessao_salva)
+Sem refresh token salvo: mostra a tela de login com senha. ... ok
+test_criar_caderno_sem_nome (test_caderno.TestCadernoBlueprint.test_criar_caderno_sem_nome)
+Retorna erro 400 se tentar criar caderno com payload vazio. ... ok
+test_criar_caderno_sucesso (test_caderno.TestCadernoBlueprint.test_criar_caderno_sucesso)
+Garante a inserção e criação bem-sucedida do caderno. ... ok
+test_excluir_caderno_sucesso (test_caderno.TestCadernoBlueprint.test_excluir_caderno_sucesso)
+Exclui com sucesso o caderno do aluno ativo. ... ok
+test_listar_cadernos_api (test_caderno.TestCadernoBlueprint.test_listar_cadernos_api)
+Garante que a API de listagem retorne o array JSON correspondente aos cadernos do usuário. ... ok
+test_meus_cadernos_sucesso (test_caderno.TestCadernoBlueprint.test_meus_cadernos_sucesso)
+Garante a renderização bem-sucedida da listagem de cadernos do aluno. ... 2026-10-24 10:00:40 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcards?select=id_flashcard&id_usuario=eq.12345&proxima_revisao=lte.2026-10-24T10%3A00%3A40.254858 "HTTP/2 200 OK"
+2026-10-24 10:00:40 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/historico_respostas?select=criado_em&id_usuario=eq.12345&order=criado_em.desc "HTTP/2 200 OK"
+ok
+test_remover_questao_caderno_formato_invalido (test_caderno.TestCadernoBlueprint.test_remover_questao_caderno_formato_invalido)
+Retorna erro 400 se o ID da questão fornecido for uma string não numérica. ... ok
+test_remover_questao_caderno_sucesso (test_caderno.TestCadernoBlueprint.test_remover_questao_caderno_sucesso)
+Deleta com sucesso a vinculação de uma questão ao caderno do aluno. ... ok
+test_salvar_questao_duplicada (test_caderno.TestCadernoBlueprint.test_salvar_questao_duplicada)
+Retorna erro 400 amigável em caso de violação de restrição única (questão duplicada). ... ok
+test_salvar_questao_no_caderno_sucesso (test_caderno.TestCadernoBlueprint.test_salvar_questao_no_caderno_sucesso)
+Grava com sucesso a relação questão-caderno no Supabase. ... ok
+test_visualizar_caderno_com_historico (test_caderno.TestCadernoBlueprint.test_visualizar_caderno_com_historico)
+Valida que o caderno exiba as questões salvas correlacionando o histórico de acertos e erros. ... 2026-10-24 10:00:40 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcards?select=id_flashcard&id_usuario=eq.12345&proxima_revisao=lte.2026-10-24T10%3A00%3A40.485128 "HTTP/2 200 OK"
+2026-10-24 10:00:40 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/historico_respostas?select=criado_em&id_usuario=eq.12345&order=criado_em.desc "HTTP/2 200 OK"
+ok
+test_atualizar_dados_sucesso (test_conta.TestContaBlueprint.test_atualizar_dados_sucesso)
+Garante que o aluno atualize username/e-mail diretamente, sem confirmacao de senha. ... ok
+test_config_ia_chave_curta (test_conta.TestContaBlueprint.test_config_ia_chave_curta)
+Rejeita chaves absurdamente curtas antes de qualquer rede. ... ok
+test_config_ia_ping_falha (test_conta.TestContaBlueprint.test_config_ia_ping_falha)
+Chave rejeitada pelo provedor não é salva (400 + motivo). ... ok
+test_config_ia_provedor_nao_suportado (test_conta.TestContaBlueprint.test_config_ia_provedor_nao_suportado)
+Rejeita provedores fora da lista oficial (openai/gemini/anthropic). ... ok
+test_config_ia_sucesso_sem_vazamento (test_conta.TestContaBlueprint.test_config_ia_sucesso_sem_vazamento)
+Salva a config localmente e a resposta SÓ contém a máscara da chave. ... 2026-10-24 10:00:40 [INFO] rotas.conta: \U0001f511 Config de IA salva LOCALMENTE (provedor=openai, modelo=gpt-5.6-luna) para o usuário 12345
+ok
+test_excluir_conta_confirmacao_incorreta (test_conta.TestContaBlueprint.test_excluir_conta_confirmacao_incorreta)
+Recusa a exclusao se a frase EXCLUIR MINHA CONTA for digitada incorretamente. ... ok
+test_excluir_conta_sucesso (test_conta.TestContaBlueprint.test_excluir_conta_sucesso)
+Valida que a exclusao remove o usuario e faz logout (sem senha). ... ok
+test_remover_config_ia (test_conta.TestContaBlueprint.test_remover_config_ia)
+Endpoint de remoção da chave local (LGPD). ... ok
+test_resetar_dados_confirmacao_incorreta (test_conta.TestContaBlueprint.test_resetar_dados_confirmacao_incorreta)
+Garante que o reset seja rejeitado se a frase de confirmacao estiver incorreta. ... ok
+test_resetar_dados_sucesso (test_conta.TestContaBlueprint.test_resetar_dados_sucesso)
+Garante a delecao em lote dos dados de estudo com a frase correta (sem senha). ... ok
+test_visualizar_configuracoes_conta (test_conta.TestContaBlueprint.test_visualizar_configuracoes_conta)
+Garante que a tela de configuracoes carrega com sucesso para o aluno. ... 2026-10-24 10:00:40 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcards?select=id_flashcard&id_usuario=eq.12345&proxima_revisao=lte.2026-10-24T10%3A00%3A40.662323 "HTTP/2 200 OK"
+2026-10-24 10:00:40 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/historico_respostas?select=criado_em&id_usuario=eq.12345&order=criado_em.desc "HTTP/2 200 OK"
+ok
+test_visualizar_conta_contem_card_ia (test_conta.TestContaBlueprint.test_visualizar_conta_contem_card_ia)
+A tela de configurações exibe o card 'Inteligência Artificial'. ... 2026-10-24 10:00:40 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcards?select=id_flashcard&id_usuario=eq.12345&proxima_revisao=lte.2026-10-24T10%3A00%3A40.767477 "HTTP/2 200 OK"
+2026-10-24 10:00:40 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/historico_respostas?select=criado_em&id_usuario=eq.12345&order=criado_em.desc "HTTP/2 200 OK"
+ok
+test_algoritmo_sm2_qualidade_dois (test_flashcards.TestFlashcardsBlueprint.test_algoritmo_sm2_qualidade_dois)
+Algoritmo Anki SM-2: Acerto com esforço (qualidade 2) mantém facilidade e escala o intervalo por facilidade. ... ok
+test_algoritmo_sm2_qualidade_tres (test_flashcards.TestFlashcardsBlueprint.test_algoritmo_sm2_qualidade_tres)
+Algoritmo Anki SM-2: Acerto fácil (qualidade 3) aumenta a facilidade em 0.15 e escala o intervalo agressivamente. ... ok
+test_algoritmo_sm2_qualidade_um (test_flashcards.TestFlashcardsBlueprint.test_algoritmo_sm2_qualidade_um)
+Algoritmo Anki SM-2: Erro leve (qualidade 1) incrementa o intervalo levemente e reduz facilidade em 0.15. ... ok
+test_algoritmo_sm2_qualidade_zero (test_flashcards.TestFlashcardsBlueprint.test_algoritmo_sm2_qualidade_zero)
+Algoritmo Anki SM-2: Erro total (qualidade 0) zera o intervalo e reduz a facilidade em 0.2. ... ok
+test_criar_card_api_campos_obrigatorios (test_flashcards.TestFlashcardsBlueprint.test_criar_card_api_campos_obrigatorios)
+Retorna erro 400 se tentar criar card sem fornecer frente ou verso. ... ok
+test_criar_card_api_sucesso (test_flashcards.TestFlashcardsBlueprint.test_criar_card_api_sucesso)
+Garante a criação de um flashcard com frente, verso e categoria válidos. ... ok
+test_criar_categoria_api_sucesso (test_flashcards.TestFlashcardsBlueprint.test_criar_categoria_api_sucesso)
+Garante a criação de uma nova categoria com nome válido. ... ok
+test_criar_categoria_api_valida_nome (test_flashcards.TestFlashcardsBlueprint.test_criar_categoria_api_valida_nome)
+Retorna erro 400 se tentar criar categoria sem passar o nome. ... ok
+test_estudar_cards_carregamento (test_flashcards.TestFlashcardsBlueprint.test_estudar_cards_carregamento)
+Valida que a página de estudos carregue os cards programados para revisão. ... 2026-10-24 10:00:40 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcards?select=id_flashcard&id_usuario=eq.12345&proxima_revisao=lte.2026-10-24T10%3A00%3A40.909867 "HTTP/2 200 OK"
+2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/historico_respostas?select=criado_em&id_usuario=eq.12345&order=criado_em.desc "HTTP/2 200 OK"
+2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcards?select=id_flashcard&id_usuario=eq.12345&proxima_revisao=lte.2026-10-24T10%3A00%3A41.007678 "HTTP/2 200 OK"
+2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/historico_respostas?select=criado_em&id_usuario=eq.12345&order=criado_em.desc "HTTP/2 200 OK"
+ok
+test_excluir_card_api (test_flashcards.TestFlashcardsBlueprint.test_excluir_card_api)
+Garante a exclusão permanente de um card pelo ID. ... ok
+test_excluir_categoria_api (test_flashcards.TestFlashcardsBlueprint.test_excluir_categoria_api)
+Garante a exclusão permanente de uma categoria completa e seus cards. ... ok
+test_gerenciar_categoria_inexistente (test_flashcards.TestFlashcardsBlueprint.test_gerenciar_categoria_inexistente)
+Redireciona para o index se a categoria não existir ou não pertencer ao aluno. ... ok
+test_gerenciar_categoria_sucesso (test_flashcards.TestFlashcardsBlueprint.test_gerenciar_categoria_sucesso)
+Carrega a página de gerenciamento de uma categoria com seus flashcards ordenados. ... 2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcards?select=id_flashcard&id_usuario=eq.12345&proxima_revisao=lte.2026-10-24T10%3A00%3A41.123260 "HTTP/2 200 OK"
+2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/historico_respostas?select=criado_em&id_usuario=eq.12345&order=criado_em.desc "HTTP/2 200 OK"
+ok
+test_index_acesso_todos_usuarios (test_flashcards.TestFlashcardsBlueprint.test_index_acesso_todos_usuarios)
+Todos os usuários autenticados têm acesso ao dashboard de flashcards (software livre). ... 2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcard_categorias?select=%2A%2Cmaterias%28nome_materia%29&id_usuario=eq.%3CMagicMock+name%3D%27_get_user%28%29.id%27+id%3D%271762953763952%27%3E "HTTP/2 200 OK"
+2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcards?select=id_flashcard&id_usuario=eq.%3CMagicMock+name%3D%27_get_user%28%29.id%27+id%3D%271762953763952%27%3E&proxima_revisao=lte.2026-10-24T10%3A00%3A41.254015 "HTTP/2 200 OK"
+2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcards?select=id_flashcard&id_usuario=eq.%3CMagicMock+name%3D%27_get_user%28%29.id%27+id%3D%271762953763952%27%3E&proxima_revisao=lte.2026-10-24T10%3A00%3A41.309011 "HTTP/2 200 OK"
+2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/historico_respostas?select=criado_em&id_usuario=eq.%3CMagicMock+name%3D%27_get_user%28%29.id%27+id%3D%271762953763952%27%3E&order=criado_em.desc "HTTP/2 200 OK"
+ok
+test_index_listagem_sucesso (test_flashcards.TestFlashcardsBlueprint.test_index_listagem_sucesso)
+Usuário autenticado acessa o painel de flashcards com listagem de categorias e revisões do dia. ... 2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcards?select=id_flashcard&id_usuario=eq.12345&proxima_revisao=lte.2026-10-24T10%3A00%3A41.424160 "HTTP/2 200 OK"
+2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/historico_respostas?select=criado_em&id_usuario=eq.12345&order=criado_em.desc "HTTP/2 200 OK"
+ok
+test_ia_explica_com_cache (test_ia_chat.TestIAChatBlueprint.test_ia_explica_com_cache)
+Cache global serve a explicação SEM chave de IA configurada (tmpdir vazio). ... ok
+test_ia_explica_geracao_sucesso (test_ia_chat.TestIAChatBlueprint.test_ia_explica_geracao_sucesso)
+Garante a geração inédita da explicação via camada BYOK quando não há cache, tratando a limpeza e a gravação. ... ok
+test_ia_explica_sem_chave_e_sem_cache (test_ia_chat.TestIAChatBlueprint.test_ia_explica_sem_chave_e_sem_cache)
+Sem chave E sem cache no banco \u2192 mensagem tratada de configuração (500). ... ok
+test_ia_gerar_estudo_cache_global_sem_chave (test_ia_chat.TestIAChatBlueprint.test_ia_gerar_estudo_cache_global_sem_chave)
+Cache global hit: material gerado por outro aluno é entregue ao aluno ... ok
+test_ia_gerar_estudo_flashcard_geracao_nova (test_ia_chat.TestIAChatBlueprint.test_ia_gerar_estudo_flashcard_geracao_nova)
+Valida a geração inédita de flashcard pela camada BYOK quando não há cache local ou global, salvando no banco. ... ok
+test_ia_gerar_estudo_resumo_cache_usuario (test_ia_chat.TestIAChatBlueprint.test_ia_gerar_estudo_resumo_cache_usuario)
+Resumo já no caderno do aluno \u2192 cache hit funciona SEM chave configurada. ... ok
+test_inicializacao_usuario_customizado (test_modelos.TestUserModel.test_inicializacao_usuario_customizado)
+Garante que um usuário customizado inicialize todos os atributos corretamente. ... ok
+test_inicializacao_usuario_padrao (test_modelos.TestUserModel.test_inicializacao_usuario_padrao)
+Garante que um usuário com valores padrão seja criado corretamente. ... ok
+test_metodos_usermixin (test_modelos.TestUserModel.test_metodos_usermixin)
+Verifica se os métodos herdados do UserMixin se comportam conforme o esperado. ... ok
+test_chave_nunca_em_texto_plano_no_arquivo (test_provedores_ia.TestBancoLocal.test_chave_nunca_em_texto_plano_no_arquivo)
+O SQLite nunca guarda a chave em plaintext (DPAPI/base64). ... ok
+test_isolamento_por_usuario (test_provedores_ia.TestBancoLocal.test_isolamento_por_usuario)
+Multiusuário na mesma máquina: cada conta tem sua própria config. ... ok
+test_mascarar_chave (test_provedores_ia.TestBancoLocal.test_mascarar_chave) ... ok
+test_roundtrip_salvar_ler_remover (test_provedores_ia.TestBancoLocal.test_roundtrip_salvar_ler_remover) ... ok
+test_dispatch_anthropic_chave_invalida (test_provedores_ia.TestCamadaBYOK.test_dispatch_anthropic_chave_invalida) ... ok
+test_dispatch_anthropic_payload_nativo (test_provedores_ia.TestCamadaBYOK.test_dispatch_anthropic_payload_nativo)
+Anthropic: Messages API nativa; penalties não suportados são omitidos. ... 2026-10-24 10:00:41 [INFO] provedores_ia: \u2139\ufe0f Parâmetros não suportados por 'anthropic' e omitidos: presence_penalty, frequency_penalty
+ok
+test_dispatch_anthropic_sem_creditos_402 (test_provedores_ia.TestCamadaBYOK.test_dispatch_anthropic_sem_creditos_402)
+402 billing_error \u2192 mensagem clara (a API da Anthropic exige créditos ... ok
+test_dispatch_gemini_base_url_google_e_role_system (test_provedores_ia.TestCamadaBYOK.test_dispatch_gemini_base_url_google_e_role_system)
+Gemini: endpoint OpenAI-compat do Google + role 'system'. ... ok
+test_dispatch_openai_role_developer (test_provedores_ia.TestCamadaBYOK.test_dispatch_openai_role_developer)
+OpenAI: role 'developer' + todos os parâmetros calibrados passam. ... ok
+test_filtrar_parametros_anthropic (test_provedores_ia.TestCamadaBYOK.test_filtrar_parametros_anthropic) ... 2026-10-24 10:00:41 [INFO] provedores_ia: \u2139\ufe0f Parâmetros não suportados por 'anthropic' e omitidos: presence_penalty, frequency_penalty
+ok
+test_ia_configurada (test_provedores_ia.TestCamadaBYOK.test_ia_configurada) ... ok
+test_sem_config_levanta_erro_amigavel (test_provedores_ia.TestCamadaBYOK.test_sem_config_levanta_erro_amigavel) ... ok
+test_modelos_anthropic (test_provedores_ia.TestListasOficiais.test_modelos_anthropic) ... ok
+test_modelos_gemini (test_provedores_ia.TestListasOficiais.test_modelos_gemini) ... ok
+test_modelos_openai (test_provedores_ia.TestListasOficiais.test_modelos_openai) ... ok
+test_temperatura_congelada (test_provedores_ia.TestListasOficiais.test_temperatura_congelada)
+TEMPERATURE_GPT herdada de extensoes.py — valor calibrado do produto. ... ok
+test_todos_os_padroes_estao_nas_listas (test_provedores_ia.TestListasOficiais.test_todos_os_padroes_estao_nas_listas) ... ok
+test_anthropic_400_com_param_repete_sem (test_provedores_ia.TestRetryParametrosNaoSuportados.test_anthropic_400_com_param_repete_sem)
+Mesma guarda defensiva no caminho REST da Anthropic. ... 2026-10-24 10:00:41 [INFO] provedores_ia: \u2139\ufe0f Modelo 'claude-sonnet-5-5' não suporta 'temperature' — repetindo com o valor default.
+ok
+test_erro_400_sem_param_conhecido_propaga_sem_loop (test_provedores_ia.TestRetryParametrosNaoSuportados.test_erro_400_sem_param_conhecido_propaga_sem_loop)
+400 sem param reconhecido não gera retry infinito: propaga direto. ... ok
+test_gemini_erro_formato_google_repete_sem_param (test_provedores_ia.TestRetryParametrosNaoSuportados.test_gemini_erro_formato_google_repete_sem_param)
+400 do Google (INVALID_ARGUMENT / fieldViolations) também dispara o ... 2026-10-24 10:00:41 [INFO] provedores_ia: \u2139\ufe0f Modelo 'gemini-4-argon' não suporta 'temperature' — repetindo com o valor default do modelo (modelos de raciocínio preservam o determinismo pela própria cadeia de raciocínio).
+ok
+test_gemini_penalties_omitidos_estaticamente (test_provedores_ia.TestRetryParametrosNaoSuportados.test_gemini_penalties_omitidos_estaticamente)
+O compat endpoint do Gemini rejeita presence/frequency_penalty ... 2026-10-24 10:00:41 [INFO] provedores_ia: \u2139\ufe0f Parâmetros não suportados por 'gemini' e omitidos: presence_penalty, frequency_penalty
+ok
+test_modelo_rejeita_temperature_e_repete_sem (test_provedores_ia.TestRetryParametrosNaoSuportados.test_modelo_rejeita_temperature_e_repete_sem)
+400 'unsupported_value' em temperature \u2192 retry sem ela; a 1ª chamada ... 2026-10-24 10:00:41 [INFO] provedores_ia: \u2139\ufe0f Modelo 'gpt-5.6-luna' não suporta 'temperature' — repetindo com o valor default do modelo (modelos de raciocínio preservam o determinismo pela própria cadeia de raciocínio).
+ok
+test_ping_401_chave_invalida (test_provedores_ia.TestValidarChave.test_ping_401_chave_invalida) ... ok
+test_ping_402_sem_creditos (test_provedores_ia.TestValidarChave.test_ping_402_sem_creditos)
+402 billing_error (Anthropic sem créditos) \u2192 motivo claro de crédito. ... ok
+test_ping_404_modelo_invalido (test_provedores_ia.TestValidarChave.test_ping_404_modelo_invalido) ... ok
+test_ping_sucesso (test_provedores_ia.TestValidarChave.test_ping_sucesso) ... ok
+test_provedor_desconhecido (test_provedores_ia.TestValidarChave.test_provedor_desconhecido) ... ok
+test_excluir_caderno_erro (test_resumos.TestResumosBlueprint.test_excluir_caderno_erro)
+Retorna success=False em caso de falha de conexão na exclusão do caderno inteiro. ... ok
+test_excluir_caderno_sucesso (test_resumos.TestResumosBlueprint.test_excluir_caderno_sucesso)
+Exclui com sucesso todos os resumos de uma matéria (caderno inteiro) do aluno ativo. ... ok
+test_excluir_resumo_erro (test_resumos.TestResumosBlueprint.test_excluir_resumo_erro)
+Retorna success=False em caso de falha de conexão na exclusão do resumo. ... ok
+test_excluir_resumo_sucesso (test_resumos.TestResumosBlueprint.test_excluir_resumo_sucesso)
+Exclui com sucesso um resumo pelo ID do aluno ativo. ... ok
+test_resumos_index_sucesso (test_resumos.TestResumosBlueprint.test_resumos_index_sucesso)
+Garante a exibição do dashboard agrupado por matérias para usuários autenticados. ... 2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcards?select=id_flashcard&id_usuario=eq.12345&proxima_revisao=lte.2026-10-24T10%3A00%3A41.726934 "HTTP/2 200 OK"
+2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/historico_respostas?select=criado_em&id_usuario=eq.12345&order=criado_em.desc "HTTP/2 200 OK"
+ok
+test_resumos_index_todos_usuarios (test_resumos.TestResumosBlueprint.test_resumos_index_todos_usuarios)
+Todos os usuários autenticados têm acesso ao dashboard de resumos (software livre). ... 2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/resumos_estudo?select=id_materia%2Cmaterias%28nome_materia%29&id_usuario=eq.%3CMagicMock+name%3D%27_get_user%28%29.id%27+id%3D%271762954130016%27%3E "HTTP/2 200 OK"
+2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcards?select=id_flashcard&id_usuario=eq.%3CMagicMock+name%3D%27_get_user%28%29.id%27+id%3D%271762954130016%27%3E&proxima_revisao=lte.2026-10-24T10%3A00%3A41.858115 "HTTP/2 200 OK"
+2026-10-24 10:00:41 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/historico_respostas?select=criado_em&id_usuario=eq.%3CMagicMock+name%3D%27_get_user%28%29.id%27+id%3D%271762954130016%27%3E&order=criado_em.desc "HTTP/2 200 OK"
+ok
+test_ver_resumos_materia_inexistente (test_resumos.TestResumosBlueprint.test_ver_resumos_materia_inexistente)
+Retorna status 404 se tentar visualizar resumos de uma matéria não cadastrada. ... ok
+test_ver_resumos_materia_sucesso (test_resumos.TestResumosBlueprint.test_ver_resumos_materia_sucesso)
+Renderiza a lista de resumos teóricos para uma matéria específica selecionada. ... 2026-10-24 10:00:42 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/flashcards?select=id_flashcard&id_usuario=eq.12345&proxima_revisao=lte.2026-10-24T10%3A00%3A41.959534 "HTTP/2 200 OK"
+2026-10-24 10:00:42 [INFO] httpx: HTTP Request: GET https://ivhuaevrrkrnagbqmnwc.supabase.co/rest/v1/historico_respostas?select=criado_em&id_usuario=eq.12345&order=criado_em.desc "HTTP/2 200 OK"
+ok
+test_pdf_browser_retorna_previa_navegavel (test_rotas.SimuladoPdfPreview.test_pdf_browser_retorna_previa_navegavel)
+Navegador (sem UA do app): a MESMA prévia navegável com o botão ... ok
+test_pdf_desktop_retorna_previa_navegavel (test_rotas.SimuladoPdfPreview.test_pdf_desktop_retorna_previa_navegavel)
+Com UA do app desktop, a rota devolve HTML navegável com botão nativo. ... ok
+test_admin_honeypots (test_rotas.TestRotasFlask.test_admin_honeypots)
+Garante que as rotas administrativas padrão barrem requisições com 404 (Honeypot). ... ok
+test_index_redireciona_para_login (test_rotas.TestRotasFlask.test_index_redireciona_para_login)
+Sem sessão: a raiz (/) leva direto à tela de login (ex-landing aposentada). ... ok
+test_slugify_com_acentos_e_caracteres_especiais (test_utils.TestUtils.test_slugify_com_acentos_e_caracteres_especiais)
+Garante a remoção adequada de acentos e substituição de caracteres especiais. ... ok
+test_slugify_com_espacos_e_hifens_extras (test_utils.TestUtils.test_slugify_com_espacos_e_hifens_extras)
+Garante que hifens múltiplos ou espaços nas pontas sejam tratados devidamente. ... ok
+test_slugify_com_texto_simples (test_utils.TestUtils.test_slugify_com_texto_simples)
+Garante que strings normais em minúsculas e maiúsculas sejam convertidas corretamente. ... ok
+
+----------------------------------------------------------------------
+Ran 132 tests in 2.179s
+
+OK
+
+[SISTEMA OFENSIVA] Hoje em Brasília: 2026-10-24 | Ofensiva Atual: 2 dias
+\u2705 CACHE GLOBAL HIT: resumo para questão 500
+\U0001f4be CACHE GLOBAL SALVO: flashcard para questão 500
+sys:1: ResourceWarning: unclosed <ssl.SSLSocket fd=1144, family=2, type=1, proto=0, laddr=('192.168.0.103', 65315), raddr=('172.64.149.246', 443)>
