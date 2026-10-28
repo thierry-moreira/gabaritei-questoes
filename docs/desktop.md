@@ -19,6 +19,7 @@ desktop/main.js (shell Electron)
 - O `APP_TOKEN` (header `x-app-token` exigido pelas policies de ESCRITA — migration `rls_header_app_aluno`) fica em `desktop/token.local.js` (gitignored; template em `desktop/token.example.js`) e é injetado no env do processo spawnado — nunca no git.
 - As credenciais chegam ao backend via **variáveis de ambiente do processo spawnado** (não via `.env` no pacote) — `load_dotenv()` não sobrescreve variáveis existentes, então o que o shell passa vence.
 - `FLASK_SECRET_KEY` é persistente (`userData/secret.key`, gerada 1x na primeira execução): a sessão Flask sobrevive entre execuções — necessária porque o login do Auth é lembrado via refresh token. Não há segredo estático no binário (a chave nasce na máquina do usuário).
+- A janela roda com `contextIsolation: true`, `sandbox: true` e `nodeIntegration: false`. A única ponte com o renderer é `preload.js`, que expõe via `contextBridge` apenas `electronAPI.printToPDF()` e `electronAPI.isElectron`.
 
 ## Desenvolvimento
 ```powershell
@@ -34,23 +35,27 @@ Requisitos: venv do repo ativo em `../venv` (o shell usa `venv/Scripts/python.ex
 powershell -ExecutionPolicy Bypass -File desktop\build.ps1
 ```
 
-Fases (idempotentes — o runtime GTK baixa apenas na 1ª vez):
+Fases (idempotentes):
 
-1. **Runtime GTK portátil** — baixa o *GTK-for-Windows-Runtime-Installer* (tschoonj, LGPL, 47 MB) para `build_gtk/runtime` (gitignored);
+1. **Runtime GTK portátil (legado)** — baixa o *GTK-for-Windows-Runtime-Installer* (tschoonj, LGPL, 47 MB) para `build_gtk/runtime` (gitignored). O fluxo de PDF atual **não usa WeasyPrint/GTK**; a etapa permanece no script apenas como herança de builds anteriores;
 2. **Backend — PyInstaller** de `app.py` → `dist_backend/GabariteiAluno/GabariteiAluno.exe` (+ `_internal/`), com `templates/` e `static/` via `--add-data`. O exe mantém o console de propósito: o shell o spawna com `windowsHide` (nenhuma janela aparece) e captura os logs do Flask pelos pipes — com `--noconsole` o `sys.stdout` seria `None` e os `print()` das rotas estourariam. O `.env` não entra no bundle — as credenciais chegam pelas variáveis de ambiente do shell;
-3. **GTK dentro do bundle** — copia `bin/` (80 DLLs) + `etc/fonts` para `dist_backend/GabariteiAluno/gtk/`;
-4. **Instalador — electron-builder NSIS** → `desktop/dist/GabariteiAluno-Setup-x.y.z.exe` (+ `win-unpacked/` portátil). O `extraResources` leva o backend inteiro (com o GTK) para `resources/backend/`, e o `token.local.js` entra no `app.asar` por design — o `main.js` o requer em runtime para injetar o `APP_TOKEN` no env do backend.
+3. **GTK dentro do bundle (legado)** — copia `bin/` (80 DLLs) + `etc/fonts` para `dist_backend/GabariteiAluno/gtk/`, embora o backend atual não carregue esse runtime;
+4. **Instalador — electron-builder NSIS** → `desktop/dist/Gabaritei.exe` (+ `win-unpacked/` portátil). O `extraResources` leva o backend inteiro (com o GTK legado) para `resources/backend/`, e o `token.local.js` entra no `app.asar` por design — o `main.js` o requer em runtime para injetar o `APP_TOKEN` no env do backend.
 
-### GTK portátil — PDF out-of-the-box
+> [!NOTE]
+> O nome final do instalador vem de `nsis.artifactName` no `desktop/package.json` (`Gabaritei.${ext}` → `Gabaritei.exe`). A mensagem impressa ao final do `build.ps1` ainda cita o padrão antigo `GabariteiAluno-Setup-*.exe`.
 
-O PDF de simulados (WeasyPrint) funciona sem o usuário instalar nada: o runtime GTK (Pango/FontConfig/HarfBuzz) viaja **dentro do app**, em `resources/backend/gtk/`.
+### PDF e impressão (client-side)
 
-- O WeasyPrint carrega as DLLs com `LoadLibrary` simples, que **não resolve dependências transitivas** a partir da pasta delas. Solução: `rotas/simulado.py` **pré-carrega** as DLLs via `ctypes` (que usa `LOAD_WITH_ALTERED_SEARCH_PATH` e resolve as deps na própria pasta), na ordem de dependência — com os módulos já no processo, os `dlopen` por nome-base do WeasyPrint os reutilizam;
-- O caminho vem de `GABARITEI_GTK_BIN` (injetado pelo `main.js`: `resources/backend/gtk/bin` em prod, o backend PyInstaller local em dev), com fallback auto-detect no exe empacotado (`sys.frozen`);
-- `FONTCONFIG_FILE` aponta para o `fonts.conf` do bundle (que lista `C:\Windows\Fonts` via `WINDOWSFONTDIR`) — sem isso o fontconfig procuraria um caminho compilado do MSYS2 que não existe na máquina do usuário;
-- Sem runtime presente (dev limpo/CI): tudo é no-op e o PDF degrada com `HTML = None` (mensagem amigável, nenhum crash).
+O PDF de simulados não é renderizado no servidor. A rota `/simulado/<id_simulado>/pdf` monta a prova e entrega a **prévia navegável** (`templates/simulados/pdf_preview.html`, com `_pdf_corpo.html` e `static/css/pdf_style.css`), que inclui `static/js/imprimir_ou_pdf.js`:
 
-Validado de ponta a ponta (out/2026): PDF real gerado com o runtime portátil; o app empacotado sobe com HTTP 200 e o WeasyPrint importa limpo, sem o aviso de GTK ausente.
+- **Desktop (Electron)**: `preload.js` expõe `window.electronAPI.printToPDF()`; o `main.js` gera o arquivo com `webContents.printToPDF()` (A4, margens de 0.5 in, `printBackground: true`), salva em `os.tmpdir()` e abre no leitor padrão com `shell.openPath()`;
+- **Navegador**: `imprimirOuPDF()` chama `window.print()`; o `@media print` esconde a barra de ações e expande a folha A4, e o aluno usa **"Salvar como PDF"**;
+- **Atalhos**: o `main.js` adiciona o sufixo `GabariteiDesktop` ao User-Agent do renderer, intercepta `Ctrl+P` via `before-input-event` e substitui `window.print()` após cada navegação (`did-finish-load`) para disparar o PDF nativo em vez do diálogo de impressão do Chromium.
+
+### Encerramento do backend
+
+`before-quit` e `quit` chamam `matarBackend()`: no Windows, `taskkill /F /T /PID <pid>` encerra a árvore inteira de processos (o backend Python/PyInstaller pode ter filhos); no Linux/macOS, o fallback é `SIGTERM` no grupo. O `spawn` usa `windowsHide: true` para não abrir console.
 
 Futuras melhorias: code signing; `win-unpacked` como release portátil.
 

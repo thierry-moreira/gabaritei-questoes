@@ -17,7 +17,15 @@ $$\text{Streak}_{\text{hoje}} = \begin{cases} \text{Streak}_{\text{ontem}} + 1 &
 ### 2. Página Pública de Questão (Vitrine SEO)
 *   **`visualizar_questao_seo`**: Exibe a página individual da questão (`/questoes/<materia>/q<id>`). Implementa **Redirecionamento Canônico (301)** para corrigir dinamicamente quaisquer slugs corrompidos digitados na URL, garantindo perfeita indexação no Google. É uma vitrine pública: visitantes leem a questão e as alternativas, mas só usuários autenticados respondem — o card substitui o botão de resposta por "Cadastre-se para responder".
 
-### 3. Ecossistema Pedagógico de IA (Gabi IA)
+### 3. Listagem e Filtros de Questões (`/aluno/questoes`)
+
+*   **`resolver_questoes`**: página principal de resolução, também servida por `/questoes/<materia_slug>` e `/questoes/<materia_slug>/<topico_slug>`. A listagem é pública; quando há sessão, o histórico do aluno alimenta os filtros de status.
+*   **Filtro de status**: `f_status = request.args.get('status', 'todas')` — o padrão é **`todas`** (antes era `nao_respondidas`). A sidebar (`templates/components/sidebar_filtros.html`) marca "🔎 Todas as Questões" como selecionada quando o parâmetro está ausente, e "🆕 Apenas Não Respondidas" só fica ativa com `?status=nao_respondidas` explícito.
+*   **Valores aceitos**: `todas` (sem filtro), `nao_respondidas` (`NOT IN` nos ids já respondidos), `respondidas`, `acertos` e `erros`. Sem histórico, as três últimas consultas usam `id_questao = 0` para retornar lista vazia em vez de vazar o banco inteiro.
+*   **Paginação e ordenação**: 10 questões por página, ordenadas por `ordem_aleatoria`, com contagem exata (`CountMethod.exact`) para calcular `tem_proxima`/`tem_anterior`.
+*   **Filtros combinados**: matéria, tópico, subtópico, banca, órgão, ano, nível, cargo e tipo são aplicados via `.in_`/`.eq` sobre a view `view_questoes_completa`, sempre restrita a `status='publicada'`.
+
+### 4. Ecossistema Pedagógico de IA (Gabi IA)
 *   **`ia_explica`**: Gera explicações hiper-pedagógicas em tempo real (`/api/ia_explica`) para usuários autenticados. Integra prompts de sistema altamente restritivos para evitar alucinações de lei e suporta **visão computacional** enviando imagens extraídas do enunciado/alternativas via URLs assinadas e seguras à API do GPT-4o mini.
 *   **`ia_gerar_estudo`**: Endpoint unificado (`/api/ia/gerar_estudo`) que extrai a teoria subjacente à questão para gerar resumos ou flashcards permanentes:
     *   **Resumos**: Gravados no caderno de resumos do aluno (`resumos_estudo`).

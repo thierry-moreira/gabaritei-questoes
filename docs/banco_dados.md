@@ -1,14 +1,14 @@
-# Documentação Técnica: `banco_dados.py` e `banco_dados_aluno.py`
+# Documentação Técnica: banco de dados do app do aluno (`banco_dados_aluno.py`)
 
 ## Descrição Geral
-O projeto mantém **dois clientes Supabase**, um por aplicação — a mesma ponte de comunicação (PostgreSQL via PostgREST), chaves diferentes:
+Este repositório contém apenas o **app do aluno**. O cliente Supabase do aluno é `banco_dados_aluno.py` — PostgreSQL via PostgREST com a **ANON key pública** e o header `x-app-token`. O painel administrativo vive em um repositório privado separado (`gabaritei-admin`) e usa o próprio cliente com **service_role**, fora deste escopo.
 
 | Módulo | Aplicação | Chave (`.env`) | Papel |
 |---|---|---|---|
-| `banco_dados.py` | Painel administrativo (`app_admin.py`) | `SUPABASE_KEY` (**service_role**) | Bypass total de RLS — uso interno, jamais distribuído |
-| `banco_dados_aluno.py` | App do aluno (`app.py`, futuro Electron) | `SUPABASE_ANON_KEY` (**anon**) | Pública por definição — protegida pelas policies RLS |
+| `banco_dados_aluno.py` | App do aluno (`app.py` + Electron) | `SUPABASE_ANON_KEY` (**anon**) + `APP_TOKEN` | Pública por definição — protegida pelas policies RLS; escrita exige token **e** dono |
+| `banco_dados.py` (repo separado) | Painel administrativo (`app_admin.py`) | `SUPABASE_KEY` (**service_role**) | Bypass total de RLS — uso interno, jamais distribuído |
 
-Ambos exportam a instância global com o **mesmo nome `supabase`**, de propósito: rotas e testes (patches `@patch('rotas.X.supabase')`) não mudam ao trocar a origem do import.
+O módulo exporta a instância global `supabase` (mesmo nome usado nos patches `@patch('rotas.X.supabase')` e nos testes).
 
 > [!CAUTION]
 > **A `service_role` (`SUPABASE_KEY`) jamais pode ser embarcada no app do aluno/bundle Electron.** Ela dá bypass total de RLS — quem a extrair do binário teria acesso destrutivo ao banco. O app do aluno usa exclusivamente `banco_dados_aluno.py`.
@@ -22,7 +22,7 @@ Todas as tabelas têm RLS habilitado; as policies liberam ao papel `anon` exatam
 - **Cache IA** (`ia_cache_estudo`, `explicacoes_ia`): **SELECT + INSERT**. A tabela de stats anônimas `historico_respostas_anonimo` é legado da era web — o app do aluno não insere mais, mas os dados históricos são preservados.
 - **Feedbacks** (`feedbacks_questoes`): **SELECT + INSERT com token** (o SELECT é necessário porque o `INSERT ... RETURNING` do PostgREST aplica as SELECT policies às linhas retornadas; os relatos são anônimos, sem `id_usuario`). A **exclusão** continua exclusiva do painel/service.
 - **Denúncias** (`reports_comentarios`, migration `reports_comentarios_denuncias`): **INSERT e DELETE apenas do dono** — `eh_app_aluno() AND eh_dono_do_aluno(id_usuario)`; **sem SELECT para o app do aluno** (a triagem é humana no painel admin, via `service_role`). PK composta `(id_comentario, id_usuario)` impede denúncia duplicada (23505 → o app responde 409 amigável); FK `ON DELETE CASCADE` para `comentarios_questao` — comentário excluído no painel leva as denúncias junto. Substitui a antiga moderação por IA: a blocklist local (`utils.verificar_texto_improprio`) segue como primeira barreira na publicação.
-- **Dados do aluno** (16 tabelas: `usuarios`, `historico_respostas`, `comentarios_questao`, `flashcards`, `flashcard_categorias`, `resumos_estudo`, `cadernos`, `caderno_questoes`, `filtros_salvos`, `simulados`, `simulados_questoes`, `simulados_resultados`, `editais_*`): **SELECT livre** (linter isenta; dados de estudo não são secretos — *exceção*: as 3 tabelas de progresso de edital, ver abaixo) + **INSERT/UPDATE/DELETE exigem o header `x-app-token`** (migration `rls_header_app_aluno`) — a função `public.eh_app_aluno()` compara o header com o token de app, que vive apenas no binário do aluno/`.env` de dev — **e, desde a migration `auth_usuario_e_policies`, também a identidade do dono**.
+- **Dados do aluno** (16 tabelas: `usuarios`, `historico_respostas`, `comentarios_questao`, `flashcards`, `flashcard_categorias`, `resumos_estudo`, `cadernos`, `caderno_questoes`, `filtros_salvos`, `simulados`, `simulados_questoes`, `simulados_resultados`, `editais_*`): **SELECT livre** (decisão de design do modelo local — *exceção*: as 3 tabelas de progresso de edital, ver abaixo) + **INSERT/UPDATE/DELETE exigem o header `x-app-token`** (migration `rls_header_app_aluno`) — a função `public.eh_app_aluno()` compara o header com o token de app, que vive apenas no binário do aluno/`.env` de dev — **e, desde a migration `auth_usuario_e_policies`, também a identidade do dono**.
 
 **Camada de dono — Auth por usuário** (migrations `auth_usuario_e_policies` + `editais_leitura_por_dono` + `policies_para_authenticated`): cada aluno agora autentica no **Supabase Auth** (e-mail + senha) e `usuarios.auth_id` guarda o vínculo com `auth.users`. O SDK encadeia o JWT do usuário em todas as queries; como o JWT carrega `role=authenticated`, todas as policies foram regeneradas para `TO anon, authenticated`. Toda policy de escrita dos dados do aluno passou a exigir `eh_app_aluno() AND eh_dono_do_aluno(id_usuario)` (em `simulados` a coluna é `id_criador`; em `simulados_questoes` o dono é herdado do simulado) — resultado: mesmo que alguém extraia anon key **e** APP_TOKEN do binário, não escreve dados de outro aluno. O INSERT em `usuarios` usa `WITH CHECK (auth.uid() = auth_id)` (auto-cadastro da própria conta). As 3 tabelas de progresso de edital (`editais_materias`, `editais_topicos`, `editais_progresso`) ganharam `id_usuario` (FK CASCADE — eram herança do design single-user, sem dono) e leitura exclusiva do dono (não alimentam rankings). `feedbacks_questoes`, `historico_respostas_anonimo`, `ia_cache_estudo` e `explicacoes_ia` permanecem token-only (sem dono, anônimas por design).
 
@@ -31,13 +31,13 @@ Todas as tabelas têm RLS habilitado; as policies liberam ao papel `anon` exatam
 - **Storage**: o bucket `imagens_questoes` é **público com public URLs diretas** no app (a policy SELECT de `storage.objects` foi removida — o signed URL de 60s não protegia nada num bucket público; migration `rls_header_app_aluno`). O **upload é exclusivo do painel** (`TO service_role`), com limite de 5MB e apenas mimes de imagem (png/jpeg/webp/gif).
 - As views (`view_questoes_completa`, `view_taxa_acerto_questoes`) rodam com `security_invoker=on` — respeitam o RLS das tabelas base.
 
-**Escrita com token de app** (migration `rls_header_app_aluno`): todas as policies de escrita do aluno validam o header HTTP `x-app-token` contra a função `public.eh_app_aluno()` — o token (gerado com `secrets.token_hex(32)`) vive apenas no binário do Electron/`.env` de dev/`desktop/main.js`, no mesmo nível de segredo que a anon key. Resultado: extrair **só** a anon key pública já não permite mais escrever NADA (INSERT negado, UPDATE/DELETE 0 linhas) — vandalismo cross-user exige reverse-engineering do binário. Leitura das tabelas de dados continua livre (design; login é local). Rotação: regenerar o token e atualizar (migration da função + `.env` + `desktop/main.js`).
+**Escrita com token de app** (migration `rls_header_app_aluno`): todas as policies de escrita do aluno validam o header HTTP `x-app-token` contra a função `public.eh_app_aluno()` — o token (gerado com `secrets.token_hex(32)`) vive apenas no binário do Electron/`.env` de dev/`desktop/token.local.js`, no mesmo nível de segredo que a anon key. Resultado: extrair **só** a anon key pública já não permite escrever nada (INSERT negado, UPDATE/DELETE 0 linhas) — e, desde `auth_usuario_e_policies`, nem o token sozinho basta: a escrita também exige o JWT do dono. Leitura das tabelas de dados de estudo continua liberada pelo desenho atual (exceto as 3 tabelas de progresso de edital). Rotação: regenerar o token e atualizar a migration da função, o `.env` de dev e `desktop/token.local.js`.
 
-Limites conhecidos (sem servidor, irreversíveis): o conteúdo é raspável por quem extrair a anon key; quem extrair **anon key + token do binário** ainda pode escrever como outro `id_usuario` (isolamento per-usuário seguiria exigindo Supabase Auth silencioso — roadmap).
+Limites conhecidos (sem servidor, irreversíveis): o conteúdo é raspável por quem extrair a anon key; a leitura dos dados de estudo é liberada pelo desenho atual (privacidade entre alunos não é garantida em `SELECT`, com exceção das 3 tabelas de edital); quem extrair **anon key + APP_TOKEN + um JWT válido** ainda age como aquele aluno, mas não escreve em nome de outro `id_usuario`. A `service_role` continua fora do app.
 
 **Hardening de grants** (migration `security_hardening_p1`): além do RLS, `anon` perdeu `TRUNCATE` em todas as tabelas (RLS não se aplica a TRUNCATE), perdeu toda escrita nas 12 tabelas de conteúdo (só SELECT) e perdeu tudo em `admins`/`logs_admin` — defesa em profundidade contra qualquer regressão de policy.
 
-**GraphQL desabilitado + advisor limpo** (migration `disable_graphql_move_trgm`): a extensão `pg_graphql` foi removida com CASCADE (o app nunca usou a API GraphQL; reversível com `create extension pg_graphql;`) e o `pg_trgm` foi movido do schema `public` para o `extensions` (o índice trinário de `textos_base` sobreviveu — índices referenciam a opclass por OID). Os achados restantes do Security Advisor são **design intencional**: `rls_enabled_no_policy` em `admins`/`logs_admin` (deny-all deliberado), `rls_policy_always_true` nas policies de escrita do aluno (consequência da ausência de identidade server-side — ver limites conhecidos) e o listing público do bucket `imagens_questoes` (a policy SELECT é exigida pelos `create_signed_url` do app). Chaves públicas: apenas a `anon` legacy permanece habilitada.
+**GraphQL desabilitado + advisor limpo** (migration `disable_graphql_move_trgm`): a extensão `pg_graphql` foi removida com CASCADE (o app nunca usou a API GraphQL; reversível com `create extension pg_graphql;`) e o `pg_trgm` foi movido do schema `public` para o `extensions` (o índice trinário de `textos_base` sobreviveu — índices referenciam a opclass por OID). Achados restantes do Security Advisor que são **design intencional**: `rls_enabled_no_policy` em `admins`/`logs_admin` (deny-all deliberado) e o listing público do bucket `imagens_questoes` (as public URLs são usadas pelo app). As policies de escrita atuais exigem `eh_app_aluno() AND eh_dono_do_aluno(...)`; qualquer achado de policy permissiva deve ser reavaliado no dashboard. Chaves públicas: apenas a `anon` legacy permanece habilitada.
 
 ---
 
@@ -50,45 +50,42 @@ Para lidar de forma robusta com instabilidades de rede — incluindo oscilaçõe
 ---
 
 ## Variáveis de Ambiente e Trava Fail-Fast
-O projeto depende diretamente de três chaves armazenadas de maneira segura no arquivo de configuração `.env` (ou variáveis de sistema na plataforma de hospedagem):
+O `banco_dados_aluno.py` depende de três variáveis no `.env` (ou no ambiente do processo spawnado pelo Electron):
 
-1.  **`SUPABASE_URL`**: O endpoint HTTP REST exclusivo do seu projeto Supabase.
-2.  **`SUPABASE_KEY`**: Chave **service_role** — exclusiva do painel administrativo (`banco_dados.py`, bypass de RLS).
-3.  **`SUPABASE_ANON_KEY`**: Chave **anon** — usada pelo app do aluno (`banco_dados_aluno.py`, protegida por RLS).
+1.  **`SUPABASE_URL`**: endpoint HTTP REST do projeto Supabase.
+2.  **`SUPABASE_ANON_KEY`**: chave **anon** — pública por design, protegida pelas policies RLS.
+3.  **`APP_TOKEN`**: segredo de app (gerado com `secrets.token_hex(32)`), enviado em **todas as requisições ao PostgREST** no header `x-app-token`; exigido pelas policies de escrita.
+
+O app como um todo também usa **`FLASK_SECRET_KEY`** (sessão), **`GABARITEI_LOCAL_DIR`** (SQLite + DPAPI da chave BYOK; no Electron aponta para o `userData`) e, opcionalmente, **`TRUSTED_PROXIES`** (ProxyFix).
 
 > [!CAUTION]
 > **Mecanismo de Segurança Fail-Fast (Parada Imediata)**:
-> Se as chaves `SUPABASE_URL` ou `SUPABASE_KEY` não forem encontradas durante a importação do módulo, a aplicação lançará imediatamente uma exceção `ValueError` de erro crítico, interrompendo o ciclo de inicialização do servidor. Isso evita que a aplicação entre em execução em estado inconsistente ou que falhe silenciosamente em tempo de execução para os usuários finais.
+> Se `SUPABASE_URL` ou `SUPABASE_ANON_KEY` faltarem na importação, o módulo lança `ValueError` e interrompe a inicialização. O mesmo acontece se `APP_TOKEN` não estiver configurado — sem ele, nenhuma escrita do aluno passa no RLS. Isso evita subir a aplicação em estado inconsistente.
 
 ---
 
 ## Uso no Código
-Ambos os módulos resultam em uma instância global chamada `supabase`:
+O módulo exporta a instância global `supabase` e os helpers de Auth:
 
 ```python
-# Rotas do painel admin (service_role — bypass de RLS)
-from banco_dados import supabase
-
-# Rotas do app do aluno (anon — protegida por RLS)
+# Rotas do app do aluno (anon + x-app-token — protegida por RLS)
 from banco_dados_aluno import supabase
+
+# Auth (Supabase Auth): login, cadastro, refresh e reset de senha
+from banco_dados_aluno import (
+    entrar_com_senha, criar_conta_auth, restaurar_sessao,
+    sessao_atual, sair_auth, pedir_reset_senha,
+)
 
 # Exemplo de busca de dados
 resultado = supabase.table("usuarios").select("*").execute()
 ```
 
----
-
-## Backup local soberano (`backup_banco.py`)
-O plano **free** do Supabase retém backups por ~7 dias apenas — para vandalismo ou erro grave não haver recuperação além dessa janela, o projeto mantém uma cópia independente:
-
-- **Uso**: `python backup_banco.py` → baixa as 34 tabelas (service_role, paginação de 1000 com verificação de contagem) + os arquivos do bucket `imagens_questoes` para `backup_dados/<timestamp>/` (gitignored).
-- **Integridade**: cada tabela é comparada com o `count` do banco — divergência aborta o script com erro (exit ≠ 0, detectável pelo Task Scheduler).
-- **Agendamento**: a task **"Gabaritei Backup"** já está criada no Windows (diária às 09:00, com `StartWhenAvailable` — se o PC estiver desligado no horário, roda assim que ligar). Teste real validado: disparo manual retornou `LastTaskResult=0`. Para recriar em outra máquina: `Register-ScheduledTask -TaskName "Gabaritei Backup" -Action (New-ScheduledTaskAction -Execute "<venv>\Scripts\python.exe" -Argument '"backup_banco.py"' -WorkingDirectory "<projeto>") -Trigger (New-ScheduledTaskTrigger -Daily -At 09:00)`.
-- ⚠️ A pasta contém dados sensíveis (hash de senha/TOTP dos admins, e-mails) — manter apenas local.
+O cliente admin (`banco_dados.py`, service_role) **não existe neste repositório** — ele pertence ao repo privado `gabaritei-admin`.
 
 ---
 
 ## Práticas de Resiliência de Acesso a Dados
 Embora a instância `supabase` esteja globalmente disponível, é considerada uma excelente prática **não invocá-la diretamente para escritas ou consultas cruciais em rotas**. 
 
-Em vez disso, as operações devem ser empacotadas utilizando a função utilitária `safe_execute` localizada em `utils.py`. A função `safe_execute` adiciona uma camada inteligente de retentativa automática (com recuo exponencial e tratativas de exceções gerais) para tolerar falhas pontuais e momentâneas de rede ou concorrência de requisições no Supabase.
+Em vez disso, as operações devem ser empacotadas utilizando a função utilitária `safe_execute` localizada em `utils.py`. A função `safe_execute` adiciona uma camada de retentativa automática (até 3 tentativas, pausa fixa de `0.5` s e sem retry para erros determinísticos listados em `ERROS_SEM_RETRY`) para tolerar falhas pontuais e momentâneas de rede ou concorrência de requisições no Supabase.

@@ -7,12 +7,12 @@ O módulo de Resumos gerencia o acesso e a organização dos resumos teóricos g
 
 ## Fluxo de Processamento de Resumos
 
-O ciclo de vida de um resumo teórico abrange a geração dinâmica (integrada ao módulo de questões) até a catalogação no painel de revisões do aluno premium:
+O ciclo de vida de um resumo teórico abrange a geração dinâmica (integrada ao módulo de questões) até a catalogação no painel de revisões do aluno:
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Aluno as Aluno (Premium)
+    actor Aluno
     participant Q as Questão (rotas/questao.py)
     participant IA as Gabi IA (OpenAI)
     participant DB as Supabase (Banco de Dados)
@@ -92,6 +92,28 @@ sequenceDiagram
     query = supabase.table('resumos_estudo').delete().eq('id_resumo', id_resumo).eq('id_usuario', str(current_user.id))
     ```
     Se o resumo pertencer a outro usuário, a query simplesmente não afetará nenhuma linha (`row_count = 0`), garantindo privacidade absoluta dos dados.
+
+---
+
+### 4. Exclusão do Caderno por Matéria (`/api/resumos/excluir-materia/<int:id_materia>`)
+
+*   **Método**: `POST` (API JSON)
+*   **Segurança e Decorators**:
+    ```python
+    @login_required
+    @aluno_required
+    ```
+*   **Descrição**: Apaga de uma vez todos os resumos do aluno vinculados à matéria informada — o botão "excluir caderno" do painel de resumos.
+*   **Filtro duplo (IDOR)**: a deleção exige simultaneamente `id_materia` e `id_usuario`, então uma matéria com resumos de vários alunos perde apenas as linhas do dono autenticado:
+    ```python
+    query = (
+        supabase.table('resumos_estudo')
+        .delete()
+        .eq('id_materia', id_materia)
+        .eq('id_usuario', str(current_user.id))
+    )
+    ```
+*   **Resposta**: `{"success": true}` quando o `safe_execute` retorna resultado; `{"success": false, "error": "Erro ao excluir caderno"}` em falha. A rota não valida previamente se a matéria existe — excluir uma matéria sem resumos é uma operação idempotente.
 
 ---
 

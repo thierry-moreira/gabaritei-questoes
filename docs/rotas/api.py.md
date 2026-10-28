@@ -12,7 +12,7 @@ Este é o endpoint mais crítico do módulo, projetado especificamente para alim
 *   **Rota**: `/api/get_assuntos_cascata`
 *   **Método**: `POST`
 *   **Segurança**:
-    *   Exige autenticação ativa (`@aluno_required`).
+    *   Leitura pública: a taxonomia é conteúdo público e as tabelas `topicos` e `subtopicos` liberam `SELECT` para o papel `anon` via RLS. Não depende de uma sessão Flask válida.
     *   Isento de rate limiting (`@limiter.exempt`) por ser um fluxo operacional intensivo do painel do aluno.
 *   **Estrutura do JSON Input**:
     ```json
@@ -91,7 +91,7 @@ Este é o endpoint mais crítico do módulo, projetado especificamente para alim
 *   **Validação Rígida de Domínio**:
     O valor do parâmetro `tema` é verificado contra uma lista branca de valores aceitos: `['light', 'dark']`. Caso o cliente envie dados diferentes, o servidor rejeita imediatamente retornando `400 Bad Request` com a mensagem `"Tema inválido"`.
 *   **Persistência**: 
-    Atualiza o campo `tema` na tabela `usuarios` do Supabase para o ID correspondente ao usuário ativo na sessão (`current_user.id`), mantendo a consistência do visual premium entre navegadores e dispositivos diferentes.
+    Atualiza o campo `tema` na tabela `usuarios` do Supabase para o ID correspondente ao usuário ativo na sessão (`current_user.id`), mantendo a consistência do tema entre navegadores e dispositivos diferentes.
 
 ---
 

@@ -168,6 +168,17 @@ Sem essa variável o gradiente ficava inválido no tema escuro.
 *   Títulos dos estados vazio/final e da tela de gerenciamento usam `var(--texto-principal)`, funcionando nos temas claro e escuro.
 *   O botão **Médio** não força `text-white`; o texto escuro padrão do `btn-warning` garante contraste no amarelo.
 
+### Dashboard de categorias
+
+O cabeçalho do deck (`templates/flashcards/index.html`) usa `align-items-md-center` e o botão **Nova Categoria** passou a usar a classe dedicada `.flashcards-create-category-btn` (commit `b99a3c8`), definida em `static/css/flashcards.css`:
+
+*   `min-height: 38px`, `padding: 0.5rem 1rem`, borda de `1px` e raio de `12px`, fundo `var(--primary-color)` e texto branco;
+*   `:hover` e `:active` trocam para `var(--primary-hover)` com `translateY(-1px)` / `scale(0.98)`;
+*   `:focus-visible` desenha um outline de `2px` com `outline-offset: 2px`;
+*   em telas `< 768px` o botão ocupa `width: 100%`, acompanhando o empilhamento do cabeçalho.
+
+Os cards de estatística (`.stat-card`) e o restante do dashboard continuam usando as variáveis de tema (`--card-bg`, `--border-color`, `--texto-principal`), então o layout acompanha claro/escuro sem estilos duplicados.
+
 ---
 
 ## Otimizações de Banco de Dados e Segurança
@@ -217,7 +228,7 @@ A cobertura específica está em `tests/test_flashcards.py` e inclui:
 *   criação e exclusão de cards e categorias.
 
 ```powershell
-venv\Scripts\python.exe -m pytest tests/test_flashcards.py -q
+venv\Scripts\python.exe -m unittest tests.test_flashcards -v
 ```
 
-No estado atual, a suíte específica passa com **19 testes**.
+No estado atual, a suíte específica passa com **19 testes**. O comando canônico do projeto é `python -m unittest discover -s tests` (o `pytest` falha na coleta porque importa `testar_chave` de `provedores_ia.py` como se fosse um teste).

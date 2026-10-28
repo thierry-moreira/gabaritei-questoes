@@ -53,8 +53,8 @@ Electron (janela do app)  ──spawna──▶  Flask (127.0.0.1:5000)  ──H
 <a id="modelo-de-seguranca"></a>
 ## 🔐 Modelo de segurança
 
-- **Conteúdo é aberto, dados do aluno são do dono**: questões, matérias e taxonomia são legíveis por qualquer visitante; já o histórico, flashcards, resumos, simulados e editais do aluno só são lidos e escritos pelo próprio dono (RLS por `auth.uid()` vinculado a `usuarios.auth_id`).
-- **Escrita exige dois fatores**: o header `x-app-token` (segredo de app, migration `rls_header_app_aluno`) **e** a identidade do dono no JWT — mesmo que alguém extraia a ANON key **e** o token do binário, não consegue tocar dados de outro aluno.
+- **Conteúdo é aberto; escrita é do dono**: questões, matérias e taxonomia são legíveis por qualquer visitante. Os dados de estudo têm `SELECT` liberado pelo desenho atual (exceto as 3 tabelas de progresso de edital, exclusivas do dono), mas `INSERT`/`UPDATE`/`DELETE` exigem o dono (`auth.uid()` vinculado a `usuarios.auth_id`).
+- **Escrita em dados do aluno exige dois fatores**: o header `x-app-token` (segredo de app, migration `rls_header_app_aluno`) **e** a identidade do dono no JWT — mesmo que alguém extraia a ANON key **e** o token do binário, não consegue tocar dados de outro aluno. Feedbacks, caches de IA e estatísticas anônimas aceitam INSERT só com o token, por design.
 - **A chave `service_role` nunca** faz parte deste app: a gestão de conteúdo roda num painel separado, com 2FA próprio.
 - **Perfis legados são adotados no 1º login**: alunos do sistema antigo (passwordless) têm o perfil re-vinculado à conta Auth pelo próprio RLS, sem duplicação.
 - Detalhes completos: [docs/banco_dados.md](docs/banco_dados.md)
@@ -81,14 +81,14 @@ npm install
 npm start          # spawna o Flask do venv e abre a janela
 ```
 
-Gerar o executável do Windows (backend PyInstaller + runtime GTK + instalador NSIS):
+Gerar o executável do Windows (backend PyInstaller + instalador NSIS):
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File desktop\build.ps1
-# → desktop\dist\GabariteiAluno-Setup-x.y.z.exe (+ win-unpacked portátil)
+# → desktop\dist\Gabaritei.exe (+ win-unpacked/ portátil)
 ```
 
-> O PDF de simulados funciona **out-of-the-box**: o instalador embarca o runtime GTK (Pango/FontConfig, LGPL) junto ao backend — nada é instalado no sistema do usuário.
+> O PDF de simulados é gerado no **cliente**: o app desktop usa `electronAPI.printToPDF()` (Electron `printToPDF`, A4) e o navegador cai no `window.print()` com "Salvar como PDF". Não há WeasyPrint nem dependência de GTK no fluxo de PDF. O `build.ps1` ainda baixa e copia um runtime GTK legado — etapa herdada da antiga geração server-side, sem uso pelo app em execução.
 
 > A ANON key é **pública por design** (vai embarcada no binário) — a segurança do produto vive nas policies RLS, não no segredo da chave. O `service_role` nunca é usado aqui. Detalhes completos do build: [docs/desktop.md](docs/desktop.md).
 
@@ -99,7 +99,7 @@ powershell -ExecutionPolicy Bypass -File desktop\build.ps1
 .\rodar_testes.bat          # ou: python -m unittest discover -s tests
 ```
 
-Suíte 100% isolada (sem rede, sem banco real) cobrindo login e cadastro, re-link de perfis legados, questões e streaks, simulados, flashcards (incluindo rota global, estado vazio e validações da revisão), editais, IA, cadernos, resumos e honeypots de segurança. Especificação completa em [tests/README.md](tests/README.md).
+São **139 testes** que não exigem um banco real para passar, cobrindo login e cadastro, re-link de perfis legados, questões e streaks, filtro de status, simulados, flashcards (incluindo rota global, estado vazio e validações da revisão), editais, IA/BYOK, cadernos, resumos, taxonomia pública e honeypots de segurança. Especificação completa em [tests/README.md](tests/README.md).
 
 <a id="documentacao"></a>
 ## 📚 Documentação
@@ -119,7 +119,7 @@ Suíte 100% isolada (sem rede, sem banco real) cobrindo login e cadastro, re-lin
 <a id="contribuicao"></a>
 ## 🤝 Contribuição
 
-Issues e pull requests são bem-vindos! Antes de mexer no modelo de dados, leia [docs/banco_dados.md](docs/banco_dados.md) (as policies RLS são o coração da segurança) e rode a suíte de testes — ela não exige nenhum serviço externo.
+Issues e pull requests são bem-vindos! Antes de mexer no modelo de dados, leia [docs/banco_dados.md](docs/banco_dados.md) (as policies RLS são o coração da segurança) e rode a suíte de testes — ela não exige banco real nem chaves de API.
 
 <a id="licenca"></a>
 ## 📄 Licença

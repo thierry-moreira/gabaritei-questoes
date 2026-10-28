@@ -37,7 +37,7 @@ Funcionalidades confirmadas (11 blueprints em `rotas/`):
 - **questoes** — resolver, visualizar (lista e individual), gabaritos comentados, discussões
 - **caderno** — cadernos de questões agrupadas sob medida pelo estudante
 - **filtro** — filtros complexos de disciplinas, bancas e anos
-- **simulado** — criação, resposta, pontuação, ranking, resultado e PDF
+- **simulado** — criação, resposta, pontuação, ranking, resultado e PDF (prévia navegável; `printToPDF` no desktop, `window.print` no navegador)
 - **edital** — exibição e análise estruturada de editais de concursos
 - **flashcards** — SRS: repetição espaçada, revisões do dia, sessão de estudo com estados vazio/final e avaliação 0–3
 - **resumos** — cadernos de resumos por matéria, com geração automática via IA BYOK (chave própria do aluno: OpenAI, Google Gemini ou Anthropic — ver `provedores_ia.py`) e exclusão individual ou total
@@ -47,9 +47,9 @@ Funcionalidades confirmadas (11 blueprints em `rotas/`):
 Restrições técnicas confirmadas:
 
 - Flask (Python) + templates Jinja2 + Bootstrap 5.3 + Bootstrap Icons + fonte Inter; CSS customizado por área em `static/css/`; JS por área em `static/js/`
-- Shell Electron (`desktop/main.js`) com zero código de produto; build PyInstaller/NSIS planejado em fases
+- Shell Electron (`desktop/main.js`) com zero código de produto; build PyInstaller + instalador NSIS já implementado em `desktop/build.ps1` (o script ainda executa a etapa legada de GTK, sem uso pelo PDF client-side)
 - CSP rigorosa via Talisman; gzip automático; rate limiting global; logging estruturado
-- Licença MIT (`LICENSE`) — nota: `package.json` ainda declara ISC (divergência menor a corrigir)
+- Licença MIT (`LICENSE`) — nota: o `package.json` da raiz ainda declara ISC (divergência menor a corrigir); o `desktop/package.json` já declara MIT
 
 **Fato confirmado de produto:** o modelo é **software livre total** — todo aluno autenticado tem acesso completo, sem paywall, trial ou planos. O legado freemium foi removido do código e da copy: a landing de apresentação foi aposentada (a raiz `/` abre direto o login), as páginas públicas de questões funcionam como vitrine (visitante lê, mas só aluno cadastrado responde — o card mostra "Cadastre-se para responder"), e a flag `is_premium` não existe mais no código. Trabalhos futuros não podem reintroduzir planos, preços, trials ou muros que o produto não tem.
 

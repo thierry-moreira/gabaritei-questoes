@@ -1,7 +1,7 @@
 # Especificação da Suíte de Testes Unitários e Integração
 ## Gabaritei Questões
 
-Este documento serve como guia técnico e especificação para a manutenção, execução e expansão futura da suíte de testes do projeto **Gabaritei Questões**. Os testes foram arquitetados para serem extremamente rápidos, leves e 100% isolados de serviços externos.
+Este documento serve como guia técnico e especificação para a manutenção, execução e expansão futura da suíte de testes do projeto **Gabaritei Questões**. Os testes foram arquitetados para serem extremamente rápidos, leves e isolados de serviços externos.
 
 ---
 
@@ -14,6 +14,9 @@ Para garantir a confiabilidade e a velocidade de execução da suíte, todos os 
 3. **Nativo e Leve:** A suíte de testes utiliza estritamente a biblioteca nativa `unittest` do Python. Isso elimina a necessidade de instalar pacotes adicionais e garante compatibilidade total com o ambiente existente.
 4. **Sem Alterações na Infraestrutura:** Não é permitido modificar os arquivos `.env` ou `requirements.txt` apenas para fins de testes.
 
+> [!NOTE]
+> **Exceção conhecida:** em testes de rotas autenticadas que não mockam `calcular_ofensiva_usuario`, o `context_processor` pode disparar GETs anônimos ao Supabase (flashcards e histórico) com o IP de teste. Essas consultas não fornecem dados ao teste e seus erros são engolidos; ainda assim, aparecem nos logs do `httpx`. Sem rede, elas caem nos retries e a suíte fica mais lenta. Para isolamento total, mocke também `utils.calcular_ofensiva_usuario` e a consulta de flashcards do processor.
+
 ---
 
 ## 📂 Estrutura de Arquivos e Cobertura
@@ -25,7 +28,7 @@ caminho_do_projeto\tests\
 ├── __init__.py          # Inicializa o diretório como um módulo Python
 ├── test_modelos.py      # Testes de validação dos modelos e estruturas de dados
 ├── test_utils.py        # Testes de funções utilitárias e regras de negócio isoladas
-├── test_rotas.py        # Testes de honeypots de segurança administrativa
+├── test_rotas.py        # Honeypots administrativos e prévia navegável do PDF
 ├── test_auth.py         # Testes de autenticação, login, cadastro e sessões
 ├── test_aluno_questoes.py # Testes do dashboard, resolução e streaks (Fase 4)
 ├── test_ia_chat.py        # Testes de IA, explicações, resumos e flashcards (Fase 6)
@@ -33,8 +36,11 @@ caminho_do_projeto\tests\
 ├── test_api.py            # Testes de cascata de matérias, cargos e preferências de tema
 ├── test_flashcards.py     # Testes do sistema de flashcards e algoritmo SM-2 customizado
 ├── test_caderno.py        # Testes de coleções de questões e criação de cadernos
-└── test_resumos.py        # Testes do painel de resumos por matéria e exclusão
+├── test_resumos.py        # Testes do painel de resumos por matéria e exclusão
+└── test_provedores_ia.py  # Camada BYOK: provedores, banco local, pings e fallback de parâmetros
 ```
+
+No estado atual a suíte soma **139 testes**, executados com `python -m unittest discover -s tests`.
 
 ### 1. Modelos (`test_modelos.py`)
 Valida o comportamento das classes de dados (representando tabelas e registros do Supabase), garantindo consistência na modelagem e lógica interna.
@@ -46,11 +52,12 @@ Garante o correto funcionamento de funções de suporte críticas e segurança d
 - **Funções testadas:**
   - `slugify`: Geração de URLs amigáveis.
 
-### 3. Honeypots de Segurança (`test_rotas.py`)
-Valida as proteções preventivas contra acessos automatizados indevidos.
+### 3. Honeypots e Prévia de PDF (`test_rotas.py`)
+Valida as proteções preventivas contra acessos automatizados indevidos e a entrega da prévia navegável do simulado.
 - **Rotas testadas:**
   - `/admin`, `/admin/` e `/admin/login` (honeypot de segurança que bloqueia acessos maliciosos com 404).
   - `/` (raiz redireciona à tela de login — ex-landing de apresentação aposentada).
+  - `/simulado/<id>/pdf` (retorna HTML navegável com o botão `imprimirOuPDF`, inclusive com UA do app desktop; não existe mais PDF inline via WeasyPrint).
 
 ### 4. Autenticação e Sessões (`test_auth.py`)
 Valida o fluxo completo de controle de acesso do aluno à plataforma.
@@ -71,7 +78,8 @@ Valida o fluxo completo de controle de acesso do aluno à plataforma.
 Valida os dashboards de estatísticas do aluno e a lógica de resolução de questões com streaks.
 - **Fluxos testados:**
   - `/aluno/painel` (ofensiva/streak em Brasília, dados agregados por data, taxas de acerto).
-  - `/aluno/dashboard_detalhado` (esquecimento, melhor matéria, redirecionamento se histórico estiver vazio).
+  - `/aluno/dashboard_detalhado` (esquecimento, melhor matéria — exige ≥5 questões respondidas e ≥60% de acerto —, redirecionamento se histórico estiver vazio).
+  - `/aluno/questoes` (filtro de status: ausência do parâmetro equivale a `todas`; `status=nao_respondidas` explícito continua selecionando a opção correta na sidebar).
   - `/aluno/responder` e `/api/responder` (envio de respostas e incremento de streak no banco).
   - `/api/comentarios` (blocklist local de moderação antes da inserção — sem IA).
   - `/api/comentarios/<id>/reportar` (denúncia para triagem no painel do admin: motivo obrigatório, uuid validado, 1 denúncia por comentário/aluno → 409 duplicado, 404 inexistente).
@@ -93,7 +101,7 @@ Valida as rotas de atualização de informações cadastrais do aluno, redefini�
 - **Fluxos testados:**
   - `/aluno/conta/` (GET com o card "Inteligência Artificial" e status mascarado da chave; POST para atualização de username e e-mail).
   - `/api/ia/config` (BYOK: provedor validado contra as listas oficiais, chave testada por ping gratuito, salvamento local — resposta só com a máscara; rejeita provedor não suportado e chave curta).
-  - `/api/ia/config/remover` (apaga a chave local — LGPD).
+  - `/api/ia/config/remover` (apaga a chave local — LGPD; resposta inclui `removido`).
   - `/aluno/conta/resetar-dados` (validação de frase secreta "RESETAR MEUS DADOS" e exclusão em massa das tabelas do Supabase de progresso do aluno).
   - `/aluno/conta/excluir` (validação de frase secreta "EXCLUIR MINHA CONTA", exclusão física de registros e logout da sessão).
 - **Mocks importantes:**
@@ -103,7 +111,7 @@ Valida as rotas de atualização de informações cadastrais do aluno, redefini�
 Valida os endpoints secundários que fornecem dados estruturados JSON e salvam preferências do usuário em tempo de execução.
 - **Fluxos testados:**
   - `/api/cargos/<id_orgao>` (listagem ordenada de cargos com base no órgão público selecionado).
-  - `/api/get_assuntos_cascata` (geração de estrutura hierárquica em árvore correlacionando matérias a tópicos e subtópicos associados).
+  - `/api/get_assuntos_cascata` (geração de estrutura hierárquica em árvore correlacionando matérias a tópicos e subtópicos associados; leitura pública — funciona sem sessão Flask válida).
   - `/api/topicos/<id_materia>` e `/api/subtopicos/<id_topico>` (listagem individual de taxonomia).
   - `/api/usuario/preferencias` (validação e salvamento de tema visual dark/light no banco).
 - **Mocks importantes:**
@@ -144,6 +152,7 @@ Valida o agrupamento de resumos teóricos por matérias e a exclusão de resumos
   - `/aluno/resumos` (dashboard agrupando quantidades de resumos por disciplina).
   - `/aluno/resumos/materia/<id>` (detalhamento de resumos com data de criação com tratamento de erro 404).
   - `/api/resumos/excluir/<id>` (remoção física de arquivos e registros).
+  - `/api/resumos/excluir-materia/<id>` (remoção de todos os resumos do aluno na matéria).
 
 ### 12. Camada BYOK de IA (`test_provedores_ia.py`)
 Valida o núcleo do BYOK sem nenhuma rede real (pings e SDKs mockados).
@@ -243,6 +252,9 @@ Para rodar apenas um arquivo de teste específico:
 ```bash
 python -m unittest tests/test_auth.py
 ```
+
+> [!NOTE]
+> O comando canônico é `unittest`. `pytest tests -q` falha na **coleta** de `tests/test_provedores_ia.py`: a função `testar_chave` (importada de `provedores_ia.py`) começa com `test` e o pytest tenta tratá-la como caso de teste, pedindo fixtures para os parâmetros `provedor`, `chave` e `modelo`. Isso não indica falha da suíte — com `unittest` os 139 testes passam.
 
 ---
 

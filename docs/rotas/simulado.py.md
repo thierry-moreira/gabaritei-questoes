@@ -123,7 +123,7 @@ graph TD
 
 *   **Desktop (Electron)**: o Chromium do Electron não renderiza `application/pdf` inline; `imprimir_ou_pdf.js` detecta o `electronAPI` e gera o PDF nativo (A4), aberto no leitor padrão do sistema.
 *   **Navegador**: `window.print()` abre o preview de impressão nativo — o `@media print` da página esconde a barra de ações e expande a folha A4; o aluno usa **"Salvar como PDF"**.
-*   O corpo da prova (`_pdf_corpo.html`) e a folha de estilos (`pdf_style.css`) são compartilhados: a folha renderizada na tela é a mesma que sai na impressão. (O antigo pipeline WeasyPrint — template `pdf.html`, URIs `file:///` e runtime GTK portátil — foi removido com a unificação.)
+*   O corpo da prova (`_pdf_corpo.html`) e a folha de estilos (`pdf_style.css`) são compartilhados: a folha renderizada na tela é a mesma que sai na impressão. (O antigo pipeline WeasyPrint — template `pdf.html` e URIs `file:///` — foi removido do fluxo; o `build.ps1` ainda baixa um runtime GTK legado, mas o backend não o usa.)
 
 ### Algoritmo Específico de Fallback do Gabarito
 Para garantir que o caderno impresso traga as respostas corretas de cada questão de forma impecável no final do documento (gabarito automático), foi projetada uma varredura hierárquica em dois níveis:
