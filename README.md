@@ -15,7 +15,7 @@ Plataforma de estudos para concursos com inteligência artificial — **questõe
 
 [Recursos](#recursos) · [Arquitetura](#arquitetura) · [Segurança](#modelo-de-seguranca) · [Instalação](#instalacao) · [Testes](#testes) · [Documentação](#documentacao)
 
-<img src="static/imagens/index/painel_aluno_fiel.webp" alt="Painel do aluno — estatísticas, taxa de acerto e ofensiva" width="840" />
+<img src="static/index.png" alt="Painel do aluno — questões resolvidas, taxa de acerto, ofensiva ativa e frequência de estudos" width="960" />
 </div>
 
 ---
@@ -25,13 +25,14 @@ Plataforma de estudos para concursos com inteligência artificial — **questõe
 
 | | |
 |---|---|
-| 📝 **Questões comentadas** | Explicação pedagógica gerada por IA para cada questão, além de comentários da comunidade com moderação automática |
+| 📝 **Questões comentadas** | Explicação pedagógica gerada por IA para cada questão, além de comentários da comunidade com blocklist local e denúncia para triagem humana |
 | 📋 **Simulados** | Monte simulados personalizados e acompanhe o desempenho por matéria |
+| 🖨️ **PDF de simulados** | Prévia navegável em A4: no desktop o Electron gera o PDF nativo; no navegador, o aluno usa "Salvar como PDF" via `window.print()` |
 | 🧠 **Flashcards** | Revisão com repetição espaçada (SM-2 customizado), sessão com flip, avaliação 0–3 e estados vazio/final |
 | 🤖 **IA de estudos (BYOK)** | Explicações, resumos e flashcards gerados pela **sua própria chave de API** (OpenAI, Google Gemini ou Anthropic), configurada em Configurações da conta e guardada só no seu dispositivo (cifrada com DPAPI) — explicações geradas ficam salvas no banco (cache global para todos os alunos) |
 | 📑 **Editais** | Trilha de estudo por edital, com progresso por tópico e ciclo de revisão |
 | 📚 **Cadernos e filtros** | Coleções de questões salvas e filtros de busca reutilizáveis |
-| 📊 **Painel do aluno** | Estatísticas, curva de esquecimento, meta diária e ofensiva (streak calculado no horário de Brasília) |
+| 📊 **Painel do aluno** | Estatísticas, raio-X por matéria e tópico, curva de esquecimento, calendário de metas e ofensiva (streak no horário de Brasília) |
 | ☁️ **Conta na nuvem** | Login com e-mail e senha (Supabase Auth) — o progresso acompanha o aluno em qualquer máquina, com sessão lembrada entre execuções |
 | 🌗 **Tema claro/escuro** | Preferência salva na conta |
 
@@ -46,8 +47,8 @@ Electron (janela do app)  ──spawna──▶  Flask (127.0.0.1:5000)  ──H
 | Camada | O quê | Onde |
 |---|---|---|
 | **Shell** | Janela do app — spawna o backend e abre direto na tela de login | `desktop/main.js` |
-| **Backend** | Flask com **11 blueprints** (aluno, questões, simulados, flashcards, editais, cadernos, IA, auth…) | `app.py`, `rotas/` |
-| **Banco** | Supabase (PostgreSQL) acessado via **chave ANON pública** — toda a segurança vive em policies RLS no banco | `docs/banco_dados.md` |
+| **Backend** | Flask com **11 blueprints** — auth, aluno, api, questão, simulado, edital, conta, caderno, filtro, flashcards e resumos | `app.py`, `rotas/` |
+| **Banco** | Supabase (PostgreSQL) acessado com a **ANON key pública** + `APP_TOKEN` nas escritas — a segurança vive nas policies RLS no banco | `docs/banco_dados.md` |
 | **Página de e-mail** | Página estática no GitHub Pages que recebe o redirect dos e-mails do Auth (confirmação de cadastro e redefinição de senha) | `site/` |
 
 <a id="modelo-de-seguranca"></a>
@@ -56,7 +57,7 @@ Electron (janela do app)  ──spawna──▶  Flask (127.0.0.1:5000)  ──H
 - **Conteúdo é aberto; escrita é do dono**: questões, matérias e taxonomia são legíveis por qualquer visitante. Os dados de estudo têm `SELECT` liberado pelo desenho atual (exceto as 3 tabelas de progresso de edital, exclusivas do dono), mas `INSERT`/`UPDATE`/`DELETE` exigem o dono (`auth.uid()` vinculado a `usuarios.auth_id`).
 - **Escrita em dados do aluno exige dois fatores**: o header `x-app-token` (segredo de app, migration `rls_header_app_aluno`) **e** a identidade do dono no JWT — mesmo que alguém extraia a ANON key **e** o token do binário, não consegue tocar dados de outro aluno. Feedbacks, caches de IA e estatísticas anônimas aceitam INSERT só com o token, por design.
 - **A chave `service_role` nunca** faz parte deste app: a gestão de conteúdo roda num painel separado, com 2FA próprio.
-- **Perfis legados são adotados no 1º login**: alunos do sistema antigo (passwordless) têm o perfil re-vinculado à conta Auth pelo próprio RLS, sem duplicação.
+- **Perfis legados são adotados no 1º login**: alunos das eras anteriores ao Supabase Auth (web/SaaS e desktop passwordless) têm o perfil re-vinculado à conta Auth pelo próprio RLS, sem duplicação.
 - Detalhes completos: [docs/banco_dados.md](docs/banco_dados.md)
 
 <a id="instalacao"></a>
@@ -110,7 +111,7 @@ São **139 testes** que não exigem um banco real para passar, cobrindo login e 
 | [DESIGN.md](DESIGN.md) | Design system, temas e painel do aluno |
 | [docs/desktop.md](docs/desktop.md) | Shell Electron (app instalável) |
 | [docs/banco_dados.md](docs/banco_dados.md) | Banco, RLS e modelo de segurança |
-| [docs/rotas/](docs/rotas/) | Cada blueprint documentado |
+| [docs/rotas/](docs/rotas/) | Cada blueprint documentado — inclui [painel e estatísticas](docs/rotas/aluno.md) |
 | [docs/utils.md](docs/utils.md) · [docs/extensoes.md](docs/extensoes.md) | Utilitários e extensões Flask |
 | [site/README.md](site/README.md) | Página pública de confirmação de e-mail (GitHub Pages) |
 | [tests/README.md](tests/README.md) | Especificação da suíte de testes |
