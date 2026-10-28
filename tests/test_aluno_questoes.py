@@ -3,6 +3,7 @@ import sys
 import unittest
 from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock
+from flask import render_template_string
 
 # Adiciona o diretório raiz ao sys.path para garantir que as importações funcionem corretamente
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -21,6 +22,25 @@ class TestAlunoQuestaoFlask(unittest.TestCase):
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
         self.client = app.test_client()
+
+    def _renderizar_filtro_status(self, url):
+        with app.test_request_context(url):
+            return render_template_string(
+                '{% import "components/sidebar_filtros.html" as filtros with context %}'
+                '{{ filtros.render_sidebar_filtros([], [], [], [], [], []) }}'
+            )
+
+    def test_filtro_status_padrao_todas(self):
+        for url in ('/aluno/questoes', '/aluno/questoes?id_materia=15&id_subtopico=1427'):
+            with self.subTest(url=url):
+                html = self._renderizar_filtro_status(url)
+                self.assertIn('value="todas" selected', html)
+                self.assertNotIn('value="nao_respondidas" selected', html)
+
+    def test_filtro_status_nao_respondidas_explicitamente(self):
+        html = self._renderizar_filtro_status('/aluno/questoes?status=nao_respondidas')
+        self.assertIn('value="nao_respondidas" selected', html)
+        self.assertNotIn('value="todas" selected', html)
 
     # -------------------------------------------------------------------------
     # Testes de Painel e Dashboards (GET)

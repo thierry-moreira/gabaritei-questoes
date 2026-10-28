@@ -24,8 +24,10 @@ def get_cargos_por_orgao(id_orgao):
 
 @api_bp.route('/api/get_assuntos_cascata', methods=['POST'])
 @limiter.exempt
-@aluno_required
 def get_assuntos_cascata():
+    # Taxonomia é conteúdo de leitura pública (RLS permite SELECT para anon).
+    # A própria página de questões também é pública; não exigir perfil evita
+    # quebrar os filtros quando existe um cookie Flask antigo/inválido.
     dados = request.get_json()
     ids_materias = dados.get('ids_materias', [])
 

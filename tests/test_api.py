@@ -94,6 +94,27 @@ class TestAPIBlueprint(unittest.TestCase):
         self.assertEqual(len(dados[0]["subtopicos"]), 1)
         self.assertEqual(dados[0]["subtopicos"][0]["nome"], "Princípios")
 
+    @patch('utils.current_user')
+    @patch('rotas.api.safe_execute')
+    def test_api_get_assuntos_cascata_publica_sem_sessao(self, mock_safe_execute, mock_current_user):
+        """A cascata de taxonomia pública funciona sem login ou perfil Flask válido."""
+        mock_current_user.is_authenticated = False
+
+        mock_res_topicos = MagicMock()
+        mock_res_topicos.data = [{"id_topico": 100, "nome_topico": "Direito Constitucional"}]
+        mock_res_sub = MagicMock()
+        mock_res_sub.data = [{
+            "id_subtopico": 200,
+            "nome_subtopico": "Princípios",
+            "id_topico": 100,
+        }]
+        mock_safe_execute.side_effect = [mock_res_topicos, mock_res_sub]
+
+        response = self.client.post('/api/get_assuntos_cascata', json={"ids_materias": [1]})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()[0]["subtopicos"][0]["id"], 200)
+
     # -------------------------------------------------------------------------
     # Testes de Endpoints de Listagem Auxiliares
     # -------------------------------------------------------------------------

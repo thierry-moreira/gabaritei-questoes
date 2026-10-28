@@ -115,8 +115,8 @@
 
                             <h6 class="filter-section-title"><i class="bi bi-clock-history"></i> STATUS</h6>
                             <select name="status" class="form-select filter-select mb-3">
-                                <option value="todas" {% if request.args.get('status') == 'todas' %}selected{% endif %}>🔎 Todas as Questões</option>
-                                <option value="nao_respondidas" {% if request.args.get('status') == 'nao_respondidas' or not request.args.get('status') %}selected{% endif %}>🆕 Apenas Não Respondidas</option>
+                                <option value="todas" {% if request.args.get('status', 'todas') == 'todas' %}selected{% endif %}>🔎 Todas as Questões</option>
+                                <option value="nao_respondidas" {% if request.args.get('status') == 'nao_respondidas' %}selected{% endif %}>🆕 Apenas Não Respondidas</option>
                                 <option value="respondidas" {% if request.args.get('status') == 'respondidas' %}selected{% endif %}>✅ Apenas as que já fiz</option>
                                 <option value="acertos" {% if request.args.get('status') == 'acertos' %}selected{% endif %}>🎯 Questões que Acertei</option>
                                 <option value="erros" {% if request.args.get('status') == 'erros' %}selected{% endif %}>❌ Questões que Errei</option>
