@@ -50,9 +50,16 @@ $pyiArgs = @(
 if (Test-Path $python3t) {
     $pyiArgs += @('--add-binary', "$python3t;.")
 } else {
-    Write-Warning "python3t.dll nao encontrado em $python3t - extensoes abi3t (cryptography) podem falhar no backend empacotado."
+    throw "python3t.dll nao encontrado em $python3t - necessario para extensoes abi3t (cryptography) no Python 3.15."
 }
 & (Join-Path $raiz 'venv\Scripts\pyinstaller.exe') @pyiArgs app.py
+if ($LASTEXITCODE -ne 0) {
+    throw "PyInstaller falhou (exit $LASTEXITCODE)."
+}
+$python3tEmpacotado = Join-Path $raiz 'dist_backend\GabariteiAluno\_internal\python3t.dll'
+if (-not (Test-Path $python3tEmpacotado)) {
+    throw "python3t.dll nao foi empacotado em $python3tEmpacotado - o backend nao vai importar cryptography/_rust."
+}
 
 # --- 3. GTK dentro do bundle do backend (o PyInstaller recria a pasta) ---
 $gtkDest = Join-Path $raiz 'dist_backend\GabariteiAluno\gtk'
