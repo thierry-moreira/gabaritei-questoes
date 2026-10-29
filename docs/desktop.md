@@ -42,6 +42,9 @@ Fases (idempotentes):
 3. **GTK dentro do bundle (legado)** — copia `bin/` (80 DLLs) + `etc/fonts` para `dist_backend/GabariteiAluno/gtk/`, embora o backend atual não carregue esse runtime;
 4. **Instalador — electron-builder NSIS** → `desktop/dist/Gabaritei.exe` (+ `win-unpacked/` portátil). O `extraResources` leva o backend inteiro (com o GTK legado) para `resources/backend/`, e o `token.local.js` entra no `app.asar` por design — o `main.js` o requer em runtime para injetar o `APP_TOKEN` no env do backend.
 
+> [!IMPORTANT]
+> **Python 3.15 + ABI `abi3t`:** o `build.ps1` copia `python3t.dll` de `<base>\abi3t-compat\` para `_internal/` via `--add-binary`. Extensões compiladas para a ABI estável `abi3t` (como `cryptography/hazmat/bindings/_rust.pyd`) dependem dessa DLL; sem ela o backend PyInstaller falha no import (`ImportError: DLL load failed while importing _rust`) e o shell fica sem servidor — a janela nunca abre.
+
 > [!NOTE]
 > O nome final do instalador vem de `nsis.artifactName` no `desktop/package.json` (`Gabaritei.${ext}` → `Gabaritei.exe`). A mensagem impressa ao final do `build.ps1` ainda cita o padrão antigo `GabariteiAluno-Setup-*.exe`.
 

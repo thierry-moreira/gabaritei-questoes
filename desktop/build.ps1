@@ -33,7 +33,26 @@ if (-not (Test-Path (Join-Path $raiz 'venv\Scripts\pyinstaller.exe'))) {
     & (Join-Path $raiz 'venv\Scripts\pip.exe') install pyinstaller
 }
 Write-Host '==> [pyinstaller] empacotando o backend Flask (1-3 min)...'
-& (Join-Path $raiz 'venv\Scripts\pyinstaller.exe') --noconfirm --clean --name GabariteiAluno --distpath dist_backend --workpath build_backend --add-data "templates;templates" --add-data "static;static" app.py
+
+# Python 3.15 (PEP 793): extensoes compiladas para a ABI estavel "abi3t"
+# (ex.: cryptography/hazmat/bindings/_rust.pyd) carregam python3t.dll, que
+# fica em <base>\abi3t-compat e NAO e copiado automaticamente pelo
+# PyInstaller. Sem ele o backend morre no import com
+# "ImportError: DLL load failed while importing _rust".
+$pyBase = & (Join-Path $raiz 'venv\Scripts\python.exe') -c "import sys; print(sys.base_prefix)"
+$python3t = Join-Path $pyBase 'abi3t-compat\python3t.dll'
+$pyiArgs = @(
+    '--noconfirm', '--clean', '--name', 'GabariteiAluno',
+    '--distpath', 'dist_backend', '--workpath', 'build_backend',
+    '--add-data', 'templates;templates',
+    '--add-data', 'static;static'
+)
+if (Test-Path $python3t) {
+    $pyiArgs += @('--add-binary', "$python3t;.")
+} else {
+    Write-Warning "python3t.dll nao encontrado em $python3t - extensoes abi3t (cryptography) podem falhar no backend empacotado."
+}
+& (Join-Path $raiz 'venv\Scripts\pyinstaller.exe') @pyiArgs app.py
 
 # --- 3. GTK dentro do bundle do backend (o PyInstaller recria a pasta) ---
 $gtkDest = Join-Path $raiz 'dist_backend\GabariteiAluno\gtk'
