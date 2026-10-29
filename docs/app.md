@@ -69,3 +69,39 @@ Para evitar que rotas repitam chamadas redundantes a serviços globais, a funç�
 Configurado no nível `INFO` com padrão estrito:
 `[Data Hora] [Nível de Gravidade] Nome_do_Modulo: Mensagem`
 Essencial para registrar anomalias de autenticação de sessão múltipla, problemas de conectividade e o status operacional da aplicação.
+ 
+ ---
+ 
+ ## 🔤 Encoding e Compatibilidade Python 3.15
+ 
+ O projeto adota **UTF-8 como encoding padrão** em toda a stack, alinhado com Python 3.15+ (PEP 686):
+ 
+ | Camada | Encoding | Observação |
+ |---|---|---|
+ | **Código Python (.py)** | UTF-8 | Fontes com emojis em logs, type hints modernos (`str \| None`, `dict[str, Any]`) |
+ | **Templates Jinja2 (.html)** | UTF-8 | Suporte completo a acentuação e emojis na UI |
+ | **Assets estáticos (.css, .js)** | UTF-8 | Inclui `imprimir_ou_pdf.js`, `pdf_style.css` |
+ | **Banco Supabase/PostgreSQL** | UTF-8 (`utf8mb4`) | Emojis e acentuação em comentários, questões, etc. |
+ | **Sessão Flask / Cookies** | UTF-8 | Compatível com `session.permanent = True` |
+ | **Console Windows (CP1252)** | UTF-8 + backslashreplace | `sys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')` no `app.py:10-16` |
+ | **Variáveis de ambiente (.env)** | UTF-8 | `load_dotenv()` lê UTF-8; acentos em secrets funcionam |
+ 
+ > [!IMPORTANT]
+ > Python 3.15 define UTF-8 como encoding padrão do sistema (independente da locale). O código usa `encoding='utf-8'` explicitamente em operações de I/O (`open()`, `json.load()`, `BytesIO`, etc.) para compatibilidade com versões anteriores. O console Windows recebe emojis via `errors='backslashreplace'` para evitar erros de encoding no CP1252.
+ 
+ ---
+ 
+ ## ⚡ Novos Recursos Python 3.15 Disponíveis
+ 
+ O projeto pode aproveitar (opcionalmente) os seguintes recursos do Python 3.15:
+ 
+ | Recurso (PEP) | Disponível | Uso Sugerido no Projeto |
+ |---|---|---|
+ | **frozendict** (PEP 814) | ✅ Built-in | Cache imutável em `utils.py`, configs de IA |
+ | **Unpacking em comprehensions** (PEP 798) | ✅ Syntax | `[*x for x in lista_de_listas]` em agregações de dashboard |
+ | **Lazy imports** (PEP 810) | ✅ Syntax/CLI | `lazy import weasyprint`, `lazy from openai import OpenAI` em `rotas/questao.py` |
+ | **sentinel** (PEP 661) | ❌ Adiado | Usa `object()` como sentinela (ex.: `MISSING = object()`) |
+ | **UTF-8 default** (PEP 686) | ✅ Default | Já ativo — encoding explícito mantido para compatibilidade |
+ 
+ > [!NOTE]
+ > O `weasyprint` no `requirements.txt` é legacy (PDF client-side via Electron). Mantido apenas para compatibilidade; não requer GTK no Windows.

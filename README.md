@@ -8,7 +8,7 @@
 Plataforma de estudos para concursos com inteligência artificial — **questões comentadas, simulados, flashcards, resumos, cadernos e editais**. Software livre e sem paywall: todo aluno cadastrado usa tudo, e o progresso fica na nuvem com a própria conta.
 
 [![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](./LICENSE)
-![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Python 3.15](https://img.shields.io/badge/Python-3.15-3776AB?logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-backend-000000?logo=flask&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ECF8E?logo=supabase&logoColor=white)
 ![Electron](https://img.shields.io/badge/Electron-shell-47848F?logo=electron&logoColor=white)
@@ -63,7 +63,7 @@ Electron (janela do app)  ──spawna──▶  Flask (127.0.0.1:5000)  ──H
 <a id="instalacao"></a>
 ## 🛠️ Instalação (dev)
 
-**Pré-requisitos:** Python 3.12+, Node.js (apenas para o shell Electron) e um projeto Supabase. Os recursos de IA usam a chave do próprio aluno (BYOK — OpenAI, Google Gemini ou Anthropic, configurada pela UI da conta).
+**Pré-requisitos:** Python 3.15+, Node.js (apenas para o shell Electron) e um projeto Supabase. Os recursos de IA usam a chave do próprio aluno (BYOK — OpenAI, Google Gemini ou Anthropic, configurada pela UI da conta).
 
 ```powershell
 python -m venv venv
@@ -92,6 +92,23 @@ powershell -ExecutionPolicy Bypass -File desktop\build.ps1
 > O PDF de simulados é gerado no **cliente**: o app desktop usa `electronAPI.printToPDF()` (Electron `printToPDF`, A4) e o navegador cai no `window.print()` com "Salvar como PDF". Não há WeasyPrint nem dependência de GTK no fluxo de PDF. O `build.ps1` ainda baixa e copia um runtime GTK legado — etapa herdada da antiga geração server-side, sem uso pelo app em execução.
 
 > A ANON key é **pública por design** (vai embarcada no binário) — a segurança do produto vive nas policies RLS, não no segredo da chave. O `service_role` nunca é usado aqui. Detalhes completos do build: [docs/desktop.md](docs/desktop.md).
+
+<a id="encoding"></a>
+## 🔤 Encoding e Compatibilidade
+
+O projeto utiliza **UTF-8 como encoding padrão** (Python 3.15+ adota UTF-8 por padrão, PEP 686):
+
+| Contexto | Encoding | Detalhes |
+|---|---|---|
+| **Arquivos .py** | UTF-8 | Todos os fontes usam UTF-8 (inclui emojis em logs/mensagens) |
+| **Arquivos .html/.css/.js** | UTF-8 | Templates Jinja2 e assets estáticos |
+| **Banco de dados (Supabase/PostgreSQL)** | UTF-8 | `utf8` / `utf8mb4` — suporta emojis e acentuação completa |
+| **Sessão Flask / Cookies** | UTF-8 | `session.permanent = True` com cookies compatíveis |
+| **Console/Logs (Windows)** | UTF-8 | `sys.stdout.reconfigure(encoding='utf-8', errors='backslashreplace')` no `app.py` para emojis no CP1252 |
+| **Variáveis de ambiente (.env)** | UTF-8 | Valores com acentos/emojis funcionam corretamente |
+
+> [!IMPORTANT]
+> Em Python 3.15, o encoding padrão do sistema é UTF-8 independente da locale. Para compatibilidade com versões anteriores, o código usa `encoding='utf-8'` explicitamente em operações de I/O de arquivos (`open()`, `json.load()`, etc.). O console Windows (CP1252) recebe emojis via `errors='backslashreplace'` para não quebrar a saída.
 
 <a id="testes"></a>
 ## ✅ Testes

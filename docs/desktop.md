@@ -27,7 +27,7 @@ cd desktop
 npm install        # 1ª vez (baixa o Electron)
 npm start          # spawna o Flask do venv e abre a janela
 ```
-Requisitos: venv do repo ativo em `../venv` (o shell usa `venv/Scripts/python.exe` direto).
+Requisitos: Python 3.15+, venv do repo ativo em `../venv` (o shell usa `venv/Scripts/python.exe` direto).
 
 ## Build (pipeline único: `desktop\build.ps1`)
 
