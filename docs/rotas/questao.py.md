@@ -26,10 +26,11 @@ $$\text{Streak}_{\text{hoje}} = \begin{cases} \text{Streak}_{\text{ontem}} + 1 &
 *   **Filtros combinados**: matéria, tópico, subtópico, banca, órgão, ano, nível, cargo e tipo são aplicados via `.in_`/`.eq` sobre a view `view_questoes_completa`, sempre restrita a `status='publicada'`.
 
 ### 4. Ecossistema Pedagógico de IA (Gabi IA)
-*   **`ia_explica`**: Gera explicações hiper-pedagógicas em tempo real (`/api/ia_explica`) para usuários autenticados. Integra prompts de sistema altamente restritivos para evitar alucinações de lei e suporta **visão computacional** enviando imagens extraídas do enunciado/alternativas via URLs assinadas e seguras à API do GPT-4o mini.
+*   **`ia_explica`**: Gera explicações hiper-pedagógicas em tempo real (`/api/ia_explica`) para usuários autenticados, com a **própria chave do aluno (BYOK)**. Integra prompts de sistema altamente restritivos para evitar alucinações de lei, injeta o **contexto legislativo curado** recuperado pela RPC `buscar_legislacao` (RAG leve, com evidência gravada em `explicacoes_ia.contexto_legislacao`) e suporta **visão computacional** enviando as imagens do enunciado/alternativas ao provedor. Detalhes em [docs/ia.md](../ia.md).
 *   **`ia_gerar_estudo`**: Endpoint unificado (`/api/ia/gerar_estudo`) que extrai a teoria subjacente à questão para gerar resumos ou flashcards permanentes:
     *   **Resumos**: Gravados no caderno de resumos do aluno (`resumos_estudo`).
     *   **Flashcards**: Pergunta e resposta estruturadas para memorização ativa (Frente/Verso), salvas automaticamente no respectivo baralho da matéria (`flashcards` e `flashcard_categorias`).
+*   **`feedback_ia`**: Reporte anônimo de problema em qualquer resposta gerada (explicação, resumo ou flashcard) pelo botão 🚩 (`POST /api/feedback_ia`): o motivo é validado contra o catálogo fechado `MOTIVOS_FEEDBACK_IA`, o relato passa pela blocklist local e é gravado em `feedbacks_ia` para triagem humana no painel admin (seção "Respostas da IA"), que pode **invalidar o cache** para o conteúdo ser regerado com o contexto atual.
 
 ---
 
@@ -126,7 +127,7 @@ O motor generativo adota uma política de **tolerância zero contra alucinaçõe
 *   **Proteção Contra IDOR**:
     *   A deleção física de questões (`excluir_questao`) migrou para o ambiente administrativo (`rotas/admin_api.py`, blindada por `@admin_required` com trava de dispositivo único — ver `docs/rotas/admin.md` no repositório do painel administrativo). O blueprint de questões do aluno não expõe nenhuma rota destrutiva.
     *   A inserção de resumos e flashcards sempre resolve e força a propriedade ao UUID autenticado do aluno (`current_user.id`), inviabilizando qualquer injeção ou tentativa de alteração cruzada de dados por IDs arbitrários.
-*   **Moderação sem IA (blocklist + denúncia humana)**: o salvamento de novos comentários passa pela blocklist local (`verificar_texto_improprio`) — a antiga moderação por API de IA foi removida. A segunda barreira é a **denúncia** (`POST /api/comentarios/<id_comentario>/reportar`, botão 🚩 em cada comentário): grava em `reports_comentarios` (no máximo 1 por comentário/aluno → `409` duplicado amigável; uuid validado; comentário inexistente → `404`) e a triagem é **humana**, no painel do admin (repo separado).
+*   **Moderação sem IA (blocklist + denúncia humana)**: o salvamento de novos comentários passa pela blocklist local (`verificar_texto_improprio`) — a antiga moderação por API de IA foi removida. A segunda barreira é a **denúncia** (`POST /api/comentarios/<id_comentario>/reportar`, botão 🚩 em cada comentário): grava em `reports_comentarios` (no máximo 1 por comentário/aluno → `409` duplicado amigável; uuid validado; comentário inexistente → `404`) e a triagem é **humana**, no painel do admin (repo separado) — seção "Denúncias de Comentários" da página de feedbacks, com exclusão do comentário denunciado (FK CASCADE encerra as denúncias) ou descarte da denúncia.
 *   **IA com BYOK**: `/api/ia_explica` e `/api/ia/gerar_estudo` chamam a camada `provedores_ia.chamar_ia()` com a **própria chave do aluno** (OpenAI, Google Gemini ou Anthropic), guardada apenas localmente (SQLite + DPAPI). Os prompts e parâmetros calibrados permanecem idênticos; os caches (`explicacoes_ia`, `ia_cache_estudo`) e a gravação no banco seguem inalterados. Detalhes em [docs/ia.md](../ia.md).
 
 ---
