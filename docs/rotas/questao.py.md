@@ -71,9 +71,10 @@ graph TD
     %% ia_explica
     E -->|Explicação Pedagógica| F{Existe no Cache Global explicacoes_ia?}
     G[Retorna Explicação do Cache]
-    F -->|Não: MISS| H[Chama OpenAI GPT-4o mini]
+    F -->|Não: MISS| H0[Recupera contexto legislativo — RPC buscar_legislacao]
+    H0 --> H[Camada BYOK: provedores_ia.chamar_ia]
     H -->|Aplica Prompts e Visão Computacional| I[Sanitiza LaTeX e Tags HTML <b>]
-    I -->|Salva Cache Global| J[(Tabela: explicacoes_ia)]
+    I -->|Salva Cache Global + evidência contexto_legislacao| J[(Tabela: explicacoes_ia)]
     J --> G
     
     %% ia_gerar_estudo
@@ -81,9 +82,9 @@ graph TD
     K -->|Sim: HIT Local| L[Retorna Mensagem de Já Existente no Caderno]
     K -->|Não: MISS Local| M{Existe no Cache Global ia_cache_estudo?}
     
-    M -->|Sim: HIT Global| N[Usa Conteúdo em Cache Global e pula OpenAI]
+    M -->|Sim: HIT Global| N[Usa Conteúdo em Cache Global e pula a IA]
     M -->|Não: MISS Global| O[Busca Explicação Base + Prompt da Matéria]
-    O --> P[Chama OpenAI GPT-4o mini]
+    O --> P[Camada BYOK: provedores_ia.chamar_ia]
     P --> Q[Gera JSON / Estrutura Frente-Verso ou Resumo]
     Q -->|Salva Cache Global| R[(Tabela: ia_cache_estudo)]
     R --> N
@@ -97,12 +98,13 @@ graph TD
 
 ---
 
-## ⚖️ Diretrizes e Regras do Motor Generativo (GPT-4o mini)
+## ⚖️ Diretrizes e Regras do Motor Generativo (BYOK)
 
 O motor generativo adota uma política de **tolerância zero contra alucinações**, além de aplicar formatações rígidas no envio de outputs ao frontend:
 
 ### 1. Regras Antialucinação Legislativa
 *   **Fundamentação Real**: É expressamente proibido deduzir ou inventar leis, decretos, portarias ou súmulas jurídicas. Se não houver certeza doutrinária ou legal, o motor silencia a dedução.
+*   **Grounding por Contexto Curado (RAG leve)**: além das regras do prompt, a geração recebe os dispositivos legais recuperados do corpus curado (`legislacao.py` → RPC `buscar_legislacao`) e deve citar apenas dispositivos transcritos nesse contexto; a evidência usada é gravada em `explicacoes_ia.contexto_legislacao` para auditoria. Sem contexto disponível, o fluxo segue normalmente (fail-open).
 *   **Precisão Territorial**: O motor respeita de forma rígida a abrangência territorial da lei seca (e.g. diferenciando uma lei municipal ou estadual de normas nacionais como a Lei nº 8.112/1990).
 *   **Alerta de Desatualização**: Caso o enunciado trate de matéria revogada, o sistema gera obrigatoriamente um bloco de alerta técnico:
 
@@ -127,6 +129,7 @@ O motor generativo adota uma política de **tolerância zero contra alucinaçõe
 *   **Proteção Contra IDOR**:
     *   A deleção física de questões (`excluir_questao`) migrou para o ambiente administrativo (`rotas/admin_api.py`, blindada por `@admin_required` com trava de dispositivo único — ver `docs/rotas/admin.md` no repositório do painel administrativo). O blueprint de questões do aluno não expõe nenhuma rota destrutiva.
     *   A inserção de resumos e flashcards sempre resolve e força a propriedade ao UUID autenticado do aluno (`current_user.id`), inviabilizando qualquer injeção ou tentativa de alteração cruzada de dados por IDs arbitrários.
+*   **Feedback de questões**: o relato de problema na questão (modal do formulário de feedback → `POST /api/feedback`) grava em `feedbacks_questoes` como `"[tipo] descrição"`, para triagem humana no painel admin (página de feedbacks).
 *   **Moderação sem IA (blocklist + denúncia humana)**: o salvamento de novos comentários passa pela blocklist local (`verificar_texto_improprio`) — a antiga moderação por API de IA foi removida. A segunda barreira é a **denúncia** (`POST /api/comentarios/<id_comentario>/reportar`, botão 🚩 em cada comentário): grava em `reports_comentarios` (no máximo 1 por comentário/aluno → `409` duplicado amigável; uuid validado; comentário inexistente → `404`) e a triagem é **humana**, no painel do admin (repo separado) — seção "Denúncias de Comentários" da página de feedbacks, com exclusão do comentário denunciado (FK CASCADE encerra as denúncias) ou descarte da denúncia.
 *   **IA com BYOK**: `/api/ia_explica` e `/api/ia/gerar_estudo` chamam a camada `provedores_ia.chamar_ia()` com a **própria chave do aluno** (OpenAI, Google Gemini ou Anthropic), guardada apenas localmente (SQLite + DPAPI). Os prompts e parâmetros calibrados permanecem idênticos; os caches (`explicacoes_ia`, `ia_cache_estudo`) e a gravação no banco seguem inalterados. Detalhes em [docs/ia.md](../ia.md).
 

@@ -117,7 +117,7 @@ O projeto utiliza **UTF-8 como encoding padrão** (Python 3.15+ adota UTF-8 por 
 .\rodar_testes.bat          # ou: python -m unittest discover -s tests
 ```
 
-São **157 testes** que não exigem um banco real para passar, cobrindo login e cadastro, re-link de perfis legados, questões e streaks, filtro de status, simulados, flashcards (incluindo rota global, estado vazio e validações da revisão), editais, IA/BYOK, contexto legislativo (RAG leve), cadernos, resumos, taxonomia pública e honeypots de segurança. Especificação completa em [tests/README.md](tests/README.md).
+São **162 testes** que não exigem um banco real para passar, cobrindo login e cadastro, re-link de perfis legados, questões e streaks, filtro de status, simulados, flashcards (incluindo rota global, estado vazio e validações da revisão), editais, IA/BYOK, contexto legislativo (RAG leve), feedback de respostas da IA, cadernos, resumos, taxonomia pública e honeypots de segurança. Especificação completa em [tests/README.md](tests/README.md).
 
 <a id="documentacao"></a>
 ## 📚 Documentação

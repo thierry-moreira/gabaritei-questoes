@@ -24,7 +24,7 @@ Plataforma de estudos **desktop local, software livre (MIT), com IA** — modelo
 - Conta real com e-mail e senha (Supabase Auth); a sessão é lembrada entre execuções via refresh token persistido na sessão Flask.
 - Dados no Supabase (PostgreSQL) via chave ANON **pública por design**: leitura de conteúdo liberada; escrita dos dados do aluno exige o header `x-app-token` **e** a identidade do dono (`auth.uid()` amarrado a `usuarios.auth_id`). A `service_role` jamais embarca no app.
 - IA 100% **BYOK** (Bring Your Own Key): cada aluno usa a própria chave de API (OpenAI, Google Gemini ou Anthropic) configurada em Configurações da conta; a chave fica **apenas no dispositivo** (SQLite + DPAPI em `GABARITEI_LOCAL_DIR`), nunca no Supabase. Prompts e parâmetros são calibrados e idênticos para todos os provedores (`provedores_ia.py`); os modelos oficiais por provedor estão congelados nas listas aprovadas.
-- Comunidade **sem moderação por IA**: blocklist local na publicação + denúncia humana (🚩 em cada comentário → tabela `reports_comentarios` → triagem no painel admin, repo separado).
+- Comunidade **sem moderação por IA**: blocklist local na publicação + denúncia humana (🚩 em cada comentário → tabela `reports_comentarios` → triagem no painel admin, repo separado). Respostas da IA também têm reporte de problema (🚩 em explicações, resumos e flashcards → tabela `feedbacks_ia` → triagem humana no painel, com invalidação de cache para o conteúdo ser regerado).
 - Execução local em HTTP puro: HTTPS/HSTS/cookie Secure desativados por design (Talisman); escuta apenas em `127.0.0.1`.
 - Desenvolvimento: `python app.py` (http://127.0.0.1:5000); shell via `cd desktop; npm start`; testes 100% isolados (`rodar_testes.bat`).
 
