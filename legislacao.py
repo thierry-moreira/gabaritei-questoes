@@ -49,12 +49,17 @@ def _cortar(texto: str, limite: int) -> str:
 
 
 def recuperar_legislacao(
-    id_materia: Any,
-    id_topico: Any,
     enunciado: Any,
+    id_subtopico: Any = None,
+    id_materia: Any = None,
+    id_topico: Any = None,
     limite: int = LIMITE_PADRAO,
 ) -> list[dict[str, Any]]:
     """Busca trechos de legislação curada para a questão (fail-open).
+
+    A taxonomia da questão afina o retrieval: `id_subtopico` (coluna real de
+    `questoes`) resolve matéria/tópico dentro da RPC; `id_materia`/`id_topico`
+    explícitos têm precedência quando disponíveis (ex.: view_questoes_completa).
 
     Retorna lista de dicts {id, referencia, texto, vigencia_de, vigencia_ate}
     — vazia quando não há contexto, quando a consulta é inconclusiva ou
@@ -68,6 +73,8 @@ def recuperar_legislacao(
         "p_texto": texto,
         "p_limite": max(1, min(limite, LIMITE_PADRAO)),
     }
+    if id_subtopico:
+        params["p_id_subtopico"] = id_subtopico
     if id_materia:
         params["p_id_materia"] = id_materia
     if id_topico:

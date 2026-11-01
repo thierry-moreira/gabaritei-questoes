@@ -165,7 +165,7 @@ class TestIAChatBlueprint(unittest.TestCase):
         mock_res_cache.data = []
         mock_res_q = MagicMock()
         mock_res_q.data = {
-            'id_questao': 500, 'id_materia': 7, 'id_topico': 9,
+            'id_questao': 500, 'id_subtopico': 123,
             'enunciado': 'O servidor público pode aceitar propina?', 'url_imagem': None
         }
         mock_res_alt = MagicMock()
@@ -181,7 +181,8 @@ class TestIAChatBlueprint(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
         # A recuperação usou a taxonomia da questão + enunciado
-        mock_leg.assert_called_once_with(7, 9, 'O servidor público pode aceitar propina?')
+        # A recuperação usou a taxonomia da questão (id_subtopico) + enunciado
+        mock_leg.assert_called_once_with('O servidor público pode aceitar propina?', id_subtopico=123)
 
         # System prompt ganha o bloco condicional do contexto
         kwargs = mock_chamar_ia.call_args.kwargs

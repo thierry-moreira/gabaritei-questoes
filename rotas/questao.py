@@ -459,8 +459,10 @@ def ia_explica():
 
         # RAG leve de legislação: recupera trechos curados (fail-open — sem
         # contexto, ou em falha de retrieval, o system prompt permanece
-        # byte a byte o congelado de docs/ia.md).
-        trechos_leg = recuperar_legislacao(q.get('id_materia'), q.get('id_topico'), q.get('enunciado'))
+        # byte a byte o congelado de docs/ia.md). A taxonomia entra via
+        # id_subtopico (coluna real de `questoes` — a tabela não tem
+        # id_materia/id_topico; a RPC resolve matéria/tópico a partir dele).
+        trechos_leg = recuperar_legislacao(q.get('enunciado'), id_subtopico=q.get('id_subtopico'))
 
         system_prompt = (
             "Você é um professor especialista em concursos públicos no Brasil. Sua função é explicar o gabarito de questões objetivas de forma pedagógica, clara e direta.\n\n"

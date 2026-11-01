@@ -49,28 +49,28 @@ class TestRecuperarLegislacao(unittest.TestCase):
             }]
             mock_supabase.rpc.return_value.execute.return_value = res
 
-            trechos = recuperar_legislacao(7, 9, 'Servidor aceita propina?')
+            trechos = recuperar_legislacao('Servidor aceita propina?', id_subtopico=123)
 
         self.assertEqual(len(trechos), 1)
         self.assertEqual(trechos[0]['id'], 42)
         self.assertEqual(trechos[0]['vigencia_ate'], None)
-        # Taxonomia da questão vira filtro estruturado da RPC
+        # Taxonomia da questão vira filtro estruturado da RPC (resolvido
+        # matéria/tópico a partir do id_subtopico dentro do SQL)
         mock_supabase.rpc.assert_called_once_with('buscar_legislacao', {
             'p_texto': 'Servidor aceita propina?',
             'p_limite': 5,
-            'p_id_materia': 7,
-            'p_id_topico': 9,
+            'p_id_subtopico': 123,
         })
 
     def test_fail_open_quando_rpc_falha(self):
         """RPC inexistente/rede fora → lista vazia, nunca exceção (contrato fail-open)."""
         with patch('legislacao.supabase') as mock_supabase:
             mock_supabase.rpc.return_value.execute.side_effect = Exception('PGRST202 function not found')
-            self.assertEqual(recuperar_legislacao(1, None, 'Enunciado longo o suficiente aqui.'), [])
+            self.assertEqual(recuperar_legislacao('Enunciado longo o suficiente aqui.'), [])
 
     def test_enunciado_curto_nao_busca(self):
         with patch('legislacao.supabase') as mock_supabase:
-            self.assertEqual(recuperar_legislacao(None, None, 'Curto'), [])
+            self.assertEqual(recuperar_legislacao('Curto'), [])
             mock_supabase.rpc.assert_not_called()
 
     def test_texto_longo_e_truncado(self):
@@ -79,7 +79,7 @@ class TestRecuperarLegislacao(unittest.TestCase):
             res.data = [{'id': 1, 'referencia': 'Lei X', 'texto': 'a' * (MAX_TEXTO_TRECHO + 500)}]
             mock_supabase.rpc.return_value.execute.return_value = res
 
-            trechos = recuperar_legislacao(None, None, 'Enunciado longo o suficiente para buscar.')
+            trechos = recuperar_legislacao('Enunciado longo o suficiente para buscar.')
 
         self.assertTrue(trechos[0]['texto'].endswith(' …'))
         self.assertLessEqual(len(trechos[0]['texto']), MAX_TEXTO_TRECHO + 2)  # + sufixo " …"
@@ -90,12 +90,12 @@ class TestRecuperarLegislacao(unittest.TestCase):
             res.data = [{'id': 1, 'referencia': 'Lei X', 'texto': None}, 'lixo', None]
             mock_supabase.rpc.return_value.execute.return_value = res
 
-            self.assertEqual(recuperar_legislacao(None, None, 'Enunciado longo o suficiente para buscar.'), [])
+            self.assertEqual(recuperar_legislacao('Enunciado longo o suficiente para buscar.'), [])
 
     def test_limite_e_limitado_ao_padrao(self):
         with patch('legislacao.supabase') as mock_supabase:
             mock_supabase.rpc.return_value.execute.return_value = MagicMock(data=[])
-            recuperar_legislacao(None, None, 'Enunciado longo o suficiente para buscar.', limite=99)
+            recuperar_legislacao('Enunciado longo o suficiente para buscar.', limite=99)
         self.assertEqual(mock_supabase.rpc.call_args.args[1]['p_limite'], legislacao.LIMITE_PADRAO)
 
 

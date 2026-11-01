@@ -5,7 +5,9 @@
 -- Aplicar no Supabase (editor SQL / pipeline do painel administrativo).
 -- STATUS: aplicada em 2026-11-01 no projeto Supabase (ref ivhuaevrrkrnagbqmnwc),
 -- via MCP (`apply_migration` nomeada `legislacao_busca`) — inclui o fix
--- `set search_path = ''` na função (advisor function_search_path_mutable).
+-- `set search_path = ''` na função (advisor function_search_path_mutable) e o
+-- fallback AND/OR do FTS (recall de perguntas com palavras de função).
+-- Corpus: batch 1 aplicado (258 dispositivos) — ver legislacao_batch1.sql.
 -- O app do aluno apenas CONSULTA (anon + RLS de leitura); a ingestão do
 -- corpus é exclusiva do painel (service_role, fora deste repo).
 --
@@ -60,9 +62,16 @@ revoke insert, update, delete, truncate on public.legislacao_artigos from anon, 
 
 -- -----------------------------------------------------------------------------
 -- 2) RPC de retrieval: FTS + preferência por tópico > matéria > texto puro
+--    A taxonomia da questão chega como p_id_subtopico (coluna real de
+--    questoes) e matéria/tópico são resolvidos aqui dentro (subtopicos já
+--    carrega ambos); p_id_materia/p_id_topico explícitos têm precedência.
+--    Busca em duas passadas: AND (acerto completo) e, na ausência dele,
+--    fallback OR ranqueado — a pergunta do aluno carrega palavras de função
+--    ("quais", "sobre"...) que nunca casariam em AND puro.
 -- -----------------------------------------------------------------------------
 create or replace function public.buscar_legislacao(
     p_texto text,
+    p_id_subtopico bigint default null,
     p_id_materia bigint default null,
     p_id_topico bigint default null,
     p_limite int default 5
@@ -79,11 +88,22 @@ language sql
 stable
 set search_path = ''
 as $$
-    with tsq as (
+    with bruto as (
+        select left(coalesce(p_texto, ''), 2000) as txt
+    ),
+    tsq as (
         select case
-            when nullif(trim(coalesce(p_texto, '')), '') is null then null
-            else plainto_tsquery('portuguese', left(coalesce(p_texto, ''), 2000))
-        end as q
+            when nullif(trim(bruto.txt), '') is null then null
+            else plainto_tsquery('portuguese', bruto.txt)
+        end as q_and
+        from bruto
+    ),
+    qor as (
+        select case
+            when tsq.q_and is null or tsq.q_and = ''::tsquery then null
+            else to_tsquery('portuguese', replace(tsq.q_and::text, ' & ', ' | '))
+        end as q_or
+        from tsq
     ),
     candidatos as (
         select l.id,
@@ -92,31 +112,43 @@ as $$
                l.vigencia_de,
                l.vigencia_ate,
                case
-                   when p_id_topico is not null and l.id_topico = p_id_topico then 4
-                   when p_id_materia is not null and l.id_materia = p_id_materia then 2
+                   when l.id_topico is not null
+                        and l.id_topico = coalesce(p_id_topico,
+                            (select s.id_topico from public.subtopicos s where s.id_subtopico = p_id_subtopico)) then 4
+                   when l.id_materia is not null
+                        and l.id_materia = coalesce(p_id_materia,
+                            (select s.id_materia from public.subtopicos s where s.id_subtopico = p_id_subtopico)) then 2
                    else 0
                end as pont_estrutura,
                case
-                   when tsq.q is null then 0::real
-                   else coalesce(ts_rank_cd(l.search_tsv, tsq.q), 0)::real
+                   when tsq.q_and is not null and l.search_tsv @@ tsq.q_and then 2
+                   else 1
+               end as forca,
+               case
+                   when tsq.q_and is null then 0::real
+                   else coalesce(ts_rank_cd(l.search_tsv,
+                          case when l.search_tsv @@ tsq.q_and then tsq.q_and else qor.q_or end), 0)::real
                end as rk
         from public.legislacao_artigos l
         cross join tsq
-        where tsq.q is null or l.search_tsv @@ tsq.q
+        cross join qor
+        where tsq.q_and is null
+           or l.search_tsv @@ tsq.q_and
+           or l.search_tsv @@ qor.q_or
     )
     -- Precisão primeiro: se há qualquer acerto na taxonomia da questão,
-    -- descarta acertos "genéricos" fora dela; senão, cai para o FTS puro.
+    -- descarta acertos "genéricos" fora dela; senão, cai para o FTS.
     select c.id, c.referencia, c.texto, c.vigencia_de, c.vigencia_ate,
-           (c.pont_estrutura + c.rk)::real as relevancia
+           (c.pont_estrutura + c.forca + c.rk)::real as relevancia
     from candidatos c
     where c.pont_estrutura > 0
        or not exists (select 1 from candidatos c2 where c2.pont_estrutura > 0)
-    order by c.pont_estrutura desc, c.rk desc, c.id
+    order by c.pont_estrutura desc, c.forca desc, c.rk desc, c.id
     limit least(greatest(coalesce(p_limite, 5), 1), 10)
 $$;
 
-grant execute on function public.buscar_legislacao(text, bigint, bigint, int) to anon, authenticated;
-revoke execute on function public.buscar_legislacao(text, bigint, bigint, int) from public;
+grant execute on function public.buscar_legislacao(text, bigint, bigint, bigint, int) to anon, authenticated;
+revoke execute on function public.buscar_legislacao(text, bigint, bigint, bigint, int) from public;
 
 -- -----------------------------------------------------------------------------
 -- 3) Evidência do RAG no cache global de explicações (auditoria)
