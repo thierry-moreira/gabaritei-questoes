@@ -92,10 +92,18 @@
                             <span class="badge bg-primary bg-opacity-10 text-primary fw-bold px-3 py-2" style="border-radius: 8px;">
                                 RESUMO #{{ loop.index }}
                             </span>
-                            <button class="btn btn-link text-danger p-0" title="Excluir este resumo"
-                                    onclick="excluirResumo('{{ r.id_resumo }}')">
-                                <i class="bi bi-trash fs-5"></i>
-                            </button>
+                            <div class="d-flex align-items-center gap-3">
+                                {% if r.id_questao %}
+                                <button class="btn btn-link text-muted p-0" title="Reportar problema neste resumo"
+                                        onclick="reportarRespostaIA({{ r.id_questao }}, 'resumo')">
+                                    <i class="bi bi-flag-fill"></i>
+                                </button>
+                                {% endif %}
+                                <button class="btn btn-link text-danger p-0" title="Excluir este resumo"
+                                        onclick="excluirResumo('{{ r.id_resumo }}')">
+                                    <i class="bi bi-trash fs-5"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="resumo-text markdown-render">
                             {{ r.conteudo }}

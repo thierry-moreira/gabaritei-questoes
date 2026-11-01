@@ -37,11 +37,12 @@ caminho_do_projeto\tests\
 ├── test_flashcards.py     # Testes do sistema de flashcards e algoritmo SM-2 customizado
 ├── test_caderno.py        # Testes de coleções de questões e criação de cadernos
 ├── test_resumos.py        # Testes do painel de resumos por matéria e exclusão
+├── test_feedback_ia.py    # Reporte de problemas em respostas da IA (triagem no painel admin)
 ├── test_legislacao.py     # Contexto legislativo (RAG leve): recuperação fail-open e blocos de prompt
 └── test_provedores_ia.py  # Camada BYOK: provedores, banco local, pings e fallback de parâmetros
 ```
 
-No estado atual a suíte soma **157 testes**, executados com `python -m unittest discover -s tests`.
+No estado atual a suíte soma **162 testes**, executados com `python -m unittest discover -s tests`.
 
 ### 1. Modelos (`test_modelos.py`)
 Valida o comportamento das classes de dados (representando tabelas e registros do Supabase), garantindo consistência na modelagem e lógica interna.
@@ -176,6 +177,11 @@ Valida o grounding de `/api/ia_explica` contra o corpus curado `legislacao_artig
   - `@patch('legislacao.supabase')` — a cadeia `rpc().execute()` é simulada; o app real só chama a RPC no Supabase (migration `legislacao_busca`).
   - Testes de rota com contexto ficam em `test_ia_chat.py` (seção 6), com `rotas.questao.recuperar_legislacao` mockado.
 
+### 14. Feedback de Respostas da IA (`test_feedback_ia.py`)
+Valida o reporte anônimo de problemas em conteúdos gerados pela IA (`POST /api/feedback_ia`) — explicações, resumos e flashcards — que alimenta a triagem humana do painel admin (tabela `feedbacks_ia`).
+- **Fluxos testados:** envio válido grava `id_questao`/`tipo`/`motivo`/`relato`; tipo fora do catálogo → `400`; motivo fora do catálogo → `400`; blocklist local de moderação bloqueia relato impróprio (sem IA); relato longo é truncado em 1000 caracteres.
+- **Mocks importantes:** `rotas.questao.safe_execute`/`rotas.questao.supabase` para a inserção; `current_user` mockado nos módulos `utils` e `rotas.questao` (padrão do `test_ia_chat.py`).
+
 ---
 
 ## 🛠️ Padrões de Implementação (Guia de Manutenção)
@@ -267,7 +273,7 @@ python -m unittest tests/test_auth.py
 ```
 
 > [!NOTE]
-> O comando canônico é `unittest`. `pytest tests -q` falha na **coleta** de `tests/test_provedores_ia.py`: a função `testar_chave` (importada de `provedores_ia.py`) começa com `test` e o pytest tenta tratá-la como caso de teste, pedindo fixtures para os parâmetros `provedor`, `chave` e `modelo`. Isso não indica falha da suíte — com `unittest` os 157 testes passam.
+> O comando canônico é `unittest`. `pytest tests -q` falha na **coleta** de `tests/test_provedores_ia.py`: a função `testar_chave` (importada de `provedores_ia.py`) começa com `test` e o pytest tenta tratá-la como caso de teste, pedindo fixtures para os parâmetros `provedor`, `chave` e `modelo`. Isso não indica falha da suíte — com `unittest` os 162 testes passam.
 
 ---
 

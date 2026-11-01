@@ -6,8 +6,15 @@
             <h6 class="modal-title fw-bold mb-0" style="font-size: 0.9rem;">
                 <i class="bi bi-stars"></i> EXPLICAÇÃO PASSO A PASSO
             </h6>
-            <button type="button" class="btn-close btn-close-white" 
-                    onclick="document.getElementById('container-ia-{{ id_questao }}').classList.add('d-none')"></button>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-link btn-sm text-white p-0 opacity-75"
+                        onclick="reportarRespostaIA({{ id_questao }}, 'explicacao')"
+                        title="Reportar problema nesta explicação" aria-label="Reportar problema nesta explicação da IA">
+                    <i class="bi bi-flag-fill"></i>
+                </button>
+                <button type="button" class="btn-close btn-close-white"
+                        onclick="document.getElementById('container-ia-{{ id_questao }}').classList.add('d-none')"></button>
+            </div>
         </div>
         <div class="ia-card-body-premium">
             <div class="resposta-texto markdown-render"></div>

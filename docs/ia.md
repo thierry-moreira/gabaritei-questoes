@@ -31,6 +31,10 @@ Para o modelo não alucinar (nem citar revogados) dispositivos legais, a `/api/i
 - **Migração pendente**: se `contexto_legislacao` ainda não existir no Supabase (42703), o cache é gravado sem a evidência — a explicação já gerada não se perde.
 - **Ingestão**: exclusiva do painel administrativo (service_role) — ver `docs/migrations/legislacao_busca.sql`; o app do aluno só consulta.
 
+## Feedback das respostas da IA (triagem humana)
+
+Toda resposta gerada (explicação, resumo ou flashcard) tem um botão 🚩 que abre o reporte de problema (`POST /api/feedback_ia` → tabela `feedbacks_ia`, relato anônimo com blocklist local). A triagem acontece no painel admin, na seção "Respostas da IA" da página de feedbacks, com a ação-chave **Invalidar cache**: apaga a resposta cacheada (`explicacoes_ia`/`ia_cache_estudo`) para a próxima geração recriar o conteúdo do zero — a correção do conteúdo é sempre regenerar, nunca editar o cache à mão. Motivos aceitos: `conteudo_incorreto`, `citacao_legal`, `desatualizado`, `formatacao`, `outro`.
+
 ## Modelos pré-configurados (`PROVEDORES`)
 
 | Provedor | Modelos (nesta ordem) | Padrão pré-selecionado |

@@ -173,6 +173,13 @@ async function chamarIA(btn) {
             } else {
                 resultDiv.innerHTML = data.explicacao.replace(/\n/g, '<br>');
             }
+            // 🚩 Reporte de problema na explicação (triagem humana no painel admin)
+            if (typeof botaoFeedbackIA === 'function') {
+                const rodape = document.createElement('div');
+                rodape.className = 'text-end mt-2';
+                rodape.innerHTML = botaoFeedbackIA(questaoId, 'explicacao');
+                resultDiv.appendChild(rodape);
+            }
         } else {
             resultDiv.innerHTML = `<p class="text-danger">${data.erro || 'Não foi possível gerar a explicação agora.'}</p>`;
         }

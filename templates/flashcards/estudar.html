@@ -10,7 +10,14 @@
             <a href="{{ url_for('flashcards.index') }}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-x-lg me-1"></i> Sair da Sessão
             </a>
-            <div id="progress-text" class="small fw-bold text-muted" aria-live="polite"></div>
+            <div class="d-flex align-items-center gap-2">
+                <div id="progress-text" class="small fw-bold text-muted" aria-live="polite"></div>
+                <button id="btn-feedback-flashcard" type="button" class="btn btn-link btn-sm text-muted p-0 d-none"
+                        title="Reportar problema neste flashcard" aria-label="Reportar problema neste flashcard da IA"
+                        onclick="reportarFeedbackCardAtual()">
+                    <i class="bi bi-flag-fill"></i>
+                </button>
+            </div>
         </div>
 
         <!-- Render dos Cards (Invisíveis inicialmente) -->
@@ -109,6 +116,20 @@
         document.getElementById('card-frente-text').innerHTML = formatarMarkdown(card.frente);
         document.getElementById('card-verso-text').innerHTML = formatarMarkdown(card.verso);
         document.getElementById('progress-text').innerText = `Card ${index + 1} de ${deckFlashcards.length}`;
+
+        // 🚩 Reporte de problema: só para cards gerados a partir de questão
+        // (cards criados manualmente não têm id_questao).
+        const btnFeedback = document.getElementById('btn-feedback-flashcard');
+        if (btnFeedback) {
+            btnFeedback.classList.toggle('d-none', !card.id_questao);
+        }
+    }
+
+    function reportarFeedbackCardAtual() {
+        const card = deckFlashcards[currentIndex];
+        if (card && card.id_questao && typeof reportarRespostaIA === 'function') {
+            reportarRespostaIA(card.id_questao, 'flashcard');
+        }
     }
 
     function toggleFlip() {

@@ -8,7 +8,7 @@ from postgrest import CountMethod
 
 from banco_dados_aluno import supabase
 from extensoes import limiter
-from utils import safe_execute, aluno_required, slugify
+from utils import safe_execute, aluno_required, slugify, verificar_texto_improprio
 # BYOK (Bring Your Own Key): a IA roda com a PRÓPRIA chave do aluno, guardada
 # apenas localmente (banco_local.py). Os prompts e parâmetros calibrados das
 # respostas continuam definidos aqui nas rotas, sem qualquer alteração.
@@ -424,6 +424,53 @@ def salvar_feedback():
         return jsonify({"success": True})
     except Exception as e:
         print(f"❌ Erro ao salvar feedback da questão {id_questao}: {e}")
+        return jsonify({"success": False, "error": "Não foi possível enviar o feedback no momento."}), 500
+
+
+# Motivos aceitos no reporte de respostas da IA (catálogo fechado da UI —
+# a triagem humana acontece no painel admin, sem moderação por IA).
+MOTIVOS_FEEDBACK_IA = {
+    'conteudo_incorreto': 'Conteúdo incorreto',
+    'citacao_legal': 'Citação de lei errada ou desatualizada',
+    'desatualizado': 'Conteúdo desatualizado',
+    'formatacao': 'Problema de formatação',
+    'outro': 'Outro',
+}
+
+
+@questao_bp.route('/api/feedback_ia', methods=['POST'])
+@aluno_required
+@limiter.exempt
+def salvar_feedback_ia():
+    """Reporte anônimo de problema em resposta gerada pela IA (explicação,
+    resumo ou flashcard). O relato chega à triagem do painel admin, que pode
+    invalidar o cache para a resposta ser regerada."""
+    dados = request.get_json() or {}
+    id_questao = dados.get('id_questao')
+    tipo = dados.get('tipo')
+    motivo = (dados.get('motivo') or '').strip()
+    relato = (dados.get('relato') or '').strip()
+
+    if not id_questao or tipo not in ('explicacao', 'resumo', 'flashcard'):
+        return jsonify({"success": False, "error": "Dados incompletos."}), 400
+    if motivo not in MOTIVOS_FEEDBACK_IA:
+        return jsonify({"success": False, "error": "Motivo inválido."}), 400
+
+    # Blocklist local de moderação (mesma barreira dos comentários — sem IA).
+    permitido, msg_erro = verificar_texto_improprio(relato)
+    if not permitido:
+        return jsonify({"success": False, "error": msg_erro}), 400
+
+    try:
+        safe_execute(supabase.table("feedbacks_ia").insert({
+            "id_questao": id_questao,
+            "tipo": tipo,
+            "motivo": motivo,
+            "relato": relato[:1000] or None
+        }))
+        return jsonify({"success": True})
+    except Exception as e:
+        print(f"❌ Erro ao salvar feedback de IA da questão {id_questao}: {e}")
         return jsonify({"success": False, "error": "Não foi possível enviar o feedback no momento."}), 500
 
 
