@@ -29,7 +29,7 @@ Plataforma de estudos para concursos com inteligência artificial — **questõe
 | 📋 **Simulados** | Monte simulados personalizados e acompanhe o desempenho por matéria |
 | 🖨️ **PDF de simulados** | Prévia navegável em A4: no desktop o Electron gera o PDF nativo; no navegador, o aluno usa "Salvar como PDF" via `window.print()` |
 | 🧠 **Flashcards** | Revisão com repetição espaçada (SM-2 customizado), sessão com flip, avaliação 0–3 e estados vazio/final |
-| 🤖 **IA de estudos (BYOK)** | Explicações, resumos e flashcards gerados pela **sua própria chave de API** (OpenAI, Google Gemini ou Anthropic), configurada em Configurações da conta e guardada só no seu dispositivo (cifrada com DPAPI) — explicações geradas ficam salvas no banco (cache global para todos os alunos) |
+| 🤖 **IA de estudos (BYOK)** | Explicações, resumos e flashcards gerados pela **sua própria chave de API** (OpenAI, Google Gemini ou Anthropic), configurada em Configurações da conta e guardada só no seu dispositivo (cifrada com DPAPI) — explicações geradas ficam salvas no banco (cache global para todos os alunos) e são ancoradas em **legislação curada** quando disponível (RAG leve contra alucinação) |
 | 📑 **Editais** | Trilha de estudo por edital, com progresso por tópico e ciclo de revisão |
 | 📚 **Cadernos e filtros** | Coleções de questões salvas e filtros de busca reutilizáveis |
 | 📊 **Painel do aluno** | Estatísticas, raio-X por matéria e tópico, curva de esquecimento, calendário de metas e ofensiva (streak no horário de Brasília) |
@@ -117,7 +117,7 @@ O projeto utiliza **UTF-8 como encoding padrão** (Python 3.15+ adota UTF-8 por 
 .\rodar_testes.bat          # ou: python -m unittest discover -s tests
 ```
 
-São **139 testes** que não exigem um banco real para passar, cobrindo login e cadastro, re-link de perfis legados, questões e streaks, filtro de status, simulados, flashcards (incluindo rota global, estado vazio e validações da revisão), editais, IA/BYOK, cadernos, resumos, taxonomia pública e honeypots de segurança. Especificação completa em [tests/README.md](tests/README.md).
+São **157 testes** que não exigem um banco real para passar, cobrindo login e cadastro, re-link de perfis legados, questões e streaks, filtro de status, simulados, flashcards (incluindo rota global, estado vazio e validações da revisão), editais, IA/BYOK, contexto legislativo (RAG leve), cadernos, resumos, taxonomia pública e honeypots de segurança. Especificação completa em [tests/README.md](tests/README.md).
 
 <a id="documentacao"></a>
 ## 📚 Documentação

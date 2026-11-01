@@ -13,6 +13,10 @@ from utils import safe_execute, aluno_required, slugify
 # apenas localmente (banco_local.py). Os prompts e parâmetros calibrados das
 # respostas continuam definidos aqui nas rotas, sem qualquer alteração.
 from provedores_ia import chamar_ia, ia_configurada, MSG_NAO_CONFIGURADA, TEMPERATURE_GPT
+# RAG leve de legislação (fail-open): trechos curados para grounding da IA
+# contra alucinação de dispositivos legais — ver legislacao.py e
+# docs/migrations/legislacao_busca.sql.
+from legislacao import recuperar_legislacao, montar_bloco_contexto, montar_evidencia
 
 questao_bp = Blueprint('questao', __name__)
 
@@ -453,6 +457,11 @@ def ia_explica():
         res_alt = safe_execute(supabase.table("alternativas_questao").select("*").eq("id_questao", id_q).order("letra"))
         alts = res_alt.data or []
 
+        # RAG leve de legislação: recupera trechos curados (fail-open — sem
+        # contexto, ou em falha de retrieval, o system prompt permanece
+        # byte a byte o congelado de docs/ia.md).
+        trechos_leg = recuperar_legislacao(q.get('id_materia'), q.get('id_topico'), q.get('enunciado'))
+
         system_prompt = (
             "Você é um professor especialista em concursos públicos no Brasil. Sua função é explicar o gabarito de questões objetivas de forma pedagógica, clara e direta.\n\n"
             "REGRAS ESTRITAS:\n"
@@ -489,6 +498,22 @@ def ia_explica():
             "9. **Nomes com Underscore**: Para nomes de atributos ou tabelas com underscore (ex: Nome_RazaoSocial), escreva-os OBRIGATORIAMENTE dentro de \\text{...} se estiver em fórmula LaTeX, ou dentro de blocos de código (ex: `Nome_RazaoSocial`) se estiver no texto comum. Nunca deixe o underscore solto para evitar conflitos de Markdown."
         )
 
+        # Bloco condicional do RAG: só entra quando há trechos recuperados —
+        # sem contexto, o system prompt é literalmente o congelado acima.
+        bloco_leg = montar_bloco_contexto(trechos_leg)
+        if bloco_leg:
+            system_prompt += (
+                "\n\nCONTEXTO LEGISLATIVO OFICIAL (corpus curado do Gabaritei, recuperação automática):\n"
+                "Os trechos de legislação estão no final do prompt do usuário, sob 'Contexto legislativo oficial'.\n"
+                "REGRAS DO CONTEXTO:\n"
+                "- O contexto é a ÚNICA fonte autoritativa de citação de dispositivos legais nesta resposta.\n"
+                "- Cite artigo, §, inciso ou alínea APENAS se estiverem transcritos no contexto.\n"
+                "- NUNCA cite número de dispositivo que não esteja no contexto.\n"
+                "- Se o contexto não cobrir o fundamento do gabarito, explique o raciocínio sem citar dispositivo legal específico.\n"
+                "- Se houver 'Texto base de apoio (Lei seca)' fornecido pela banca, ele PREVALECE sobre o contexto recuperado.\n"
+                "- Se o contexto marcar 'VIGÊNCIA ENCERRADA' e a questão depender da redação antiga, mantenha o Alerta de Desatualização Legislativa explicando a mudança."
+            )
+
         gabarito_letra = next((a['letra'] for a in alts if a['is_correct']), "?")
         prompt_usuario = f"Explique pedagogicamente esta questão.\nQuestão: {q['enunciado']}\n"
         prompt_usuario += "Alternativas:\n"
@@ -498,6 +523,8 @@ def ia_explica():
         prompt_usuario += f"\nGabarito Correto: {gabarito_letra}\n"
         if q.get('textos_base'):
             prompt_usuario += f"Texto base de apoio (Lei seca): {q['textos_base']['conteudo_texto']}\n"
+        if bloco_leg:
+            prompt_usuario += f"\nContexto legislativo oficial (fonte de citação):\n{bloco_leg}\n"
 
         import re
         urls_imagens = []
@@ -536,7 +563,23 @@ def ia_explica():
         explicacao_final = re.sub(r'(?m)^[ \t]*[>|][ \t]*', r' ', explicacao_gerada)
         explicacao_final = re.sub(r' +', r' ', explicacao_final)
 
-        safe_execute(supabase.table("explicacoes_ia").insert({"id_questao": id_q, "conteudo_explicacao": explicacao_final}))
+        # Evidência do RAG junto do cache global (auditoria: quais trechos
+        # fundamentaram esta explicação). Se a coluna contexto_legislacao
+        # ainda não existir no Supabase (migration pendente), grava sem a
+        # evidência — a explicação já gerada não se perde.
+        payload_cache: dict[str, Any] = {"id_questao": id_q, "conteudo_explicacao": explicacao_final}
+        evidencia_leg = montar_evidencia(trechos_leg)
+        if evidencia_leg:
+            payload_cache["contexto_legislacao"] = evidencia_leg
+        try:
+            safe_execute(supabase.table("explicacoes_ia").insert(payload_cache))
+        except Exception as e:
+            if not evidencia_leg or ("contexto_legislacao" not in str(e) and "42703" not in str(e)):
+                raise
+            print(f"⚠️ Coluna contexto_legislacao ausente (migration pendente) — salvando sem evidência: {e}")
+            safe_execute(supabase.table("explicacoes_ia").insert(
+                {"id_questao": id_q, "conteudo_explicacao": explicacao_final}
+            ))
 
         return jsonify({"explicacao": explicacao_final})
     except Exception as e:

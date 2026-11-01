@@ -37,10 +37,11 @@ caminho_do_projeto\tests\
 ├── test_flashcards.py     # Testes do sistema de flashcards e algoritmo SM-2 customizado
 ├── test_caderno.py        # Testes de coleções de questões e criação de cadernos
 ├── test_resumos.py        # Testes do painel de resumos por matéria e exclusão
+├── test_legislacao.py     # Contexto legislativo (RAG leve): recuperação fail-open e blocos de prompt
 └── test_provedores_ia.py  # Camada BYOK: provedores, banco local, pings e fallback de parâmetros
 ```
 
-No estado atual a suíte soma **139 testes**, executados com `python -m unittest discover -s tests`.
+No estado atual a suíte soma **157 testes**, executados com `python -m unittest discover -s tests`.
 
 ### 1. Modelos (`test_modelos.py`)
 Valida o comportamento das classes de dados (representando tabelas e registros do Supabase), garantindo consistência na modelagem e lógica interna.
@@ -89,11 +90,12 @@ Valida os dashboards de estatísticas do aluno e a lógica de resolução de que
 ### 6. Integração com IA (`test_ia_chat.py`) [Fase 6 - Consolidada]
 Valida a lógica dos fluxos acionados por Inteligência Artificial na plataforma.
 - **Fluxos testados:**
-  - `/api/ia_explica` (validação de cache local `explicacoes_ia` e geração via camada BYOK com limpeza de strings desnecessárias — com regressão dos parâmetros congelados: temperature=0.0, top_p=0.1, presence/frequency=0.0).
+  - `/api/ia_explica` (validação de cache local `explicacoes_ia` e geração via camada BYOK com limpeza de strings desnecessárias — com regressão dos parâmetros congelados: temperature=0.0, top_p=0.1, presence/frequency=0.0). Inclui o **RAG leve de legislação**: trechos recuperados entram no system prompt (bloco condicional), no prompt do usuário e a evidência é gravada no cache (`contexto_legislacao`); com a coluna ainda inexistente no Supabase (42703), o cache é gravado sem a evidência sem perder a explicação.
   - `/api/ia/gerar_estudo` (criação de resumos e flashcards, validação de cache de usuário em `resumos_estudo` ou `flashcards`, consulta a cache global `ia_cache_estudo` e gravação correta de novos materiais gerados; TEMPERATURE_GPT=0.3 congelada).
 - **Mocks importantes:**
   - Mock da camada BYOK (`chamar_ia` e `ia_configurada` em `rotas.questao`) substituindo o antigo cliente global `client_gpt`.
   - Mock de banco de dados nas consultas de cache e persistência de materiais de IA.
+  - `rotas.questao.recuperar_legislacao` mockado nos testes de geração (o retrieval real só roda no app; ver `test_legislacao.py` para a unitária).
   - Banco local da chave de IA isolado em tmpdir via `GABARITEI_LOCAL_DIR` (setUp/tearDown).
 
 ### 7. Painel da Conta do Usuário (`test_conta.py`)
@@ -162,6 +164,17 @@ Valida o núcleo do BYOK sem nenhuma rede real (pings e SDKs mockados).
   - `chamar_ia`: erro amigável sem config; dispatch OpenAI (role `developer`), Gemini (base_url do Google, role `system`) e Anthropic (payload nativo com `x-api-key`, penalties omitidos, 401 → `chave_invalida`).
   - `testar_chave`: pings 401/404/200 mockados e provedor desconhecido.
   - Retry de parâmetros rejeitados por MODELO: 400 `unsupported_value` em `temperature` (família gpt-5/6 de raciocínio) → a 1ª chamada envia os calibrados, a 2ª vem sem o parâmetro rejeitado; 400 sem param conhecido propaga sem loop; caminho REST da Anthropic com a mesma guarda.
+
+### 13. Contexto Legislativo — RAG Leve (`test_legislacao.py`)
+Valida o grounding de `/api/ia_explica` contra o corpus curado `legislacao_artigos` (módulo `legislacao.py`), sem nenhuma rede real.
+- **Fluxos testados:**
+  - `limpar_html`: remoção de tags/entidades do enunciado e normalização de espaços antes da busca lexical.
+  - `recuperar_legislacao`: normalização dos trechos retornados pela RPC `buscar_legislacao`, envio da taxonomia (`p_id_materia`/`p_id_topico`), clamping do limite, truncagem de textos longos, ignoração de linhas inválidas; **fail-open** (RPC ausente/rede → lista vazia, nunca exceção); enunciado curto não dispara busca.
+  - `montar_bloco_contexto`: bloco numerado com anotação de vigência — `VIGÊNCIA ENCERRADA` para redações históricas, "vigente desde" para atuais.
+  - `montar_evidencia`: forma `{id, referência}` gravada em `explicacoes_ia.contexto_legislacao`.
+- **Mocks importantes:**
+  - `@patch('legislacao.supabase')` — a cadeia `rpc().execute()` é simulada; o app real só chama a RPC no Supabase (migration `legislacao_busca`).
+  - Testes de rota com contexto ficam em `test_ia_chat.py` (seção 6), com `rotas.questao.recuperar_legislacao` mockado.
 
 ---
 
@@ -254,7 +267,7 @@ python -m unittest tests/test_auth.py
 ```
 
 > [!NOTE]
-> O comando canônico é `unittest`. `pytest tests -q` falha na **coleta** de `tests/test_provedores_ia.py`: a função `testar_chave` (importada de `provedores_ia.py`) começa com `test` e o pytest tenta tratá-la como caso de teste, pedindo fixtures para os parâmetros `provedor`, `chave` e `modelo`. Isso não indica falha da suíte — com `unittest` os 139 testes passam.
+> O comando canônico é `unittest`. `pytest tests -q` falha na **coleta** de `tests/test_provedores_ia.py`: a função `testar_chave` (importada de `provedores_ia.py`) começa com `test` e o pytest tenta tratá-la como caso de teste, pedindo fixtures para os parâmetros `provedor`, `chave` e `modelo`. Isso não indica falha da suíte — com `unittest` os 157 testes passam.
 
 ---
 

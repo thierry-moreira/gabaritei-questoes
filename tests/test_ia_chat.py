@@ -79,7 +79,8 @@ class TestIAChatBlueprint(unittest.TestCase):
     @patch('rotas.questao.current_user')
     @patch('rotas.questao.safe_execute')
     @patch('rotas.questao.supabase')
-    def test_ia_explica_geracao_sucesso(self, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
+    @patch('rotas.questao.recuperar_legislacao', return_value=[])
+    def test_ia_explica_geracao_sucesso(self, mock_leg, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
         """Garante a geração inédita da explicação via camada BYOK quando não há cache, tratando a limpeza e a gravação."""
         for mock_user in [mock_questao_user, mock_utils_user]:
             mock_user.is_authenticated = True
@@ -136,6 +137,112 @@ class TestIAChatBlueprint(unittest.TestCase):
         self.assertEqual(kwargs.get('top_p'), 0.1)
         self.assertEqual(kwargs.get('presence_penalty'), 0.0)
         self.assertEqual(kwargs.get('frequency_penalty'), 0.0)
+
+    @patch('rotas.questao.ia_configurada', return_value=True)
+    @patch('utils.current_user')
+    @patch('rotas.questao.chamar_ia')
+    @patch('rotas.questao.current_user')
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    @patch('rotas.questao.recuperar_legislacao')
+    def test_ia_explica_com_contexto_legislativo(self, mock_leg, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
+        """RAG leve: trechos curados entram no system prompt, no prompt do
+        usuário e a evidência é gravada no cache (contexto_legislacao)."""
+        for mock_user in [mock_questao_user, mock_utils_user]:
+            mock_user.is_authenticated = True
+            mock_user.id = '12345'
+            mock_user.role = 'aluno'
+
+        mock_leg.return_value = [{
+            'id': 42,
+            'referencia': 'Lei nº 8.112/1990 — art. 117, inciso IX',
+            'texto': 'Aceitar, direta ou indiretamente, propina ou gratificação.',
+            'vigencia_de': '1990-01-08',
+            'vigencia_ate': None,
+        }]
+
+        mock_res_cache = MagicMock()
+        mock_res_cache.data = []
+        mock_res_q = MagicMock()
+        mock_res_q.data = {
+            'id_questao': 500, 'id_materia': 7, 'id_topico': 9,
+            'enunciado': 'O servidor público pode aceitar propina?', 'url_imagem': None
+        }
+        mock_res_alt = MagicMock()
+        mock_res_alt.data = [
+            {'letra': 'A', 'is_correct': False, 'texto': 'Sim, em qualquer hipótese.'},
+            {'letra': 'B', 'is_correct': True, 'texto': 'Não, é terminantemente vedado.'}
+        ]
+        mock_res_insert = MagicMock()
+        mock_safe_execute.side_effect = [mock_res_cache, mock_res_q, mock_res_alt, mock_res_insert]
+        mock_chamar_ia.return_value = "Não, é terminantemente vedado ao servidor."
+
+        response = self.client.post('/api/ia_explica', json={'id_questao': 500})
+        self.assertEqual(response.status_code, 200)
+
+        # A recuperação usou a taxonomia da questão + enunciado
+        mock_leg.assert_called_once_with(7, 9, 'O servidor público pode aceitar propina?')
+
+        # System prompt ganha o bloco condicional do contexto
+        kwargs = mock_chamar_ia.call_args.kwargs
+        self.assertIn('CONTEXTO LEGISLATIVO OFICIAL', kwargs.get('system_prompt', ''))
+
+        # O prompt do usuário carrega os trechos para citação
+        prompt_usuario = kwargs.get('conteudo')[0]['text']
+        self.assertIn('Contexto legislativo oficial', prompt_usuario)
+        self.assertIn('art. 117, inciso IX', prompt_usuario)
+        self.assertIn('Aceitar, direta ou indiretamente, propina', prompt_usuario)
+
+        # Evidência gravada junto do cache global (auditoria)
+        payload = mock_supabase.table.return_value.insert.call_args.args[0]
+        self.assertEqual(
+            payload.get('contexto_legislacao'),
+            [{'id': 42, 'referencia': 'Lei nº 8.112/1990 — art. 117, inciso IX'}]
+        )
+
+    @patch('rotas.questao.ia_configurada', return_value=True)
+    @patch('utils.current_user')
+    @patch('rotas.questao.chamar_ia')
+    @patch('rotas.questao.current_user')
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    @patch('rotas.questao.recuperar_legislacao')
+    def test_ia_explica_cache_sem_coluna_evidencia(self, mock_leg, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
+        """Migration da coluna contexto_legislacao pendente (42703) → o cache é
+        gravado SEM a evidência e a explicação gerada não se perde."""
+        for mock_user in [mock_questao_user, mock_utils_user]:
+            mock_user.is_authenticated = True
+            mock_user.id = '12345'
+            mock_user.role = 'aluno'
+
+        mock_leg.return_value = [{
+            'id': 1, 'referencia': 'Lei nº 9.784/1999 — art. 2',
+            'texto': 'A Administração obedecerá a critérios de legalidade.', 'vigencia_de': None, 'vigencia_ate': None
+        }]
+
+        mock_res_cache = MagicMock()
+        mock_res_cache.data = []
+        mock_res_q = MagicMock()
+        mock_res_q.data = {'id_questao': 500, 'enunciado': 'Processo administrativo observa legalidade?', 'url_imagem': None}
+        mock_res_alt = MagicMock()
+        mock_res_alt.data = [{'letra': 'C', 'is_correct': True, 'texto': 'Sim.'}]
+        mock_res_insert = MagicMock()
+
+        erro_coluna = Exception('42703 column "contexto_legislacao" of relation "explicacoes_ia" does not exist')
+        mock_safe_execute.side_effect = [
+            mock_res_cache, mock_res_q, mock_res_alt, erro_coluna, mock_res_insert
+        ]
+        mock_chamar_ia.return_value = "Sim, critério de legalidade."
+
+        response = self.client.post('/api/ia_explica', json={'id_questao': 500})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("legalidade", response.get_json().get('explicacao', ''))
+
+        # Dois inserts: o 1º com evidência falhou, o 2º sem a coluna passou
+        payloads = [c.args[0] for c in mock_supabase.table.return_value.insert.call_args_list]
+        self.assertEqual(len(payloads), 2)
+        self.assertIn('contexto_legislacao', payloads[0])
+        self.assertNotIn('contexto_legislacao', payloads[1])
 
     # -------------------------------------------------------------------------
     # Testes do Gerador de Materiais (/api/ia/gerar_estudo)

@@ -7,16 +7,29 @@ O app do aluno **não tem chave de IA própria**: cada aluno usa a **própria ch
 | Camada | Arquivo | Responsabilidade |
 |---|---|---|
 | Provedores | `provedores_ia.py` | Listas oficiais de modelos, dispatch por provedor, pings de validação, tradução de payload/imagens |
+| Contexto legal | `legislacao.py` | Recuperação **fail-open** de trechos curados (RPC `buscar_legislacao`) para grounding contra alucinação de dispositivos legais |
 | Armazenamento local | `banco_local.py` | SQLite em `GABARITEI_LOCAL_DIR` com a chave cifrada via **DPAPI** |
 | UI + endpoints | `rotas/conta.py` + `templates/aluno/conta.html` | Card de configuração, `POST /api/ia/config`, `POST /api/ia/config/remover` |
 | Consumo | `rotas/questao.py` | `/api/ia_explica` e `/api/ia/gerar_estudo` chamam `chamar_ia()` |
 
 ## O que NÃO muda (congelado)
 
-- **System prompts** byte a byte — continuam definidos nas rotas.
+- **System prompts** byte a byte — continuam definidos nas rotas. Exceção **condicional**: com contexto legislativo recuperado (seção abaixo), um bloco é *anexado* ao system prompt da `/api/ia_explica`; sem contexto, o prompt é literalmente o congelado.
 - `/api/ia_explica`: `temperature=0.0, top_p=0.1, presence_penalty=0.0, frequency_penalty=0.0`.
 - `/api/ia/gerar_estudo`: `TEMPERATURE_GPT = 0.3`.
 - Caches e persistência no Supabase intactos: `explicacoes_ia` (global por questão), `ia_cache_estudo` (global por questão+tipo), `resumos_estudo`/`flashcards` (por aluno).
+
+## Contexto legislativo (RAG leve)
+
+Para o modelo não alucinar (nem citar revogados) dispositivos legais, a `/api/ia_explica` recupera trechos do corpus curado `legislacao_artigos` e os injeta no prompt antes de gerar:
+
+- **Recuperação**: `legislacao.recuperar_legislacao(id_materia, id_topico, enunciado)` → RPC `buscar_legislacao` — busca **lexical/estruturada** (Postgres FTS em português + filtros da taxonomia `id_materia`/`id_topico`), **sem embeddings**: legislação é altamente lexical ("art. 117 Lei 8.112") e a camada BYOK não tem API de embeddings compatível entre OpenAI, Gemini e Anthropic. Máx. 5 trechos × 1.500 caracteres; enunciado limpo de HTML antes da busca.
+- **Fail-open**: qualquer falha (RPC inexistente, rede, enunciado curto demais) devolve lista vazia e a geração segue **idêntica** ao fluxo sem RAG — uma chamada única, sem retry, propositadamente (o contrato é enriquecimento, não dependência).
+- **Prompt**: com contexto, o bloco `CONTEXTO LEGISLATIVO OFICIAL` é anexado ao system prompt (regras: citar **apenas** dispositivos transcritos no contexto; o `textos_base` da banca prevalece; `VIGÊNCIA ENCERRADA` mantém o Alerta de Desatualização) e os trechos entram no prompt do usuário sob "Contexto legislativo oficial". Sem contexto, prompts permanecem os congelados.
+- **Auditoria**: IDs/referências dos trechos usados são gravados em `explicacoes_ia.contexto_legislacao` (jsonb) junto do cache global. Linhas antigas ficam `NULL` (geradas sem contexto); para regerar uma com RAG, o painel apaga a linha e o próximo aluno com chave gera de novo.
+- **Custo**: o retrieval é **uma única query PostgREST por geração inédita**, amortizada pelo cache global — paga por 1 aluno, servida a todos.
+- **Migração pendente**: se `contexto_legislacao` ainda não existir no Supabase (42703), o cache é gravado sem a evidência — a explicação já gerada não se perde.
+- **Ingestão**: exclusiva do painel administrativo (service_role) — ver `docs/migrations/legislacao_busca.sql`; o app do aluno só consulta.
 
 ## Modelos pré-configurados (`PROVEDORES`)
 
