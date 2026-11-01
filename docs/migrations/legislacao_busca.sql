@@ -3,6 +3,9 @@
 -- Migration: legislacao_busca
 --
 -- Aplicar no Supabase (editor SQL / pipeline do painel administrativo).
+-- STATUS: aplicada em 2026-11-01 no projeto Supabase (ref ivhuaevrrkrnagbqmnwc),
+-- via MCP (`apply_migration` nomeada `legislacao_busca`) — inclui o fix
+-- `set search_path = ''` na função (advisor function_search_path_mutable).
 -- O app do aluno apenas CONSULTA (anon + RLS de leitura); a ingestão do
 -- corpus é exclusiva do painel (service_role, fora deste repo).
 --
@@ -74,6 +77,7 @@ returns table (
 )
 language sql
 stable
+set search_path = ''
 as $$
     with tsq as (
         select case
