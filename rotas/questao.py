@@ -8,7 +8,14 @@ from postgrest import CountMethod
 
 from banco_dados_aluno import supabase
 from extensoes import limiter
-from utils import safe_execute, aluno_required, slugify, verificar_texto_improprio
+from utils import (
+    safe_execute,
+    aluno_required,
+    slugify,
+    verificar_texto_improprio,
+    validar_username,
+    validar_texto_comentario,
+)
 # BYOK (Bring Your Own Key): a IA roda com a PRÓPRIA chave do aluno, guardada
 # apenas localmente (banco_local.py). Os prompts e parâmetros calibrados das
 # respostas continuam definidos aqui nas rotas, sem qualquer alteração.
@@ -19,6 +26,33 @@ from provedores_ia import chamar_ia, ia_configurada, MSG_NAO_CONFIGURADA, TEMPER
 from legislacao import recuperar_legislacao, montar_bloco_contexto, montar_evidencia
 
 questao_bp = Blueprint('questao', __name__)
+
+# Endpoint público de comentários: limita payload e custo por consulta.
+COMENTARIOS_POR_PAGINA = 20
+OFFSET_MAX_COMENTARIOS = 10_000
+COLUNAS_COMENTARIO_PUBLICO = (
+    "id_comentario",
+    "nome_usuario",
+    "texto_comentario",
+    "criado_em",
+)
+MAX_ID_HISTORICO = 2_147_483_647
+
+
+def _id_historico_positivo(valor):
+    """Normaliza IDs recebidos pelo endpoint legado de resposta.
+
+    `historico_respostas.id_questao` e `id_alternativa_marcada` são integer
+    (int4); rejeita bools, tipos compostos, valores não inteiros e overflow
+    antes de consultar ou gravar no banco.
+    """
+    if isinstance(valor, bool) or not isinstance(valor, (int, str)):
+        return None
+    try:
+        valor = int(valor)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return valor if 0 < valor <= MAX_ID_HISTORICO else None
 
 
 @questao_bp.route('/aluno/responder', methods=['POST'])
@@ -190,7 +224,7 @@ def resolver_questoes(materia_slug=None, topico_slug=None):
     contagens = {}
     if ids_da_pagina:
         res_coments = safe_execute(
-            supabase.table("comentarios_questao")
+            supabase.table("view_comentarios_publicos")
             .select("id_questao")
             .in_("id_questao", ids_da_pagina)
         )
@@ -260,7 +294,7 @@ def visualizar_questao_seo(materia_slug, topico_slug, id_questao):
     res_alt = safe_execute(supabase.table("alternativas_questao").select("*").eq("id_questao", id_questao).order("letra"))
     questao['alternativas_questao'] = res_alt.data or []
     
-    res_coments = safe_execute(supabase.table("comentarios_questao").select("id_questao", count=CountMethod.exact).eq("id_questao", id_questao))
+    res_coments = safe_execute(supabase.table("view_comentarios_publicos").select("id_questao", count=CountMethod.exact).eq("id_questao", id_questao))
     questao['total_comentarios'] = res_coments.count if res_coments.count else 0
 
     res_taxa = safe_execute(supabase.table("view_taxa_acerto_questoes").select("taxa_acerto").eq("id_questao", id_questao).maybe_single())
@@ -285,51 +319,117 @@ def visualizar_questao_seo(materia_slug, topico_slug, id_questao):
 
 
 @questao_bp.route('/api/responder', methods=['POST'])
+@limiter.limit("60 per minute")
 @aluno_required
-@limiter.exempt
 def salvar_resposta():
-    data = request.json
-    id_questao = data.get('id_questao')
-    id_alternativa = data.get('id_alternativa')
-    is_correct = data.get('is_correct')
+    dados = request.get_json(silent=True)
+    if not isinstance(dados, dict):
+        return jsonify({"success": False, "error": "Resposta inválida."}), 400
 
-    query_historico = supabase.table("historico_respostas").insert({
-        "id_usuario": current_user.id,
-        "id_questao": id_questao,
-        "id_alternativa_marcada": id_alternativa,
-        "is_correct": is_correct
-    })
+    id_questao = _id_historico_positivo(dados.get('id_questao'))
+    id_alternativa = _id_historico_positivo(dados.get('id_alternativa'))
+    if id_questao is None or id_alternativa is None:
+        return jsonify({"success": False, "error": "Questão ou alternativa inválida."}), 400
 
     try:
+        # A correção vem exclusivamente do registro da alternativa vinculada
+        # à questão. O campo is_correct recebido do cliente é ignorado.
+        res_alternativa = safe_execute(
+            supabase.table("alternativas_questao")
+            .select("id_alternativa, is_correct")
+            .eq("id_questao", id_questao)
+            .eq("id_alternativa", id_alternativa)
+            .maybe_single()
+        )
+        alternativa = res_alternativa.data if res_alternativa else None
+        if not alternativa:
+            return jsonify({
+                "success": False,
+                "error": "Alternativa inválida para essa questão.",
+            }), 400
+
+        is_correct = alternativa.get("is_correct")
+        if not isinstance(is_correct, bool):
+            current_app.logger.error(
+                "Alternativa %s da questão %s possui is_correct inválido.",
+                id_alternativa,
+                id_questao,
+            )
+            return jsonify({"success": False, "error": "Não foi possível validar a resposta."}), 500
+
+        query_historico = supabase.table("historico_respostas").insert({
+            "id_usuario": str(current_user.id),
+            "id_questao": id_questao,
+            "id_alternativa_marcada": id_alternativa,
+            "is_correct": is_correct,
+        })
         safe_execute(query_historico)
         return jsonify({"success": True})
     except Exception as e:
         print(f"❌ Erro definitivo ao salvar histórico: {e}")
+        if current_app.config.get('TESTING'):
+            raise e
         return jsonify({"success": False, "error": "Erro ao salvar seu progresso."}), 500
 
 
 @questao_bp.route('/api/comentarios/<int:id_questao>', methods=['GET'])
-@limiter.exempt
+@limiter.limit("60 per minute")
 def buscar_comentarios(id_questao):
-    query_comentarios = supabase.table("comentarios_questao") \
-        .select("*") \
-        .eq("id_questao", id_questao) \
+    """Retorna uma página do feed público, sem identificadores do autor."""
+    pagina_bruta = request.args.get("page", "1")
+    try:
+        pagina = int(pagina_bruta)
+    except (TypeError, ValueError):
+        return jsonify({"error": "Página inválida."}), 400
+
+    offset = (pagina - 1) * COMENTARIOS_POR_PAGINA
+    if pagina < 1 or offset > OFFSET_MAX_COMENTARIOS:
+        return jsonify({"error": "Página inválida."}), 400
+
+    # A view pública já remove id_usuario/auth_id e filtra questões publicadas.
+    # O SELECT explícito e a projeção abaixo mantêm a resposta mínima mesmo se
+    # a view ou o cliente retornar colunas adicionais no futuro.
+    query_comentarios = (
+        supabase.table("view_comentarios_publicos")
+        .select(", ".join(COLUNAS_COMENTARIO_PUBLICO))
+        .eq("id_questao", id_questao)
         .order("criado_em", desc=True)
+        .order("id_comentario", desc=True)
+        # range é inclusivo; busca um item extra para informar se há próxima página.
+        .range(offset, offset + COMENTARIOS_POR_PAGINA)
+    )
     try:
         res = safe_execute(query_comentarios)
-        return jsonify(res.data if res.data else [])
+        linhas = res.data or []
+        comentarios = [
+            {coluna: linha.get(coluna) for coluna in COLUNAS_COMENTARIO_PUBLICO}
+            for linha in linhas[:COMENTARIOS_POR_PAGINA]
+            if isinstance(linha, dict)
+        ]
+        return jsonify({
+            "comentarios": comentarios,
+            "pagina": pagina,
+            "tem_mais": len(linhas) > COMENTARIOS_POR_PAGINA,
+        })
     except Exception as e:
         print(f"⚠️ Falha ao buscar comentários (Questão {id_questao}): {e}")
-        return jsonify([])
+        return jsonify({"comentarios": [], "pagina": pagina, "tem_mais": False})
 
 
 @questao_bp.route('/api/comentarios', methods=['POST'])
 @limiter.exempt
 @aluno_required
 def salvar_comentario():
-    dados = request.get_json()
-    id_questao = dados.get('id_questao')
-    texto = dados.get('texto')
+    dados = request.get_json(silent=True) or {}
+
+    try:
+        id_questao = int(dados.get('id_questao'))
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "Questão inválida."}), 400
+
+    texto, erro_texto = validar_texto_comentario(dados.get('texto'))
+    if erro_texto:
+        return jsonify({"success": False, "error": erro_texto}), 400
 
     from utils import verificar_texto_improprio
     sucesso_mod, msg_erro = verificar_texto_improprio(texto)
@@ -343,7 +443,12 @@ def salvar_comentario():
             .single()
         
         res_user = safe_execute(query_user)
-        nome_aluno = res_user.data.get("username") if res_user.data else "Concurseiro"
+        nome_bruto = res_user.data.get("username") if res_user.data else "Concurseiro"
+        nome_aluno, _ = validar_username(nome_bruto)
+        if not nome_aluno:
+            # Perfil legado com username fora do formato: não propaga o valor
+            # inválido para o comentário.
+            nome_aluno = "Concurseiro"
 
         query_insert = supabase.table("comentarios_questao").insert({
             "id_questao": id_questao,
@@ -381,7 +486,7 @@ def reportar_comentario(id_comentario):
         return jsonify({"success": False, "error": "Comentário inválido."}), 400
 
     res_c = safe_execute(
-        supabase.table("comentarios_questao")
+        supabase.table("view_comentarios_publicos")
         .select("id_comentario")
         .eq("id_comentario", id_comentario)
         .maybe_single()

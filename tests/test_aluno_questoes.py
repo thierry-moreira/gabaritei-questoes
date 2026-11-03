@@ -4,6 +4,8 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock
 from flask import render_template_string
+from flask_limiter.util import get_qualified_name
+from extensoes import limiter
 
 # Adiciona o diretório raiz ao sys.path para garantir que as importações funcionem corretamente
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -211,6 +213,252 @@ class TestAlunoQuestaoFlask(unittest.TestCase):
         self.assertEqual(dados.get('comentario'), 'Excelente comentário explicativo.')
 
     # -------------------------------------------------------------------------
+    # F-08 — /api/responder calcula is_correct no servidor
+    # -------------------------------------------------------------------------
+
+    @patch('utils.current_user')
+    @patch('rotas.questao.current_user')
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    def test_api_responder_ignora_is_correct_malicioso_do_cliente(
+        self, mock_supabase, mock_safe_execute,
+        mock_questao_current_user, mock_utils_current_user,
+    ):
+        """F-08: cliente envia true, mas alternativa incorreta é gravada false."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        resultado_alternativa = MagicMock()
+        resultado_alternativa.data = {
+            'id_alternativa': 102,
+            'is_correct': False,
+        }
+        mock_safe_execute.side_effect = [resultado_alternativa, MagicMock()]
+
+        response = self.client.post('/api/responder', json={
+            'id_questao': 50,
+            'id_alternativa': 102,
+            'is_correct': True,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()['success'])
+        mock_supabase.table.return_value.insert.assert_called_once_with({
+            'id_usuario': '99988',
+            'id_questao': 50,
+            'id_alternativa_marcada': 102,
+            'is_correct': False,
+        })
+
+        query = mock_supabase.table.return_value
+        mock_supabase.table.assert_any_call('alternativas_questao')
+        query.select.assert_called_once_with('id_alternativa, is_correct')
+        primeiro_filtro = query.select.return_value.eq
+        primeiro_filtro.assert_called_once_with('id_questao', 50)
+        segundo_filtro = primeiro_filtro.return_value.eq
+        segundo_filtro.assert_called_once_with('id_alternativa', 102)
+        segundo_filtro.return_value.maybe_single.assert_called_once_with()
+
+    @patch('utils.current_user')
+    @patch('rotas.questao.current_user')
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    def test_api_responder_grava_correta_do_banco_mesmo_se_cliente_negar(
+        self, mock_supabase, mock_safe_execute,
+        mock_questao_current_user, mock_utils_current_user,
+    ):
+        """F-08: cliente envia false, mas alternativa correta é gravada true."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        resultado_alternativa = MagicMock()
+        resultado_alternativa.data = {
+            'id_alternativa': 101,
+            'is_correct': True,
+        }
+        mock_safe_execute.side_effect = [resultado_alternativa, MagicMock()]
+
+        response = self.client.post('/api/responder', json={
+            'id_questao': 50,
+            'id_alternativa': 101,
+            'is_correct': False,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        mock_supabase.table.return_value.insert.assert_called_once_with({
+            'id_usuario': '99988',
+            'id_questao': 50,
+            'id_alternativa_marcada': 101,
+            'is_correct': True,
+        })
+
+    @patch('utils.current_user')
+    @patch('rotas.questao.current_user')
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    def test_api_responder_rejeita_alternativa_de_outra_questao(
+        self, mock_supabase, mock_safe_execute,
+        mock_questao_current_user, mock_utils_current_user,
+    ):
+        """F-08: ausência de vínculo alternativa/questão bloqueia o INSERT."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        resultado_alternativa = MagicMock()
+        resultado_alternativa.data = None
+        mock_safe_execute.return_value = resultado_alternativa
+
+        response = self.client.post('/api/responder', json={
+            'id_questao': 50,
+            'id_alternativa': 999,
+            'is_correct': True,
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.get_json()['success'])
+        mock_safe_execute.assert_called_once()
+        mock_supabase.table.assert_called_once_with('alternativas_questao')
+        mock_supabase.table.return_value.insert.assert_not_called()
+
+    @patch('utils.current_user')
+    @patch('rotas.questao.current_user')
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    def test_api_responder_rejeita_ids_invalidos_antes_do_banco(
+        self, mock_supabase, mock_safe_execute,
+        mock_questao_current_user, mock_utils_current_user,
+    ):
+        """F-08: IDs não inteiros/fora do int4 não chegam ao Supabase."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        for alternativa in (True, 2_147_483_648, '50.5'):
+            with self.subTest(alternativa=alternativa):
+                response = self.client.post('/api/responder', json={
+                    'id_questao': 50,
+                    'id_alternativa': alternativa,
+                    'is_correct': True,
+                })
+                self.assertEqual(response.status_code, 400)
+
+        mock_safe_execute.assert_not_called()
+        mock_supabase.table.assert_not_called()
+
+    def test_api_responder_tem_rate_limit_configurado(self):
+        """F-08: endpoint de gravação declara o mesmo limite de 60/min da rota principal."""
+        view = app.view_functions['questao.salvar_resposta']
+        limites = limiter.limit_manager.decorated_limits(get_qualified_name(view))
+
+        self.assertEqual(len(limites), 1)
+        self.assertEqual(str(limites[0].limit), '60 per 1 minute')
+
+    # -------------------------------------------------------------------------
+    # Testes do feed público de comentários (GET)
+    # -------------------------------------------------------------------------
+
+    @patch('rotas.questao.supabase')
+    @patch('rotas.questao.safe_execute')
+    def test_buscar_comentarios_filtra_campos_e_limita_pagina(
+        self, mock_safe_execute, mock_supabase
+    ):
+        """F-07: não serializa id_usuario e retorna só 20 + indicador de página."""
+        linhas = [
+            {
+                'id_comentario': f'comentario-{i}',
+                'id_questao': 50,
+                'id_usuario': f'usuario-privado-{i}',
+                'nome_usuario': f'Aluno {i}',
+                'texto_comentario': f'Texto {i}',
+                'criado_em': '2026-01-01T00:00:00+00:00',
+            }
+            for i in range(21)
+        ]
+        resultado = MagicMock()
+        resultado.data = linhas
+        mock_safe_execute.return_value = resultado
+
+        response = self.client.get('/api/comentarios/50')
+
+        self.assertEqual(response.status_code, 200)
+        body = response.get_json()
+        self.assertEqual(body['pagina'], 1)
+        self.assertTrue(body['tem_mais'])
+        self.assertEqual(len(body['comentarios']), 20)
+        self.assertEqual(
+            set(body['comentarios'][0]),
+            {'id_comentario', 'nome_usuario', 'texto_comentario', 'criado_em'},
+        )
+        self.assertNotIn('id_usuario', response.get_data(as_text=True))
+
+        tabela = mock_supabase.table.return_value
+        mock_supabase.table.assert_called_once_with('view_comentarios_publicos')
+        tabela.select.assert_called_once_with(
+            'id_comentario, nome_usuario, texto_comentario, criado_em'
+        )
+        primeira_ordenacao = tabela.select.return_value.eq.return_value.order
+        primeira_ordenacao.assert_called_once_with('criado_em', desc=True)
+        segunda_ordenacao = primeira_ordenacao.return_value.order
+        segunda_ordenacao.assert_called_once_with('id_comentario', desc=True)
+        segunda_ordenacao.return_value.range.assert_called_once_with(0, 20)
+
+    @patch('rotas.questao.supabase')
+    @patch('rotas.questao.safe_execute')
+    def test_buscar_comentarios_pagina_seguinte_usa_offset_limitado(
+        self, mock_safe_execute, mock_supabase
+    ):
+        """F-07: pagina 3 usa offset 40 e não sinaliza próxima quando não há mais."""
+        resultado = MagicMock()
+        resultado.data = [{
+            'id_comentario': 'comentario-antigo',
+            'nome_usuario': 'Aluno',
+            'texto_comentario': 'Comentário anterior.',
+            'criado_em': '2025-01-01T00:00:00+00:00',
+        }]
+        mock_safe_execute.return_value = resultado
+
+        response = self.client.get('/api/comentarios/50?page=3')
+
+        self.assertEqual(response.status_code, 200)
+        body = response.get_json()
+        self.assertEqual(body['pagina'], 3)
+        self.assertFalse(body['tem_mais'])
+        self.assertEqual(len(body['comentarios']), 1)
+        query = (
+            mock_supabase.table.return_value.select.return_value.eq.return_value
+            .order.return_value.order.return_value
+        )
+        query.range.assert_called_once_with(40, 60)
+
+    @patch('rotas.questao.supabase')
+    def test_buscar_comentarios_rejeita_pagina_invalida_sem_consultar_banco(
+        self, mock_supabase
+    ):
+        """F-07: página inválida ou offset excessivo não chega ao Supabase."""
+        for pagina in ('0', '-1', 'nao-numero', '502'):
+            with self.subTest(pagina=pagina):
+                response = self.client.get(f'/api/comentarios/50?page={pagina}')
+                self.assertEqual(response.status_code, 400)
+
+        mock_supabase.table.assert_not_called()
+
+    def test_buscar_comentarios_tem_rate_limit_configurado(self):
+        """F-07: rota pública declara um limite próprio de 60 requisições/min."""
+        view = app.view_functions['questao.buscar_comentarios']
+        nome_view = get_qualified_name(view)
+        limites = limiter.limit_manager.decorated_limits(nome_view)
+
+        self.assertEqual(len(limites), 1)
+        self.assertEqual(str(limites[0].limit), '60 per 1 minute')
+
+    # -------------------------------------------------------------------------
     # Testes de Moderação de Comentários (POST)
     # -------------------------------------------------------------------------
 
@@ -267,6 +515,93 @@ class TestAlunoQuestaoFlask(unittest.TestCase):
         dados = response.get_json()
         self.assertFalse(dados.get('success'))
         self.assertEqual(dados.get('error'), 'Linguajar inadequado detectado.')
+
+    @patch('rotas.questao.current_user')
+    @patch('utils.current_user')
+    def test_salvar_comentario_texto_longo_bloqueia(
+        self, mock_utils_current_user, mock_questao_current_user
+    ):
+        """F-11: comentário acima do limite é rejeitado antes de qualquer query."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        response = self.client.post('/api/comentarios', json={
+            'id_questao': 50,
+            'texto': 'x' * 1001,
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.get_json().get('success'))
+
+    @patch('rotas.questao.current_user')
+    @patch('utils.current_user')
+    def test_salvar_comentario_tipo_invalido_bloqueia(
+        self, mock_utils_current_user, mock_questao_current_user
+    ):
+        """F-11: payload que não é string (ou é nulo) não chega ao banco."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        response = self.client.post('/api/comentarios', json={
+            'id_questao': 50,
+            'texto': {'html': '<img src=x onerror=alert(1)>'},
+        })
+
+        self.assertEqual(response.status_code, 400)
+
+    @patch('rotas.questao.current_user')
+    @patch('utils.current_user')
+    def test_salvar_comentario_id_questao_invalido_bloqueia(
+        self, mock_utils_current_user, mock_questao_current_user
+    ):
+        """F-11: id_questao não numérico é rejeitado com 400."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        response = self.client.post('/api/comentarios', json={
+            'id_questao': 'nao-e-numero',
+            'texto': 'Comentário normal.',
+        })
+
+        self.assertEqual(response.status_code, 400)
+
+    @patch('utils.current_user')
+    @patch('rotas.questao.current_user')
+    @patch('utils.verificar_texto_improprio', return_value=(True, None))
+    @patch('rotas.questao.safe_execute')
+    @patch('rotas.questao.supabase')
+    def test_salvar_comentario_username_legado_invalido_usa_fallback(
+        self, mock_supabase, mock_safe_execute, mock_moderacao,
+        mock_questao_current_user, mock_utils_current_user,
+    ):
+        """F-11: username legado com HTML não é copiado para o comentário."""
+        for mock_user in [mock_questao_current_user, mock_utils_current_user]:
+            mock_user.is_authenticated = True
+            mock_user.role = 'aluno'
+            mock_user.id = '99988'
+
+        mock_res_user = MagicMock()
+        mock_res_user.data = {'username': '<img src=x onerror=alert(1)>'}
+        mock_safe_execute.side_effect = [mock_res_user, MagicMock()]
+
+        response = self.client.post('/api/comentarios', json={
+            'id_questao': 50,
+            'texto': 'Comentário normal.',
+        })
+
+        self.assertEqual(response.status_code, 200)
+        mock_supabase.table.return_value.insert.assert_called_once_with({
+            'id_questao': 50,
+            'id_usuario': '99988',
+            'nome_usuario': 'Concurseiro',
+            'texto_comentario': 'Comentário normal.',
+        })
 
     # -------------------------------------------------------------------------
     # Testes de Denúncia de Comentários (POST /api/comentarios/<id>/reportar)

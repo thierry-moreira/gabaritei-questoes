@@ -33,7 +33,7 @@
                         </thead>
                         <tbody>
                             {% for r in ranking %}
-                            <tr class="{% if r.usuarios.username == current_user.username %}table-primary fw-bold{% endif %}">
+                            <tr class="{% if r.nome_usuario == current_user.username %}table-primary fw-bold{% endif %}">
                                 <td class="ps-4">
                                     {% if loop.index == 1 %}
                                         <span class="fs-4">🥇</span>
@@ -48,8 +48,8 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-person-circle fs-5 me-2 text-primary opacity-50"></i>
-                                        {{ r.usuarios.username }}
-                                        {% if r.usuarios.username == current_user.username %}
+                                        {{ r.nome_usuario }}
+                                        {% if r.nome_usuario == current_user.username %}
                                             <span class="badge bg-primary ms-2 small">Você</span>
                                         {% endif %}
                                     </div>

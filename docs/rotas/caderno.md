@@ -16,18 +16,16 @@ erDiagram
     caderno_questoes }|--|| view_questoes_completa : "busca detalhes"
 
     cadernos {
-        bigint id_caderno PK
-        uuid id_usuario FK
+        uuid id_caderno PK
+        int id_usuario FK
         text nome_caderno
-        timestamp criado_em
+        timestamptz criado_em
     }
 
     caderno_questoes {
-        bigint id PK
-        bigint id_caderno FK
-        bigint id_questao FK
-        uuid id_usuario FK
-        timestamp associado_em
+        uuid id_caderno PK
+        int id_questao PK
+        int id_usuario FK
     }
 ```
 
@@ -97,7 +95,7 @@ Para garantir uma experiência de uso rápida e sem reloads na interface web, as
 *   **`criar_caderno`** (`POST /api/cadernos/novo`):
     Cria a entidade caderno para o usuário autenticado, sem limites de uso (modelo software livre).
 *   **`salvar_na_pasta`** (`POST /api/cadernos/salvar`):
-    Vincula uma questão ao caderno. Protege o banco de redundâncias, capturando violações de chaves únicas (`duplicate key`) e convertendo-as em avisos amigáveis para o usuário.
+    Valida que `id_caderno` pertence ao aluno autenticado antes de inserir o vínculo; caderno alheio/inexistente devolve **404** sem INSERT. Protege o banco de redundâncias, capturando violações de chaves únicas (`duplicate key`) e convertendo-as em avisos amigáveis. A FK composta `(id_caderno, id_usuario) -> cadernos(id_caderno, id_usuario)` é o backstop no banco.
 *   **`remover_questao_caderno`** (`POST /api/cadernos/remover_questao`):
     Desfaz a relação na tabela `caderno_questoes` mantendo a integridade da questão e do caderno no sistema.
 *   **`excluir_caderno`** (`POST /api/cadernos/excluir/<id_caderno>`):
@@ -109,11 +107,11 @@ Para garantir uma experiência de uso rápida e sem reloads na interface web, as
 
 > [!IMPORTANT]
 > **Defesa Estrita contra IDOR (Insecure Direct Object Reference)**:
-> Nenhuma query SQL de alteração ou exclusão confia no ID do usuário vindo da requisição sem passar pela sessão do servidor. Todas as operações atômicas no banco de dados aplicam obrigatoriamente a cláusula de isolamento:
+> Nenhuma query SQL de leitura, alteração ou exclusão confia no ID do usuário vindo da requisição sem passar pela sessão do servidor. Todas as operações atômicas no banco de dados aplicam obrigatoriamente a cláusula de isolamento:
 > ```python
 > .eq("id_usuario", current_user.id)
 > ```
-> Isso garante que um estudante malicioso jamais consiga visualizar, criar cadernos no nome de outros alunos, deletar cadernos alheios ou adulterar relacionamentos de terceiros trocando IDs numéricos no payload HTTP.
+> Na visualização (`visualizar_caderno`), o filtro vai tanto em `cadernos` quanto em `caderno_questoes` e caderno alheio devolve **404**. Na escrita (`salvar_na_pasta`), o `id_caderno` do payload é validado contra `current_user.id` antes do INSERT. No banco, a FK composta `caderno_questoes (id_caderno, id_usuario) -> cadernos (id_caderno, id_usuario)` e as policies de INSERT/UPDATE repetem a regra — isso garante que um estudante malicioso jamais consiga visualizar, criar cadernos no nome de outros alunos, deletar cadernos alheios ou adulterar relacionamentos de terceiros trocando IDs (UUID/numéricos) no payload HTTP.
 
 > [!NOTE]
 > **Isenção de Rate Limits (`@limiter.exempt`)**:

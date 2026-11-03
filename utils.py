@@ -16,6 +16,64 @@ logger = logging.getLogger(__name__)
 # 22P02 tipo inválido. Falhas de rede/timeout/5xx continuam com retry.
 ERROS_SEM_RETRY = ("23505", "23503", "23502", "23514", "42501", "42703", "22P02")
 
+# Limites/formatos compartilhados por cadastro, conta e comentários.
+# A mesma regra existe como CHECK no banco (migration comentarios_username_xss).
+USERNAME_MIN = 2
+USERNAME_MAX = 30
+TEXTO_COMENTARIO_MAX = 1000
+
+# Allowlist: letras (inclusive acentuadas), números, espaço, ponto, hífen e
+# sublinhado. `\w` em str já cobre Unicode; nada de <, >, aspas, &, barras etc.
+_RE_USERNAME = re.compile(r"^[\w .-]+$", re.UNICODE)
+_RE_CONTROLE = re.compile(r"[\x00-\x1f\x7f]")
+
+
+def validar_username(username):
+    """Normaliza e valida o nome de usuário exibido na comunidade.
+
+    Retorna ``(username_normalizado, "")`` quando válido ou
+    ``(None, mensagem)`` quando inválido. A normalização remove espaços nas
+    pontas e colapsa espaços internos, preservando o nome exibido.
+    """
+    if not isinstance(username, str):
+        return None, "Nome de usuário inválido."
+
+    username = re.sub(r"\s+", " ", username).strip()
+    if not (USERNAME_MIN <= len(username) <= USERNAME_MAX):
+        return None, (
+            f"O nome de usuário deve ter entre {USERNAME_MIN} e "
+            f"{USERNAME_MAX} caracteres."
+        )
+    if not _RE_USERNAME.fullmatch(username):
+        return None, (
+            "O nome de usuário pode conter apenas letras, números, espaços, "
+            "ponto, hífen e sublinhado."
+        )
+    return username, ""
+
+
+def validar_texto_comentario(texto):
+    """Valida o texto do comentário antes de gravar.
+
+    O texto é armazenado como veio (sem escapar entidades): a defesa contra
+    XSS é feita na saída, com ``textContent`` no JS. Aqui rejeitamos apenas
+    payloads inválidos (tipo errado, vazio, longo demais ou com caracteres de
+    controle), mantendo o conteúdo legítimo intacto.
+    """
+    if not isinstance(texto, str):
+        return None, "Comentário inválido."
+
+    texto = texto.strip()
+    if not texto:
+        return None, "Escreva um comentário antes de enviar."
+    if len(texto) > TEXTO_COMENTARIO_MAX:
+        return None, (
+            f"O comentário deve ter no máximo {TEXTO_COMENTARIO_MAX} caracteres."
+        )
+    if _RE_CONTROLE.search(texto):
+        return None, "O comentário contém caracteres inválidos."
+    return texto, ""
+
 
 def _erro_deterministico(e: Exception) -> bool:
     """True quando retentar não muda o resultado (constraint/RLS/typo de query)."""

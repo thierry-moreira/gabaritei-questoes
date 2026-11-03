@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, flash, jsonify
 from flask_login import current_user, logout_user
 
 from banco_dados_aluno import supabase
-from utils import safe_execute, aluno_required
+from utils import safe_execute, aluno_required, validar_username
 import logging
 
 # BYOK (Bring Your Own Key): a chave de IA do aluno fica SOMENTE no banco
@@ -32,7 +32,13 @@ def _status_ia_do_aluno():
 @aluno_required
 def ver_configuracoes_conta():
     if request.method == 'POST':
-        novo_username = request.form.get('username')
+        novo_username, erro_username = validar_username(
+            request.form.get('username')
+        )
+        if erro_username:
+            flash(erro_username, "danger")
+            return redirect('/aluno/conta')
+
         novo_email = request.form.get('email')
 
         dados_update = {

@@ -58,7 +58,11 @@ URL_POS_EMAIL = "https://thierry-moreira.github.io/gabaritei-questoes/"
 # troca no login/logout.
 #
 # RLS: as policies de escrita exigem (eh_app_aluno() AND dono via auth.uid()),
-# migration auth_usuario_e_policies. Leitura de dados de estudo continua livre.
+# migration auth_usuario_e_policies. A leitura das tabelas de dados do aluno
+# também é owner-only (migration consolidar_rls_select_unico_dados_aluno /
+# rls_owner_only_e_conteudo_publico): sem JWT o papel anon lê 0 linhas. O que é
+# público por desenho (comentários, simulados públicos e ranking) é lido por
+# views/RPC com colunas públicas — ver docs/banco_dados.md.
 
 def entrar_com_senha(email: str, senha: str):
     """Login email+senha. A partir daqui TODAS as queries saem com o JWT do

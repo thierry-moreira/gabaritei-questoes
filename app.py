@@ -174,6 +174,14 @@ csp = {
     'frame-src': [
         '\'self\'',
     ],
+    # Endurecimento (F-11): plugins/embeds desabilitados, base URL travada e
+    # formulários só para o próprio app. O script-src mantém 'unsafe-inline'
+    # porque as páginas usam scripts/handlers inline; a defesa contra o XSS
+    # armazenado de comentários é a renderização com textContent no JS.
+    'object-src': ['\'none\''],
+    'base-uri': ['\'self\''],
+    'frame-ancestors': ['\'self\''],
+    'form-action': ['\'self\''],
 }
 
 talisman = Talisman(

@@ -67,6 +67,23 @@ class TestContaBlueprint(unittest.TestCase):
             flashes = sess.get('_flashes', [])
             self.assertTrue(any("atualizadas com sucesso" in msg[1] for msg in flashes))
 
+    @patch('rotas.conta.safe_execute')
+    @patch('flask_login.utils._get_user')
+    def test_atualizar_username_com_html_bloqueia(self, mock_get_user, mock_safe_execute):
+        """F-11: username com HTML é rejeitado antes do UPDATE no Supabase."""
+        mock_get_user.return_value = self._mock_aluno()
+
+        response = self.client.post('/aluno/conta', data={
+            'username': '<img src=x onerror=alert(1)>',
+            'email': 'novoemail@local.com'
+        })
+
+        self.assertEqual(response.status_code, 302)
+        mock_safe_execute.assert_not_called()
+        with self.client.session_transaction() as sess:
+            flashes = sess.get('_flashes', [])
+            self.assertTrue(any("pode conter apenas" in msg[1] for msg in flashes))
+
     # -------------------------------------------------------------------------
     # Reset Completo de Dados de Estudo (apenas frase de confirmacao)
     # -------------------------------------------------------------------------

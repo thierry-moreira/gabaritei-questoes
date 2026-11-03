@@ -203,48 +203,120 @@ function gerarEstudoIA(idQuestao, tipo) {
 }
 
 // 2. Lógica de Comentários
-function carregarComentarios(idQuestao) {
+/**
+ * Monta um card de comentário usando apenas APIs de texto do DOM.
+ *
+ * F-11: nome_usuario e texto_comentario são conteúdo de usuário. Eles NUNCA
+ * podem ser interpolados em template literals entregues a innerHTML — um
+ * payload como <img src=x onerror=...> executaria no mesmo-origin. textContent
+ * e createTextNode tratam o valor como texto literal.
+ */
+function montarCardComentario(comentario, podeDenunciar) {
+    const card = document.createElement('div');
+    card.className = 'mb-2 p-2 bg-white rounded border shadow-sm text-dark';
+
+    const cabecalho = document.createElement('div');
+    cabecalho.className = 'd-flex justify-content-between align-items-center mb-1';
+
+    const nome = document.createElement('strong');
+    nome.className = 'small text-primary';
+    const iconePessoa = document.createElement('i');
+    iconePessoa.className = 'bi bi-person-circle';
+    nome.appendChild(iconePessoa);
+    nome.appendChild(document.createTextNode(` ${comentario.nome_usuario || 'Aluno'}`));
+
+    const meta = document.createElement('span');
+    meta.className = 'd-flex align-items-center';
+
+    const data = document.createElement('small');
+    data.className = 'text-muted';
+    data.style.fontSize = '0.75rem';
+    data.textContent = comentario.criado_em
+        ? new Date(comentario.criado_em).toLocaleDateString('pt-BR')
+        : '';
+    meta.appendChild(data);
+
+    if (podeDenunciar && comentario.id_comentario) {
+        const botao = document.createElement('button');
+        botao.type = 'button';
+        botao.className = 'btn btn-link btn-sm text-muted p-0 ms-1 btn-reportar-comentario';
+        botao.dataset.comentarioId = String(comentario.id_comentario);
+        botao.title = 'Denunciar comentário';
+        botao.setAttribute('aria-label', 'Denunciar comentário');
+        const iconeDenuncia = document.createElement('i');
+        iconeDenuncia.className = 'bi bi-flag-fill';
+        botao.appendChild(iconeDenuncia);
+        meta.appendChild(botao);
+    }
+
+    cabecalho.appendChild(nome);
+    cabecalho.appendChild(meta);
+
+    const texto = document.createElement('p');
+    texto.className = 'mb-0 small';
+    texto.textContent = comentario.texto_comentario || comentario.texto || '';
+
+    card.appendChild(cabecalho);
+    card.appendChild(texto);
+    return card;
+}
+
+function carregarComentarios(idQuestao, pagina = 1, anexar = false) {
     const divLista = document.getElementById(`lista-comentarios-${idQuestao}`);
     if (!divLista) return;
 
-    divLista.innerHTML = '<div class="text-center small text-muted my-2"><div class="spinner-border spinner-border-sm text-primary"></div> Carregando comentários...</div>';
+    const botaoAnterior = divLista.querySelector('.btn-carregar-mais-comentarios');
+    if (anexar && botaoAnterior) {
+        botaoAnterior.disabled = true;
+        botaoAnterior.textContent = 'Carregando...';
+    } else if (!anexar) {
+        divLista.innerHTML = '<div class="text-center small text-muted my-2"><div class="spinner-border spinner-border-sm text-primary"></div> Carregando comentários...</div>';
+    }
 
-    fetch(`/api/comentarios/${idQuestao}`)
-        .then(res => res.json())
+    fetch(`/api/comentarios/${encodeURIComponent(idQuestao)}?page=${pagina}`)
+        .then(res => {
+            if (!res.ok) throw new Error('Falha ao carregar comentários.');
+            return res.json();
+        })
         .then(data => {
             const listaComentarios = Array.isArray(data) ? data : (data.comentarios || []);
+            const temMais = !Array.isArray(data) && Boolean(data.tem_mais);
+            if (botaoAnterior) botaoAnterior.remove();
+            if (!anexar) divLista.textContent = '';
 
-            if (listaComentarios.length === 0) {
-                divLista.innerHTML = '<p class="small text-muted mb-0 text-center"><i class="bi bi-chat-square-dots"></i> Nenhum comentário ainda. Seja o primeiro!</p>';
+            if (listaComentarios.length === 0 && !anexar) {
+                const vazio = document.createElement('p');
+                vazio.className = 'small text-muted mb-0 text-center';
+                vazio.textContent = 'Nenhum comentário ainda. Seja o primeiro!';
+                divLista.appendChild(vazio);
                 return;
             }
 
-            let html = '';
+            const podeDenunciar = window.GABARITEI_AUTH && window.GABARITEI_AUTH.isAuthenticated;
+            const fragmento = document.createDocumentFragment();
             listaComentarios.forEach(comentario => {
-                const dataFormatada = comentario.criado_em ? new Date(comentario.criado_em).toLocaleDateString('pt-BR') : '';
-                const podeDenunciar = window.GABARITEI_AUTH && window.GABARITEI_AUTH.isAuthenticated;
-                const botaoDenuncia = (podeDenunciar && comentario.id_comentario)
-                    ? `<button type="button" class="btn btn-link btn-sm text-muted p-0 ms-1 btn-reportar-comentario" data-comentario-id="${comentario.id_comentario}" title="Denunciar comentário" aria-label="Denunciar comentário"><i class="bi bi-flag-fill"></i></button>`
-                    : '';
-                html += `
-            <div class="mb-2 p-2 bg-white rounded border shadow-sm text-dark">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <strong class="small text-primary"><i class="bi bi-person-circle"></i> ${comentario.nome_usuario || 'Aluno'}</strong>
-                    <span class="d-flex align-items-center"><small class="text-muted" style="font-size: 0.75rem;">${dataFormatada}</small>${botaoDenuncia}</span>
-                </div>
-                <p class="mb-0 small">${comentario.texto_comentario || comentario.texto || ''}</p>
-            </div>`;
+                fragmento.appendChild(montarCardComentario(comentario, podeDenunciar));
             });
-            divLista.innerHTML = html;
+            divLista.appendChild(fragmento);
 
-            // Atualiza o contador no botão
-            const badgeCounter = document.getElementById(`contador-comentarios-${idQuestao}`);
-            if (badgeCounter) {
-                badgeCounter.innerText = listaComentarios.length;
+            if (temMais) {
+                const botaoMais = document.createElement('button');
+                botaoMais.type = 'button';
+                botaoMais.className = 'btn btn-link btn-sm d-block mx-auto btn-carregar-mais-comentarios';
+                botaoMais.textContent = 'Carregar comentários anteriores';
+                botaoMais.addEventListener('click', () => {
+                    carregarComentarios(idQuestao, pagina + 1, true);
+                });
+                divLista.appendChild(botaoMais);
             }
 
         })
-        .catch(err => {
+        .catch(() => {
+            if (anexar && botaoAnterior) {
+                botaoAnterior.disabled = false;
+                botaoAnterior.textContent = 'Carregar comentários anteriores';
+                return;
+            }
             divLista.innerHTML = '<span class="text-danger small">Erro ao carregar comentários.</span>';
         });
 }
@@ -393,6 +465,11 @@ function initQuestoes() {
                         inputTexto.value = '';
                         btnSubmit.innerHTML = '<i class="bi bi-check"></i> Enviado';
                         btnSubmit.classList.add('btn-success');
+                        const badgeCounter = document.getElementById(`contador-comentarios-${idQuestao}`);
+                        if (badgeCounter) {
+                            const total = Number.parseInt(badgeCounter.textContent, 10);
+                            badgeCounter.textContent = String((Number.isFinite(total) ? total : 0) + 1);
+                        }
                         carregarComentarios(idQuestao);
                         setTimeout(() => {
                             btnSubmit.innerHTML = 'Enviar';
@@ -803,6 +880,10 @@ window.deletarFiltro = function (idFiltro) {
             .catch(() => alert("Erro na conexão ao excluir filtro."));
     });
 };
+
+// Exposto para testes unitários (no navegador, declarações de função já são
+// propriedades de window; no CommonJS do Jest isso precisa ser explícito).
+window.carregarComentarios = carregarComentarios;
 
 // Chamar init ao carregar
 document.addEventListener('DOMContentLoaded', () => {

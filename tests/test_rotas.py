@@ -69,7 +69,9 @@ class SimuladoPdfPreview(unittest.TestCase):
             u.role = 'aluno'
 
         res_simulado = MagicMock()
-        res_simulado.data = {'id': '10955679-f9c8-4e55-b971-7bd0ff00bd99', 'titulo': 'Simulado de Teste'}
+        # `.limit(1)` devolve lista (a rota usa _buscar_simulado, que aceita
+        # tanto a linha do dono na tabela quanto a view pública).
+        res_simulado.data = [{'id': '10955679-f9c8-4e55-b971-7bd0ff00bd99', 'titulo': 'Simulado de Teste'}]
         res_sq = MagicMock()
         res_sq.data = [{'id_questao': 1}]
         res_questoes = MagicMock()
@@ -98,7 +100,9 @@ class SimuladoPdfPreview(unittest.TestCase):
             u.role = 'aluno'
 
         res_simulado = MagicMock()
-        res_simulado.data = {'id': '10955679-f9c8-4e55-b971-7bd0ff00bd99', 'titulo': 'Simulado de Teste'}
+        # `.limit(1)` devolve lista (a rota usa _buscar_simulado, que aceita
+        # tanto a linha do dono na tabela quanto a view pública).
+        res_simulado.data = [{'id': '10955679-f9c8-4e55-b971-7bd0ff00bd99', 'titulo': 'Simulado de Teste'}]
         res_sq = MagicMock()
         res_sq.data = [{'id_questao': 1}]
         res_questoes = MagicMock()

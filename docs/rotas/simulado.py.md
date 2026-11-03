@@ -59,6 +59,39 @@ else:
 
 ## Detalhamento das Rotas e APIs
 
+### 0. Guard único de acesso (`_simulado_do_usuario_ou_none`)
+
+Toda rota que recebe `id_simulado` (fazer, corrigir, ranking e PDF) chama o
+mesmo guard antes de qualquer consulta de questões, gabarito, resultados ou
+RPC:
+
+```python
+def _simulado_do_usuario_ou_none(id_simulado):
+    simulado = _buscar_simulado(id_simulado)
+    if not simulado:
+        return None
+    if simulado.get('eh_privado') and simulado.get('id_criador') != current_user.id:
+        return None
+    return simulado
+```
+
+`_buscar_simulado` consulta primeiro a tabela `simulados` (RLS owner-only) e
+depois `view_simulados_publicos` (somente `eh_privado=false`, sem
+`id_criador`/e-mail). O guard acrescenta a checagem explícita de
+`eh_privado`/`id_criador`, mantendo o contrato mesmo se a origem da consulta
+mudar.
+
+| Situação | Resultado |
+|---|---|
+| Simulado inexistente | `None` → flash "Simulado não encontrado." + redirect |
+| Simulado privado de outro aluno | `None` → mesma resposta do inexistente |
+| Simulado público de qualquer aluno | Permitido |
+| Simulado do próprio aluno (público ou privado) | Permitido |
+
+Como o guard roda antes de `_ids_questoes_do_simulado`, o não-dono não chega
+a carregar questões, não consulta `alternativas_questao.is_correct` (gabarito),
+não insere em `simulados_resultados` e não chama `ranking_simulado`.
+
 ### 1. Painel de Controle (`/aluno/simulados`)
 *   **Método**: `GET`
 *   **Segurança**: `@aluno_required`
@@ -79,7 +112,7 @@ else:
 *   **Segurança**: `@aluno_required`
 *   **Isenção de Rate Limits**: `@limiter.exempt`
 *   **Blindagem de Privacidade**:
-    Antes de carregar a prova, o sistema avalia a flag `eh_privado` do simulado. Se for privada e o criador for diferente de `current_user.id`, bloqueia o acesso instantaneamente com mensagem de erro amigável e redirecionamento de segurança.
+    Chama `_simulado_do_usuario_ou_none(id_simulado)` antes de carregar a prova. Simulado privado de outro aluno e simulado inexistente recebem a mesma resposta (flash + redirect), sem revelar a existência do ID. Simulado público de qualquer aluno e simulado do próprio aluno (inclusive privado) seguem normalmente.
 *   **Uniformidade Psicológica (Anti-Memorização)**:
     Para assegurar a eficácia dos testes, as questões recuperadas do banco são baralhadas aleatoriamente em memória antes de serem entregues ao frontend através da função:
     ```python
@@ -87,29 +120,38 @@ else:
     ```
     Isso impede que o aluno aprenda a ordem sequencial das questões ou decore as respostas baseando-se no posicionamento visual das folhas de prova. As alternativas dentro de cada questão permanecem organizadas lexicograficamente pela letra (`A`, `B`, `C`...) para coerência textual do exame.
 
-### 4. Correção Automática e Ranking (`/aluno/simulados/corrigir/<id_simulado>`)
+### 4. Correção Automática (`/aluno/simulados/corrigir/<id_simulado>`)
 *   **Método**: `POST`
+*   **Segurança**: `_simulado_do_usuario_ou_none(id_simulado)` antes de qualquer consulta. Simulado privado de outro aluno não chega a carregar gabarito, não insere resultado e não chama a RPC de ranking.
 *   **Lógica**:
     *   Busca as alternativas marcadas como corretas (`is_correct = True`) para os IDs das questões que integram o simulado.
     *   Compara item a item com as submissões via formulário do aluno (`resp_{q_id}`).
     *   Calcula a nota em escala de `0` a `10` e grava na tabela `simulados_resultados`.
-    *   Se o simulado for de acesso público, busca em tempo real o **Top 10 Global** de notas para exibição no template de encerramento.
+    *   Busca em tempo real o **Top 10 Global** de notas via RPC `ranking_simulado` (público para qualquer autenticado; privado apenas para o criador).
 
 ### 5. API de Exclusão (`/aluno/simulados/excluir/<id_simulado>`)
 *   **Método**: `POST`
 *   **Proteção Contra IDOR**:
     Garante que apenas o criador original possa realizar a deleção. Valida a ownership antes da transação física no banco:
     ```python
-    res = safe_execute(supabase.table('simulados').select('id_criador').eq('id', id_simulado).single())
-    if res.data and res.data.get('id_criador') == current_user.id:
+    res = safe_execute(
+        supabase.table('simulados').select('id_criador').eq('id', id_simulado).limit(1)
+    )
+    if res.data and res.data[0].get('id_criador') == current_user.id:
         safe_execute(supabase.table('simulados').delete().eq('id', id_simulado))
     ```
+    `.limit(1)` em vez de `.single()` evita o erro PGRST116 de "0 linhas" e
+    mantém a resposta igual para "não existe" e "não é seu".
+
+### 6. Ranking (`/aluno/simulados/ranking/<id_simulado>`)
+*   **Método**: `GET`
+*   **Segurança (F-05)**: chama `_simulado_do_usuario_ou_none(id_simulado)` antes da RPC. Simulado privado de outro aluno e simulado inexistente recebem a mesma resposta (flash + redirect), sem consultar ranking/resultados; o guard também compara `id_criador` caso a tabela devolva indevidamente a linha. A RPC `ranking_simulado` repete a validação no banco (público: authenticated; privado: criador) e devolve somente username + métricas. Regressão: `test_ranking_privado_alheio_bloqueia_mesmo_se_consulta_devolver_linha`.
 
 ---
 
 ## Exportação PDF — Prévia Navegável Unificada (padrão dos resumos)
 
-A rota `/simulado/<id_simulado>/pdf` entrega **sempre** a prévia navegável da prova (`simulados/pdf_preview.html`) com o botão **"Imprimir / Salvar PDF"** — a mesma experiência implementada nos resumos. O fluxo é client-side, sem renderização de PDF no servidor:
+A rota `/simulado/<id_simulado>/pdf` entrega **sempre** a prévia navegável da prova (`simulados/pdf_preview.html`) com o botão **"Imprimir / Salvar PDF"** — a mesma experiência implementada nos resumos. O fluxo é client-side, sem renderização de PDF no servidor. Antes de montar a prévia, a rota chama `_simulado_do_usuario_ou_none(id_simulado)`: simulado privado de outro aluno e simulado inexistente recebem a mesma resposta (flash + redirect) e nenhuma questão/alternativa/gabarito é consultada.
 
 ```mermaid
 graph TD
@@ -149,7 +191,7 @@ q['letra_gabarito'] = letra_certa if letra_certa else 'N/A'
 | :--- | :--- | :--- |
 | **Exclusão de Simulado** | `ON DELETE CASCADE` | Ao deletar o cabeçalho físico, as chaves estrangeiras apagam automaticamente todos os registros associativos nas tabelas `simulados_questoes` e `simulados_resultados` em nível de banco de dados (Supabase/PostgreSQL) de forma atômica. |
 | **Acesso Autenticado** | Decorator de Nível de Blueprint | Exige autenticação de aluno (`@aluno_required`) em todas as rotas de simulado — no modelo software livre, todo aluno autenticado tem acesso completo. |
-| **Blindagem de Ownership** | Prevenção a IDOR | Verificação compulsória de `current_user.id` em todas as rotas mutativas ou de simulados privados. |
+| **Blindagem de Ownership** | Guard único + RLS | `_simulado_do_usuario_ou_none` é chamado por fazer/corrigir/ranking/PDF antes de qualquer consulta; simulado privado alheio e inexistente têm a mesma resposta. No banco, `simulados_resultados` exige simulado público ou do próprio aluno no INSERT/UPDATE (migration `simulados_resultados_visibilidade`). |
 
 > [!WARNING]
 > Falhas no carregamento da prévia (rede/Supabase) são capturadas no bloco `try/except` da rota, exibindo mensagens flash amigáveis na tela e registrando no terminal com a marcação `❌ Erro ao carregar o PDF do simulado: {e}`.

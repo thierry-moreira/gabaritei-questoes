@@ -91,7 +91,7 @@ A cobertura está em `tests/test_aluno_questoes.py`:
 *   `/aluno/painel` com ofensiva em Brasília, agregação por data e taxas de acerto;
 *   `/aluno/dashboard_detalhado` com histórico vazio (redirect) e com dados (melhor matéria, pontos de atenção);
 *   `/aluno/questoes` com filtro de status padrão `todas` e `nao_respondidas` explícito;
-*   resolução de questões e streak via `/aluno/responder` e `/api/responder`.
+*   resolução de questões e streak via `/aluno/responder`; o endpoint legado `/api/responder` também é coberto e calcula `is_correct` no servidor (F-08), ignorando esse campo quando enviado pelo cliente.
 
 ```powershell
 venv\Scripts\python.exe -m unittest tests.test_aluno_questoes -v

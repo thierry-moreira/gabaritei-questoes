@@ -263,6 +263,50 @@ class TestAuthComSenha(unittest.TestCase):
         segundo = m_sb.table.return_value.insert.call_args_list[1][0][0]
         self.assertTrue(segundo['username'].startswith('Novo_'))
 
+    @patch('rotas.auth.secrets.token_hex', return_value='abcd')
+    def test_criar_perfil_sufixo_respeita_limite(self, _m_hex):
+        """F-11: username no limite máximo + sufixo continua com <= 30 chars."""
+        nova = _linha_fake(97)
+        base = 'A' * 30
+        with patch('rotas.auth.sessao_atual', return_value=_sessao_auth_fake()):
+            with patch('rotas.auth.supabase') as m_sb:
+                m_sb.table.return_value.update.return_value.is_.return_value.execute.return_value = MagicMock(data=[])
+                m_sb.table.return_value.insert.return_value.execute.side_effect = [
+                    Exception("{'message': 'duplicate key value violates unique constraint \"usuarios_username_key\"', 'code': '23505'}"),
+                    MagicMock(data=[nova]),
+                ]
+                linha = rotas_auth._criar_perfil(base, 'limite@teste.com')
+        self.assertEqual(linha, nova)
+        segundo = m_sb.table.return_value.insert.call_args_list[1][0][0]
+        self.assertEqual(segundo['username'], 'A' * 25 + '_abcd')
+        self.assertEqual(len(segundo['username']), 30)
+
+    def test_criar_perfil_sanitiza_username_derivado_de_email(self):
+        """F-11: prefixo de e-mail com '+' não viola a allowlist da CHECK."""
+        nova = _linha_fake(96)
+        with patch('rotas.auth.sessao_atual', return_value=_sessao_auth_fake('joao+teste@teste.com')):
+            with patch('rotas.auth.supabase') as m_sb:
+                m_sb.table.return_value.update.return_value.is_.return_value.execute.return_value = MagicMock(data=[])
+                m_sb.table.return_value.insert.return_value.execute.return_value = MagicMock(data=[nova])
+                linha = rotas_auth._criar_perfil('joao+teste', 'joao+teste@teste.com')
+        self.assertEqual(linha, nova)
+        inserido = m_sb.table.return_value.insert.call_args[0][0]
+        self.assertEqual(inserido['username'], 'joaoteste')
+
+    def test_criar_perfil_username_muito_longo_e_curto(self):
+        """F-11: base longa é truncada e base de 1 char cai no fallback."""
+        nova = _linha_fake(95)
+        with patch('rotas.auth.sessao_atual', return_value=_sessao_auth_fake()):
+            with patch('rotas.auth.supabase') as m_sb:
+                m_sb.table.return_value.update.return_value.is_.return_value.execute.return_value = MagicMock(data=[])
+                m_sb.table.return_value.insert.return_value.execute.return_value = MagicMock(data=[nova])
+                rotas_auth._criar_perfil('x' * 40, 'longo@teste.com')
+                longo = m_sb.table.return_value.insert.call_args_list[-1][0][0]
+                rotas_auth._criar_perfil('a', 'a@teste.com')
+                curto = m_sb.table.return_value.insert.call_args_list[-1][0][0]
+        self.assertEqual(longo['username'], 'x' * 30)
+        self.assertEqual(curto['username'], 'Estudante')
+
     def test_criar_perfil_falha_persisvel_retorna_none(self):
         """Falha não-recuperável no INSERT: sem exceção propagada — flash amigável."""
         with patch('rotas.auth.sessao_atual', return_value=_sessao_auth_fake()):
@@ -283,6 +327,19 @@ class TestAuthComSenha(unittest.TestCase):
             self.assertEqual(r.status_code, 302)
             m_signup.assert_not_called()
         self.assertTrue(any('mínimo' in m for m in self._flashes()))
+
+    @patch('rotas.auth.criar_conta_auth')
+    def test_criar_username_com_html_bloqueia(self, m_signup):
+        """F-11: username com HTML é barrado antes de criar a conta no Auth."""
+        r = self.client.post('/aluno/criar', data={
+            'username': '<img src=x onerror=alert(1)>',
+            'email': 'xss@teste.com',
+            'senha': 'senha12345',
+            'confirmar_senha': 'senha12345',
+        })
+        self.assertEqual(r.status_code, 302)
+        m_signup.assert_not_called()
+        self.assertTrue(any('pode conter apenas' in m for m in self._flashes()))
 
     @patch('rotas.auth.criar_conta_auth')
     def test_criar_senhas_diferentes_bloqueia(self, m_signup):

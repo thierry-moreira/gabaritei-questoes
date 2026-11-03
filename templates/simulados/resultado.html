@@ -53,11 +53,11 @@
                         </thead>
                         <tbody>
                             {% for r in ranking %}
-                            <tr class="{% if r.usuarios.username == current_user.username %}table-primary fw-bold{% endif %}">
+                            <tr class="{% if r.nome_usuario == current_user.username %}table-primary fw-bold{% endif %}">
                                 <td class="ps-4">
                                     {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}º{% endif %}
                                 </td>
-                                <td>{{ r.usuarios.username }}</td>
+                                <td>{{ r.nome_usuario }}</td>
                                 <td class="text-center fw-bold">{{ r.nota }}</td>
                             </tr>
                             {% endfor %}

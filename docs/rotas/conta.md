@@ -12,6 +12,7 @@ Permite ao aluno alterar seu nome de usuário e e-mail de contato. O login é fe
 *   **Métodos HTTP**: `GET` e `POST` (configurada com `strict_slashes=False` para flexibilidade de roteamento).
 *   **Segurança**: Acesso restrito a alunos autenticados através do decorator `@aluno_required`.
 *   **Fluxo simplificado**: o formulário submete `username` e `email` diretamente — sem senha de confirmação (a identidade já é garantida pelo login do Auth com e-mail + senha).
+*   **Validação do username (F-11)**: `utils.validar_username` normaliza espaços e exige 2–30 caracteres da allowlist (`letras`, números, espaço, ponto, hífen, sublinhado). Nome com HTML (`<img onerror=...>`), caracteres de controle ou tamanho fora do limite é rejeitado com flash antes de qualquer UPDATE. O banco repete a regra na CHECK `usuarios_username_formato` (`23514`).
 *   **Persistência**: Grava as alterações na tabela `usuarios` baseando-se no ID do aluno logado.
 
 > [!NOTE]

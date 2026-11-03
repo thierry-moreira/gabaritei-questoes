@@ -34,7 +34,7 @@
             {% for s in publicos %}
                 {% call ui.render_card_base(
                     title=s.titulo,
-                    meta=s.usuarios.username,
+                    meta=s.nome_criador,
                     badge_text='Público',
                     badge_class='primary',
                     delay=loop.index0 + 2
@@ -53,7 +53,7 @@
                             <i class="bi bi-trophy"></i>
                         </a>
                         
-                        {% if s.id_criador == current_user.id %}
+                        {% if s.eh_meu %}
                         <form method="POST" action="/aluno/simulados/excluir/{{ s.id }}" class="form-excluir-simulado m-0">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="button" class="premium-btn-icon premium-btn-danger border-0" title="Excluir" onclick="verificarExclusaoSimulado(this, 'este simulado público')">

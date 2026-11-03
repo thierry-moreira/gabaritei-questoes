@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, session, jsonify, request
+from flask import Blueprint, render_template, redirect, url_for, abort, jsonify, request
 from flask_login import current_user
 from typing import Any
 
@@ -27,21 +27,39 @@ def meus_cadernos():
 @limiter.exempt
 @aluno_required
 def visualizar_caderno(id_caderno):
+    # O caderno é dado privado: filtra pelo dono na origem. O RLS owner-only
+    # também bloqueia, mas o filtro explícito evita depender só dele. "não
+    # existe" e "não é seu" devolvem o mesmo 404 (não revela a existência).
     try:
-        id_usuario = session.get('id_usuario')
-        
-        query_nome = supabase.table("cadernos").select("nome_caderno").eq("id_caderno", id_caderno).single()
-        res_caderno = safe_execute(query_nome)
-        nome_caderno = res_caderno.data.get('nome_caderno', "Caderno sem nome") if res_caderno and res_caderno.data else "Caderno sem nome"
-        
-        query_ids = supabase.table("caderno_questoes").select("id_questao").eq("id_caderno", id_caderno)
-        res_ids = safe_execute(query_ids)
-        ids_questoes = [item['id_questao'] for item in res_ids.data] if res_ids and res_ids.data else []
-        
+        res_caderno = safe_execute(
+            supabase.table("cadernos")
+            .select("nome_caderno")
+            .eq("id_caderno", id_caderno)
+            .eq("id_usuario", current_user.id)
+            .limit(1)
+        )
+    except Exception as e:
+        print(f"❌ ERRO CRÍTICO NO CADERNO: {str(e)}")
+        return redirect(url_for('caderno.meus_cadernos'))
+
+    if not res_caderno or not res_caderno.data:
+        abort(404)
+
+    nome_caderno = res_caderno.data[0].get('nome_caderno', "Caderno sem nome")
+
+    try:
+        res_ids = safe_execute(
+            supabase.table("caderno_questoes")
+            .select("id_questao")
+            .eq("id_caderno", id_caderno)
+            .eq("id_usuario", current_user.id)
+        )
+        ids_questoes = [item['id_questao'] for item in (res_ids.data or [])] if res_ids else []
+
         questoes_lista = []
         ids_acertos = []
         ids_erros = []
-        
+
         if ids_questoes:
             query_detalhes = supabase.table("view_questoes_completa")\
                 .select("*, alternativas_questao(*)")\
@@ -49,20 +67,23 @@ def visualizar_caderno(id_caderno):
             res_detalhes = safe_execute(query_detalhes)
             if res_detalhes and res_detalhes.data:
                 questoes_lista = res_detalhes.data
-                
-            historico = supabase.table('historico_respostas')\
-                .select('id_questao, is_correct')\
-                .eq('id_usuario', id_usuario)\
-                .in_('id_questao', ids_questoes)\
-                .execute()
-                
+
+            # id_usuario é text em historico_respostas (legado); usa o id do
+            # usuário autenticado, nunca um valor arbitrário de sessão.
+            historico = safe_execute(
+                supabase.table('historico_respostas')
+                .select('id_questao, is_correct')
+                .eq('id_usuario', str(current_user.id))
+                .in_('id_questao', ids_questoes)
+            )
+
             # Type narrowing: ensure historico.data is a non-empty list of dicts
-            if historico.data and isinstance(historico.data, list) and len(historico.data) > 0:
+            if historico and historico.data and isinstance(historico.data, list) and len(historico.data) > 0:
                 historico_list: list[dict[str, Any]] = historico.data  # type: ignore[assignment]
                 ids_acertos = [h['id_questao'] for h in historico_list if h['is_correct']]
                 ids_erros = [h['id_questao'] for h in historico_list if not h['is_correct']]
-                
-        return render_template('questoes/visualizar.html', 
+
+        return render_template('questoes/visualizar.html',
                                nome_caderno=nome_caderno,
                                questoes=questoes_lista,
                                id_caderno=id_caderno,
@@ -112,21 +133,53 @@ def criar_caderno():
 @limiter.exempt
 @aluno_required
 def salvar_na_pasta():
-    dados = request.get_json()
+    dados = request.get_json(silent=True) or {}
     id_caderno = dados.get('id_caderno')
     id_questao = dados.get('id_questao')
-    
+
+    if not id_caderno or id_questao is None:
+        return jsonify({"success": False, "error": "Dados incompletos"}), 400
+
+    try:
+        id_questao_int = int(id_questao)
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "error": "Formato do ID da questão inválido."}), 400
+
+    # F-03: id_caderno vem do cliente. Confirma que o caderno pertence ao
+    # aluno antes de inserir; 404 não revela a existência de cadernos alheios.
+    try:
+        res_caderno = safe_execute(
+            supabase.table("cadernos")
+            .select("id_caderno")
+            .eq("id_caderno", id_caderno)
+            .eq("id_usuario", current_user.id)
+            .limit(1)
+        )
+    except Exception as e:
+        print(f"❌ Erro ao validar caderno {id_caderno}: {e}")
+        return jsonify({"success": False, "error": "Erro de conexão ao salvar"}), 500
+
+    if not res_caderno or not res_caderno.data:
+        return jsonify({"success": False, "error": "Caderno não encontrado"}), 404
+
     query = supabase.table("caderno_questoes").insert({
         "id_caderno": id_caderno,
-        "id_questao": id_questao,
+        "id_questao": id_questao_int,
         "id_usuario": current_user.id
     })
     try:
         safe_execute(query)
         return jsonify({"success": True})
     except Exception as e:
-        if "duplicate key" in str(e).lower():
+        msg = str(e).lower()
+        if "duplicate key" in msg:
             return jsonify({"success": False, "error": "Esta questão já está neste caderno"}), 400
+        # Backstop da FK composta: caderno removido/trocado de dono entre a
+        # checagem e o INSERT, ou chamada fora do app.
+        if "caderno_questoes_caderno_dono_fkey" in msg or "caderno_questoes_id_caderno_fkey" in msg:
+            return jsonify({"success": False, "error": "Caderno não encontrado"}), 404
+        if "caderno_questoes_id_questao_fkey" in msg:
+            return jsonify({"success": False, "error": "Questão não encontrada"}), 400
         print(f"❌ Erro ao salvar questão no caderno: {e}")
         return jsonify({"success": False, "error": "Erro de conexão ao salvar"}), 500
 

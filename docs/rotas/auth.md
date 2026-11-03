@@ -17,11 +17,13 @@
 *   **Formulário**: `email` (normalizado para minúsculas) + `senha`.
 *   **Proteção CSRF**: token renderizado no formulário.
 *   **Fluxo**: `entrar_com_senha` (Supabase Auth) → o SDK encadeia o JWT do usuário nas queries; busca a linha do aluno via `usuarios.auth_id`; conta Auth sem perfil (ex.: perfil apagado ou **aluno legado pré-Auth sem vínculo**) dispara `_criar_perfil`: primeiro tenta **adotar a linha legada de mesmo e-mail** (`UPDATE ... WHERE auth_id IS NULL` — migrations `relink_perfil_legado_usuarios` + `relink_visibilidade_select_legado`; o RLS só libera quando o e-mail CONFIRMADO do JWT bate com o da linha) e, só se não houver, cria linha nova — com sufixo `_hex` no username se colidir (padrão do cadastro antigo do site); por fim `login_user` (Flask-Login) e refresh token guardado na sessão.
+*   **Username derivado do e-mail (F-11)**: quando a linha nova é criada no login, a sugestão é o prefixo do e-mail. `_criar_perfil` remove caracteres fora da allowlist (ex.: `joao+teste@...` → `joaoteste`), aplica o mínimo de 2 caracteres (fallback `"Estudante"`) e trunca a base antes do sufixo `_hex`, para o username final respeitar o máximo de 30 e a CHECK `usuarios_username_formato`.
 *   **Falha**: credenciais inválidas → flash "E-mail ou senha incorretos."
 
 ### 3. Criar Conta (`/aluno/criar`, POST)
 *   **Formulário**: `username` (como quer ser chamado) + `email` + `senha` (mínimo 8 caracteres, validado antes de chamar o Auth) + `confirmar_senha` — os dois campos precisam conferir (validação inline no browser e no servidor, antes do Auth, para evitar conta criada com senha digitada errada).
-*   **Fluxo**: `criar_conta_auth` (Supabase Auth) → `_criar_perfil` (mesmo helper do login: adota a linha legada de mesmo e-mail se existir; sufixo `_hex` no username se colidir) → login direto.
+*   **Validação do username (F-11)**: `utils.validar_username` normaliza espaços e exige 2–30 caracteres da allowlist (`letras`, números, espaço, ponto, hífen, sublinhado). HTML, controles ou tamanho inválido recebem flash e **não** criam a conta Auth; o banco repete a regra na CHECK `usuarios_username_formato`.
+*   **Fluxo**: `criar_conta_auth` (Supabase Auth) → `_criar_perfil` (mesmo helper do login: adota a linha legada de mesmo e-mail se existir; sufixo `_hex` no username se colidir, truncando a base para não passar de 30) → login direto.
 *   **"Confirm email" ligado** (dashboard do Auth): a conta nasce sem sessão — o aluno recebe flash pedindo confirmação pelo e-mail e entra depois. O link do e-mail redireciona para a **página pública** (`site/`, GitHub Pages — ver seção 6): a confirmação acontece no servidor do Supabase ao clicar.
 *   **E-mail já cadastrado**: flash orientando login ou recuperação de senha.
 

@@ -8,12 +8,102 @@ from utils import safe_execute, aluno_required
 
 simulado_bp = Blueprint('simulado', __name__)
 
+
+def _buscar_simulado(id_simulado):
+    """Busca um simulado visível ao usuário atual.
+
+    Primeiro tenta a tabela `simulados` (RLS owner-only: cobre os simulados
+    do próprio aluno, inclusive privados). Se não houver linha, cai para a
+    view pública, que só expõe simulados com `eh_privado = false` e nunca
+    devolve `id_criador`, e-mail ou auth_id. Simulado privado de outro aluno
+    não aparece em nenhuma das duas consultas.
+    """
+    try:
+        res = safe_execute(
+            supabase.table('simulados').select('*').eq('id', id_simulado).limit(1)
+        )
+        if res.data:
+            return res.data[0]
+
+        res = safe_execute(
+            supabase.table('view_simulados_publicos')
+            .select('*')
+            .eq('id', id_simulado)
+            .limit(1)
+        )
+        if res.data:
+            linha = res.data[0]
+            return {
+                'id': linha['id'],
+                'titulo': linha['titulo'],
+                'descricao': linha.get('descricao'),
+                'eh_privado': False,
+                'id_criador': current_user.id if linha.get('eh_meu') else None,
+            }
+    except Exception as e:
+        print(f"❌ Erro ao buscar simulado {id_simulado}: {e}")
+    return None
+
+
+def _simulado_do_usuario_ou_none(id_simulado):
+    """Guard único de acesso a simulado: devolve a linha visível ou None.
+
+    Regra aplicada por fazer/corrigir/ranking/PDF antes de qualquer consulta
+    de questões, gabarito, resultados ou RPC:
+
+      * simulado inexistente -> None;
+      * simulado privado de outro aluno -> None (mesma resposta do inexistente,
+        sem revelar que o ID existe);
+      * simulado público de qualquer aluno -> permitido;
+      * simulado do próprio aluno (público ou privado) -> permitido.
+
+    `_buscar_simulado` já esconde o privado alheio (RLS owner-only + view
+    pública), mas a checagem explícita de `eh_privado`/`id_criador` mantém o
+    contrato mesmo se a origem da consulta mudar.
+    """
+    simulado = _buscar_simulado(id_simulado)
+    if not simulado:
+        return None
+    if simulado.get('eh_privado') and simulado.get('id_criador') != current_user.id:
+        return None
+    return simulado
+
+
+def _ids_questoes_do_simulado(id_simulado):
+    """IDs das questões visíveis: tabela (dono) ou view pública."""
+    res = safe_execute(
+        supabase.table('simulados_questoes')
+        .select('id_questao')
+        .eq('id_simulado', id_simulado)
+    )
+    ids = [q['id_questao'] for q in (res.data or [])]
+    if ids:
+        return ids
+
+    res = safe_execute(
+        supabase.table('view_simulados_questoes_publicas')
+        .select('id_questao')
+        .eq('id_simulado', id_simulado)
+    )
+    return [q['id_questao'] for q in (res.data or [])]
+
+
+def _ranking_simulado(id_simulado):
+    """Ranking via RPC segura (público: authenticated; privado: criador)."""
+    res = safe_execute(
+        supabase.rpc('ranking_simulado', {'p_id_simulado': id_simulado})
+    )
+    return res.data or []
+
+
 @simulado_bp.route('/aluno/simulados')
 @limiter.exempt
 @aluno_required
 def painel_simulados():
+    # Feed público via view: simulados eh_privado=false de qualquer aluno,
+    # com o username do criador e sem id_criador/email (F-01).
     res_publicos = safe_execute(
-        supabase.table("simulados").select("*, usuarios(username)").eq("eh_privado", False).order("criado_em", desc=True)
+        supabase.table("view_simulados_publicos").select("*").order("criado_em", desc=True)
     )
     simulados_publicos = res_publicos.data or []
 
@@ -133,23 +223,14 @@ def gerar_simulado():
 @limiter.exempt
 @aluno_required
 def fazer_simulado(id_simulado):
-    res_simulado = safe_execute(
-        supabase.table('simulados').select('*').eq('id', id_simulado).single()
-    )
-    simulado = res_simulado.data
+    simulado = _simulado_do_usuario_ou_none(id_simulado)
 
     if not simulado:
+        # Privado de outro aluno e inexistente recebem a mesma resposta.
         flash("Simulado não encontrado.", "danger")
         return redirect('/aluno/simulados')
 
-    if simulado.get('eh_privado') and simulado.get('id_criador') != current_user.id:
-        flash("Você não tem permissão para acessar este simulado.", "danger")
-        return redirect('/aluno/simulados')
-
-    res_sq = safe_execute(
-        supabase.table('simulados_questoes').select('id_questao').eq('id_simulado', id_simulado)
-    )
-    ids_questoes = [q['id_questao'] for q in (res_sq.data or [])] # type: ignore
+    ids_questoes = _ids_questoes_do_simulado(id_simulado)
 
     if not ids_questoes:
         flash("Este simulado está vazio.", "warning")
@@ -185,12 +266,14 @@ def fazer_simulado(id_simulado):
 @aluno_required
 def corrigir_simulado(id_simulado):
     try:
-        res_simulado = safe_execute(supabase.table('simulados').select('*').eq('id', id_simulado).single())
-        simulado = res_simulado.data
-        
-        res_sq = safe_execute(supabase.table('simulados_questoes').select('id_questao').eq('id_simulado', id_simulado))
-        ids_questoes = [q['id_questao'] for q in (res_sq.data or [])] # type: ignore
-        
+        simulado = _simulado_do_usuario_ou_none(id_simulado)
+        if not simulado:
+            # Mesma resposta para privado alheio e inexistente: não revela ID.
+            flash("Simulado não encontrado.", "danger")
+            return redirect('/aluno/simulados')
+
+        ids_questoes = _ids_questoes_do_simulado(id_simulado)
+
         res_gabaritos = safe_execute(
             supabase.table('alternativas_questao')
             .select('id_questao, letra')
@@ -229,16 +312,9 @@ def corrigir_simulado(id_simulado):
             'total_questoes': total
         }))
 
-        ranking = []
-        if not simulado.get('eh_privado'): # type: ignore
-            res_ranking = safe_execute(
-                supabase.table('simulados_resultados')
-                .select('nota, data_conclusao, usuarios(username)')
-                .eq('id_simulado', id_simulado)
-                .order('nota', desc=True)
-                .limit(10)
-            )
-            ranking = res_ranking.data or []
+        # A RPC libera ranking público para qualquer autenticado e ranking
+        # privado apenas para o criador; devolve somente username + métricas.
+        ranking = _ranking_simulado(id_simulado)[:10]
 
         return render_template('simulados/resultado.html', 
                                simulado=simulado, 
@@ -258,9 +334,14 @@ def corrigir_simulado(id_simulado):
 @aluno_required
 def excluir_simulado(id_simulado):
     try:
-        res = safe_execute(supabase.table('simulados').select('id_criador').eq('id', id_simulado).single())
-        
-        if res.data and res.data.get('id_criador') == current_user.id: # type: ignore
+        # Owner-only: a linha de outro aluno nem aparece aqui. `.limit(1)` em
+        # vez de `.single()` evita o erro PGRST116 de "0 linhas" e mantém a
+        # resposta igual para "não existe" e "não é seu".
+        res = safe_execute(
+            supabase.table('simulados').select('id_criador').eq('id', id_simulado).limit(1)
+        )
+
+        if res.data and res.data[0].get('id_criador') == current_user.id:
             safe_execute(supabase.table('simulados').delete().eq('id', id_simulado))
             flash("Simulado excluído com sucesso!", "success")
         else:
@@ -277,23 +358,15 @@ def excluir_simulado(id_simulado):
 @aluno_required
 def ver_ranking_simulado(id_simulado):
     try:
-        res_simulado = safe_execute(
-            supabase.table('simulados').select('titulo, eh_privado').eq('id', id_simulado).single()
-        )
-        simulado = res_simulado.data
+        simulado = _simulado_do_usuario_ou_none(id_simulado)
 
         if not simulado:
+            # Não revela se o ID existe: privado de outro aluno e inexistente
+            # recebem a mesma resposta.
             flash("Simulado não encontrado.", "warning")
             return redirect('/aluno/simulados')
 
-        res_ranking = safe_execute(
-            supabase.table('simulados_resultados')
-            .select('nota, respostas_corretas, total_questoes, data_conclusao, usuarios(username)')
-            .eq('id_simulado', id_simulado)
-            .order('nota', desc=True)
-            .limit(50)
-        )
-        ranking = res_ranking.data or []
+        ranking = _ranking_simulado(id_simulado)
 
         return render_template('simulados/ranking.html', 
                                simulado=simulado, 
@@ -309,19 +382,14 @@ def ver_ranking_simulado(id_simulado):
 @aluno_required
 def baixar_pdf_simulado(id_simulado):
     try:
-        res_simulado = safe_execute(
-            supabase.table('simulados').select('*').eq('id', id_simulado).single()
-        )
-        simulado = res_simulado.data
+        simulado = _simulado_do_usuario_ou_none(id_simulado)
 
         if not simulado:
+            # Privado de outro aluno e inexistente recebem a mesma resposta.
             flash("Simulado não encontrado.", "danger")
             return redirect('/aluno/simulados')
 
-        res_sq = safe_execute(
-            supabase.table('simulados_questoes').select('id_questao').eq('id_simulado', id_simulado)
-        )
-        ids_questoes = [q['id_questao'] for q in (res_sq.data or [])] # type: ignore
+        ids_questoes = _ids_questoes_do_simulado(id_simulado)
 
         if not ids_questoes:
             flash("Este simulado está vazio.", "warning")

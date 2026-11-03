@@ -1,10 +1,11 @@
 import logging
+import re
 import secrets
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from flask_login import login_user, logout_user, current_user
 
-from utils import safe_execute
+from utils import safe_execute, validar_username, USERNAME_MAX
 from banco_dados_aluno import (
     supabase, entrar_com_senha, criar_conta_auth, restaurar_sessao,
     sessao_atual, sair_auth, pedir_reset_senha,
@@ -75,6 +76,29 @@ def _relinkar_perfil_legado():
         return None
 
 
+_RE_CARACTERES_FORA_DO_USERNAME = re.compile(r"[^\w .-]", re.UNICODE)
+
+
+def _normalizar_base_username(username):
+    """Deriva uma base de username que satisfaça a CHECK do banco.
+
+    O cadastro já passa por ``utils.validar_username``. O login, porém, usa o
+    prefixo do e-mail como sugestão (ex.: ``joao+teste@...``); depois da
+    migration do F-11 esse valor precisa respeitar a mesma allowlist, senão a
+    criação do perfil falharia. Aqui removemos caracteres fora do padrão,
+    limitamos ao tamanho máximo e caímos em "Estudante" se nada sobrar.
+    """
+    bruto = re.sub(r"\s+", " ", username or "").strip()
+    valido, _ = validar_username(bruto)
+    if valido:
+        return valido
+
+    limpo = _RE_CARACTERES_FORA_DO_USERNAME.sub("", bruto)
+    limpo = re.sub(r"\s+", " ", limpo).strip(" .-_")[:USERNAME_MAX].strip()
+    valido, _ = validar_username(limpo)
+    return valido or "Estudante"
+
+
 def _criar_perfil(username, email):
     """Garante a linha `usuarios` da conta Auth logada.
 
@@ -83,6 +107,9 @@ def _criar_perfil(username, email):
     500 no login após a migração para Supabase Auth); (2) cria linha nova
     — se o username colidir (ex.: dois e-mails com o mesmo prefixo), tenta
     com sufixo _hex (padrão do cadastro antigo do site).
+
+    A base é normalizada para a allowlist do F-11 e truncada antes de receber
+    o sufixo, para que o username final nunca passe de ``USERNAME_MAX``.
     """
     s = sessao_atual()
     if not s or not s.user:
@@ -92,12 +119,14 @@ def _criar_perfil(username, email):
     if linha:
         return linha
 
-    base = (username or 'Estudante').strip() or 'Estudante'
-    for sufixo in ("", "_" + secrets.token_hex(2)):
+    base = _normalizar_base_username(username)
+    sufixo_colisao = "_" + secrets.token_hex(2)
+    candidatos = (base, base[:USERNAME_MAX - len(sufixo_colisao)].strip() + sufixo_colisao)
+    for sufixo, candidato in zip(("", sufixo_colisao), candidatos):
         try:
             res = safe_execute(supabase.table("usuarios").insert({
                 "auth_id": s.user.id,
-                "username": base + sufixo,
+                "username": candidato,
                 "email": email,
             }))
             return res.data[0] if res and res.data else None
@@ -171,13 +200,18 @@ def entrar():
 @auth_bp.route('/aluno/criar', methods=['POST'])
 def criar_usuario():
     """Cadastro: cria a conta Auth (e-mail + senha) e o perfil do aluno."""
-    username = (request.form.get('username') or '').strip()
+    username_bruto = (request.form.get('username') or '').strip()
     email = (request.form.get('email') or '').strip().lower()
     senha = request.form.get('senha') or ''
     confirmar_senha = request.form.get('confirmar_senha') or ''
 
-    if not username or not email or not senha:
+    if not username_bruto or not email or not senha:
         flash("Preencha nome, e-mail e senha para criar sua conta.", "warning")
+        return redirect(url_for('auth.login_aluno'))
+
+    username, erro_username = validar_username(username_bruto)
+    if erro_username:
+        flash(erro_username, "warning")
         return redirect(url_for('auth.login_aluno'))
     if len(senha) < MIN_SENHA:
         flash(f"A senha precisa ter no mínimo {MIN_SENHA} caracteres.", "warning")
