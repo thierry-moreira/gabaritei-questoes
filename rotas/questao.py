@@ -4,7 +4,7 @@ import re
 import uuid
 from typing import Any
 
-from postgrest import CountMethod
+from postgrest import CountMethod, ReturnMethod
 
 from banco_dados_aluno import supabase
 from extensoes import limiter
@@ -495,11 +495,15 @@ def reportar_comentario(id_comentario):
         return jsonify({"success": False, "error": "Comentário não encontrado."}), 404
 
     try:
+        # A fila de denúncias não tem SELECT para o app do aluno. O retorno
+        # padrão do PostgREST (`representation`) adiciona INSERT ... RETURNING
+        # e exige essa policy, embora a gravação deva ser permitida. `minimal`
+        # evita ler a fila e mantém intacta a checagem de dono no WITH CHECK.
         safe_execute(supabase.table("reports_comentarios").insert({
             "id_comentario": id_comentario,
             "id_usuario": str(current_user.id),
             "motivo": motivo
-        }))
+        }, returning=ReturnMethod.minimal))
         return jsonify({"success": True})
     except Exception as e:
         if "23505" in str(e):

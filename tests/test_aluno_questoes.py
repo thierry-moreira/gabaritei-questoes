@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from unittest.mock import patch, MagicMock
 from flask import render_template_string
 from flask_limiter.util import get_qualified_name
+from postgrest import ReturnMethod
 from extensoes import limiter
 
 # Adiciona o diretório raiz ao sys.path para garantir que as importações funcionem corretamente
@@ -661,6 +662,11 @@ class TestAlunoQuestaoFlask(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.get_json().get('success'))
+        mock_supabase.table.return_value.insert.assert_called_once()
+        self.assertEqual(
+            mock_supabase.table.return_value.insert.call_args.kwargs.get('returning'),
+            ReturnMethod.minimal,
+        )
 
     @patch('utils.current_user')
     @patch('rotas.questao.current_user')
