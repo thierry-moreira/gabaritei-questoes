@@ -1,0 +1,71 @@
+:root {
+    --electron-titlebar-height: 36px;
+}
+
+.electron-titlebar {
+    display: none;
+}
+
+html.electron-shell .electron-titlebar {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    height: var(--electron-titlebar-height);
+    box-sizing: border-box;
+    padding: 0 150px 0 14px;
+    border-bottom: 1px solid var(--border-color, var(--border-main, #e2e8f0));
+    background-color: var(--main-bg, #f1f5f9);
+    color: var(--texto-secundario, var(--text-secondary, #475569));
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-app-region: drag;
+}
+
+.electron-titlebar__icon {
+    display: block;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+.electron-titlebar__title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+html.electron-shell body {
+    padding-top: var(--electron-titlebar-height);
+}
+
+html.electron-shell .sidebar,
+html.electron-shell .main-wrapper {
+    height: calc(100dvh - var(--electron-titlebar-height));
+}
+
+html.electron-shell .mobile-sidebar {
+    top: var(--electron-titlebar-height);
+    height: calc(100dvh - var(--electron-titlebar-height));
+}
+
+html.electron-shell .login-screen {
+    min-height: calc(100vh - var(--electron-titlebar-height));
+}
+
+@media (max-width: 768px) {
+    html.electron-shell .main-wrapper {
+        height: auto;
+        min-height: calc(100dvh - var(--electron-titlebar-height));
+    }
+}

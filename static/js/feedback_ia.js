@@ -47,6 +47,10 @@ function reportarRespostaIA(idQuestao, tipo) {
             <textarea id="feedback-ia-relato" class="form-control" rows="3" maxlength="1000"
                 placeholder="Descreva o problema (opcional)"></textarea>
         `,
+        customClass: {
+            popup: 'report-form-popup',
+            confirmButton: 'report-ia-confirm'
+        },
         showCancelButton: true,
         confirmButtonText: 'Enviar reporte',
         cancelButtonText: 'Cancelar',

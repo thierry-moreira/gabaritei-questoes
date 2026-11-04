@@ -1,0 +1,85 @@
+-- =============================================================================
+-- RAG leve de legislação — Corpus Curado (Batch 5)
+-- Prioridade 2: Legislação Penal Especial (19), Execução Penal (58)
+--               e Direitos Humanos (16)
+-- Arquivo: docs/migrations/legislacao_batch5.sql
+--
+-- Fontes Oficiais: Presidência da República (Planalto) e Tratados Internacionais.
+-- Contempla reformas vigentes (Lei 14.843/2024 da LEP, Lei 14.532/2023 da Injúria Racial,
+-- Lei 13.964/2019 Pacote Anticrime). Sem dispositivos revogados. Idempotente.
+-- =============================================================================
+
+insert into public.legislacao_artigos (referencia, texto, vigencia_de, id_materia, id_topico) values
+
+-- -----------------------------------------------------------------------------
+-- LEGISLAÇÃO PENAL ESPECIAL (ID 19) — TÓPICO 88: Organizações Criminosas (Lei nº 12.850/2013)
+-- -----------------------------------------------------------------------------
+('Lei nº 12.850/2013 — art. 1º, § 1º', 'Considera-se organização criminosa a associação de 4 (quatro) ou mais pessoas estruturalmente ordenada e caracterizada pela divisão de tarefas, ainda que informalmente, com objetivo de obter, direta ou indiretamente, vantagem de qualquer natureza, mediante a prática de infrações penais cujas penas máximas sejam superiores a 4 (quatro) anos, ou que sejam de caráter transnacional.', '2013-08-02', 19, 88),
+('Lei nº 12.850/2013 — art. 2º (caput)', 'Promover, constituir, financiar ou integrar, pessoalmente ou por interposta pessoa, organização criminosa: Pena - reclusão, de 3 (três) a 8 (oito) anos, e multa, sem prejuízo das penas correspondentes às demais infrações penais praticadas.', '2013-08-02', 19, 88),
+('Lei nº 12.850/2013 — art. 3º', 'Em qualquer fase da persecução penal, serão permitidos, sem prejuízo de outros já previstos em lei, os seguintes meios de obtenção da prova: I - colaboração premiada; II - captação ambiental de sinais eletromagnéticos, ópticos ou acústicos; III - ação controlada; IV - acesso a registros de ligações telefônicas e telemáticas; V - interceptação de comunicações telefônicas e telemáticas; VI - afastamento dos sigilos financeiro, bancário e fiscal; VII - infiltração, por policiais, em atividade de investigação; VIII - cooperação entre instituições.', '2013-08-02', 19, 88),
+('Lei nº 12.850/2013 — art. 4º (caput)', 'O juiz poderá, a requerimento das partes, conceder o perdão judicial, reduzir em até 2/3 (dois terços) a pena privativa de liberdade ou substituí-la por restritiva de direitos daquele que tenha colaborado efetiva e voluntariamente com a investigação e com o processo criminal, desde que dessa colaboração advenha um ou mais dos seguintes resultados: I - a identificação dos demais coautores e partícipes e as infrações penais praticadas; II - a revelação da estrutura hierárquica e da divisão de tarefas; III - a prevenção de infrações penais; IV - a recuperação total ou parcial do produto ou proveito do crime; V - a localização de eventual vítima com a sua integridade física preservada.', '2013-08-02', 19, 88),
+
+-- -----------------------------------------------------------------------------
+-- LEGISLAÇÃO PENAL ESPECIAL (ID 19) — TÓPICO 49: Estatuto do Desarmamento (Lei nº 10.826/2003)
+-- -----------------------------------------------------------------------------
+('Lei nº 10.826/2003 — art. 12', 'Possuir ou manter sob sua guarda arma de fogo, acessório ou munição, de uso permitido, em desacordo com determinação legal ou regulamentar, no interior de sua residência ou dependência desta, ou, ainda no seu local de trabalho, desde que seja o titular ou o responsável legal do estabelecimento ou empresa: Pena - detenção, de 1 (um) a 3 (três) anos, e multa.', '2003-12-22', 19, 49),
+('Lei nº 10.826/2003 — art. 14', 'Portar, deter, adquirir, fornecer, receber, ter em depósito, transportar, ceder, ainda que gratuitamente, emprestar, remeter, empregar, manter sob guarda ou ocultar arma de fogo, acessório ou munição, de uso permitido, sem autorização e em desacordo com determinação legal ou regulamentar: Pena - reclusão, de 2 (dois) a 4 (quatro) anos, e multa.', '2003-12-22', 19, 49),
+('Lei nº 10.826/2003 — art. 16 (caput)', 'Possuir, deter, portar, adquirir, fornecer, receber, ter em depósito, transportar, ceder, ainda que gratuitamente, emprestar, remeter, empregar, manter sob sua guarda ou ocultar arma de fogo, acessório ou munição de uso restrito, sem autorização e em desacordo com determinação legal ou regulamentar: Pena - reclusão, de 3 (três) a 6 (seis) anos, e multa.', '2019-12-24', 19, 49),
+
+-- -----------------------------------------------------------------------------
+-- LEGISLAÇÃO PENAL ESPECIAL (ID 19) — TÓPICO 87: Lei Maria da Penha (Lei nº 11.340/2006)
+-- -----------------------------------------------------------------------------
+('Lei nº 11.340/2006 — art. 5º', 'Para os efeitos desta Lei, configura violência doméstica e familiar contra a mulher qualquer ação ou omissão baseada no gênero que lhe cause morte, lesão, sofrimento físico, sexual ou psicológico e dano moral ou patrimonial: I - no âmbito da unidade doméstica, compreendida como o espaço de convívio permanente de pessoas, com ou sem vínculo familiar, inclusive as esporadicamente agregadas; II - no âmbito da família, compreendida como a comunidade formada por indivíduos que são ou se consideram aparentados; III - em qualquer relação íntima de afeto, na qual o agressor conviva ou tenha convivido com a ofendida, independentemente de coabitação.', '2006-08-07', 19, 87),
+('Lei nº 11.340/2006 — art. 7º', 'São formas de violência doméstica e familiar contra a mulher, entre outras: I - a violência física, entendida como qualquer conduta que ofenda sua integridade ou saúde corporal; II - a violência psicológica, entendida como qualquer conduta que lhe cause dano emocional e diminuição da autoestima ou que prejudique e perturbe o pleno desenvolvimento; III - a violência sexual, entendida como qualquer conduta que a constranja a presenciar, a manter ou a participar de relação sexual não desejada; IV - a violência patrimonial, entendida como qualquer conduta que configure retenção, subtração, destruição parcial ou total de seus objetos; V - a violência moral, entendida como qualquer conduta que configure calúnia, difamação ou injúria.', '2006-08-07', 19, 87),
+('Lei nº 11.340/2006 — art. 24-A (caput)', 'Descumprir decisão judicial que defere medidas protetivas de urgência previstas nesta Lei: Pena - detenção, de 3 (três) meses a 2 (dois) anos. § 1º A configuração do crime independe da competência civil ou criminal do juiz que deferiu as medidas. § 2º Na hipótese de prisão em flagrante, apenas a autoridade judicial poderá conceder fiança.', '2018-04-03', 19, 87),
+
+-- -----------------------------------------------------------------------------
+-- LEGISLAÇÃO PENAL ESPECIAL (ID 19) — TÓPICO 48: Lei de Tortura (Lei nº 9.455/1997)
+-- -----------------------------------------------------------------------------
+('Lei nº 9.455/1997 — art. 1º, I', 'Constitui crime de tortura: I - constranger alguém com emprego de violência ou grave ameaça, causando-lhe sofrimento físico ou mental: a) com o fim de obter informação, declaração ou confissão da vítima ou de terceira pessoa; b) para provocar ação ou omissão de natureza criminosa; c) em razão de discriminação racial ou religiosa: Pena - reclusão de dois a oito anos.', '1997-04-07', 19, 48),
+('Lei nº 9.455/1997 — art. 1º, II', 'Constitui crime de tortura: II - submeter alguém, sob sua guarda, poder ou autoridade, com emprego de violência ou grave ameaça, a intenso sofrimento físico ou mental, como forma de aplicar castigo pessoal ou medida de caráter preventivo: Pena - reclusão de dois a oito anos.', '1997-04-07', 19, 48),
+('Lei nº 9.455/1997 — art. 1º, § 2º', 'Aquele que se omite em face dessas condutas, quando tinha o dever de evitá-las ou apurá-las, incorre na pena de detenção de um a quatro anos (tortura-omissão).', '1997-04-07', 19, 48),
+('Lei nº 9.455/1997 — art. 1º, § 5º', 'A condenação acarretará a perda do cargo, função ou emprego público e a interdição para seu exercício pelo dobro do prazo da pena aplicada.', '1997-04-07', 19, 48),
+
+-- -----------------------------------------------------------------------------
+-- LEGISLAÇÃO PENAL ESPECIAL (ID 19) — TÓPICO 255: Crimes de Preconceito e Racismo (Lei nº 7.716/1989)
+-- -----------------------------------------------------------------------------
+('Lei nº 7.716/1989 — art. 1º', 'Serão punidos, na forma desta Lei, os crimes resultantes de discriminação ou preconceito de raça, cor, etnia, religião ou procedência nacional.', '1989-01-05', 19, 255),
+('Lei nº 7.716/1989 — art. 2º-A', 'Injuriar alguém, ofendendo-lhe a dignidade ou o decoro, em razão de raça, cor, etnia ou procedência nacional: Pena - reclusão, de 2 (dois) a 5 (cinco) anos, e multa. Parágrafo único. A pena é aumentada de metade se o crime for cometido mediante concurso de 2 (duas) ou mais pessoas. (Incluído pela Lei nº 14.532, de 2023 - crime de racismo inafiançável e imprescritível)', '2023-01-11', 19, 255),
+
+-- -----------------------------------------------------------------------------
+-- EXECUÇÃO PENAL (ID 58) — TÓPICO 457: Lei de Execução Penal (Lei nº 7.210/1984)
+-- -----------------------------------------------------------------------------
+('LEP — art. 1º', 'A execução penal tem por objetivo efetivar as disposições de sentença ou decisão criminal e proporcionar condições para a harmônica integração social do condenado e do internado.', '1984-07-11', 58, 457),
+('LEP — art. 3º', 'Ao condenado e ao internado serão assegurados todos os direitos não atingidos pela sentença ou pela lei. Parágrafo único. Não haverá qualquer distinção de natureza racial, social, religiosa ou política.', '1984-07-11', 58, 457),
+('LEP — art. 10', 'A assistência ao preso e ao internado é dever do Estado, objetivando prevenir o crime e orientar o retorno à convivência em sociedade. Parágrafo único. A assistência estende-se ao egresso.', '1984-07-11', 58, 457),
+('LEP — art. 11', 'A assistência será: I - material; II - à saúde; III - jurídica; IV - educacional; V - social; VI - religiosa.', '1984-07-11', 58, 457),
+('LEP — art. 38', 'Cumpre ao condenado, além das obrigações decorrentes da sentença, observar os deveres de disciplina da vida prisional e prestar os serviços que lhe forem atribuídos.', '1984-07-11', 58, 457),
+('LEP — art. 41', 'Constituem direitos do preso: I - alimentação suficiente e vestuário; II - atribuição de trabalho e sua remuneração; VII - assistência material, à saúde, jurídica, educacional, social e religiosa; X - visita do cônjuge, da companheira, de parentes e amigos em dias determinados; XV - contato com o mundo exterior por meio de correspondência escrita, da leitura e de outros meios de informação que não comprometam a moral e os bons costumes.', '1984-07-11', 58, 457),
+('LEP — art. 50', 'Comete falta grave o condenado à pena privativa de liberdade que: I - incitar ou participar de movimento para subverter a ordem ou a disciplina; II - fugir; III - possuir, indevidamente, instrumento capaz de ofender a integridade física de outrem; IV - provocar acidente de trabalho; V - descumprir, no regime aberto, as condições impostas; VI - inobservar os deveres previstos nos incisos II e V, do artigo 39, desta Lei; VII - tiver em sua posse, utilizar ou fornecer aparelho telefônico, de rádio ou similar, que permita a comunicação com outros presos ou com o ambiente externo.', '1984-07-11', 58, 457),
+('LEP — art. 52 (caput)', 'A prática de fato previsto como crime doloso constitui falta grave e, quando ocasionar subversão da ordem ou disciplina internas, sujeitará o preso provisório, ou condenado, nacional ou estrangeiro, sem prejuízo da sanção penal, ao regime disciplinar diferenciado (RDD), com as seguintes características: I - duração máxima de até 2 (dois) anos, sem prejuízo de repetição da sanção por nova falta grave de mesma espécie; II - recolhimento em cela individual; III - visitas quinzenais, de 2 (duas) pessoas por vez; IV - direito do preso à saída da cela por 2 (duas) horas diárias para banho de sol.', '2019-12-24', 58, 457),
+('LEP — art. 112 (caput; redação anterior, pré-Lei nº 15.402/2026)', 'A pena privativa de liberdade será executada em forma progressiva com a transferência para regime menos rigoroso, a ser determinada pelo juiz, quando o preso tiver cumprido ao menos: I - 16% da pena, se o apenado for primário e o crime tiver sido cometido sem violência à pessoa ou grave ameaça; II - 20% da pena, se o apenado for reincidente em crime cometido sem violência ou grave ameaça; III - 25% da pena, se o apenado for primário e o crime tiver sido cometido com violência ou grave ameaça; IV - 30% da pena, se o apenado for reincidente em crime com violência ou grave ameaça; V - 40% da pena, se o apenado for condenado pela prática de crime hediondo ou equiparado, se for primário; VI - 50% da pena, se o apenado for condenado pela prática de crime hediondo com resultado morte, se for primário, vedado o livramento condicional; VII - 60% da pena, se o apenado for reincidente na prática de crime hediondo; VIII - 70% da pena, se o apenado for reincidente em crime hediondo com resultado morte, vedado o livramento condicional. § 1º Em todos os casos, o apenado só terá direito à progressão de regime se ostentar boa conduta carcerária, comprovada pelo diretor do estabelecimento e por exame criminológico.', '2019-12-24', 58, 457),
+('LEP — art. 122', 'Os condenados que cumprem pena em regime semiaberto poderão obter autorização para saída temporária do estabelecimento, sem vigilância direta, nos seguintes casos: II - frequência a curso supletivo profissionalizante, bem como de instrução do 2º grau ou superior, na comarca do juízo da execução. § 2º Não terá direito à saída temporária a que se refere o caput deste artigo o condenado que cumpre pena por praticar crime hediondo ou com violência ou grave ameaça contra pessoa. (Redação dada pela Lei nº 14.843, de 2024 - revogadas as saídas para visitas à família e atividades de convívio social)', '2024-04-11', 58, 457),
+
+-- -----------------------------------------------------------------------------
+-- DIREITOS HUMANOS (ID 16) — TÓPICO 43: Declaração Universal dos Direitos Humanos (ONU, 1948)
+-- -----------------------------------------------------------------------------
+('DUDH/1948 — art. 1º', 'Todos os seres humanos nascem livres e iguais em dignidade e em direitos. Dotados de razão e de consciência, devem agir uns para com os outros em espírito de fraternidade.', '1948-12-10', 16, 43),
+('DUDH/1948 — art. 3º', 'Todo indivíduo tem direito à vida, à liberdade e à segurança pessoal.', '1948-12-10', 16, 43),
+('DUDH/1948 — art. 4º', 'Ninguém será mantido em escravidão ou servidão; a escravidão e o comércio de escravos serão proibidos em todas as suas formas.', '1948-12-10', 16, 43),
+('DUDH/1948 — art. 5º', 'Ninguém será submetido a tortura, nem a tratamento ou castigo cruel, desumano ou degradante.', '1948-12-10', 16, 43),
+('DUDH/1948 — art. 9º', 'Ninguém pode ser arbitrariamente preso, detido ou exilado.', '1948-12-10', 16, 43),
+('DUDH/1948 — art. 10', 'Toda pessoa tem direito, em plena igualdade, a uma audiência justa e pública por parte de um tribunal independente e imparcial, para decidir de seus direitos e obrigações ou do fundamento de qualquer acusação criminal contra ela.', '1948-12-10', 16, 43),
+('DUDH/1948 — art. 11, item 1', 'Toda pessoa acusada de um ato delituoso tem o direito de ser presumida inocente até que a sua culpabilidade tenha sido provada de acordo com a lei, em julgamento público no qual lhe tenham sido asseguradas todas as garantias necessárias à sua defesa.', '1948-12-10', 16, 43),
+
+-- -----------------------------------------------------------------------------
+-- DIREITOS HUMANOS (ID 16) — TÓPICO 543: Convenção Americana sobre Direitos Humanos (Pacto de San José da Costa Rica)
+-- -----------------------------------------------------------------------------
+('Pacto de San José — art. 7º, item 7', 'Ninguém deve ser detido por dívida. Este princípio não limita os mandados de autoridade judiciária competente expedidos em virtude de inadimplemento de obrigação alimentar. (Decreto nº 678/1992 - base da Súmula Vinculante nº 25 do STF que vedou a prisão do depositário infiel)', '1992-11-06', 16, 543),
+('Pacto de San José — art. 8º, item 1', 'Toda pessoa tem direito a ser ouvida, com as devidas garantias e dentro de um prazo razoável, por um juiz ou tribunal competente, independente e imparcial, estabelecido anteriormente por lei, na apuração de qualquer acusação penal formulada contra ela, ou para que se determinem seus direitos ou obrigações de natureza civil, trabalhista, fiscal ou de qualquer outra natureza.', '1992-11-06', 16, 543)
+
+on conflict (referencia) do update set 
+    texto = excluded.texto, 
+    vigencia_de = excluded.vigencia_de, 
+    id_materia = excluded.id_materia, 
+    id_topico = excluded.id_topico;

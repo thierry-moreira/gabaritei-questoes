@@ -1,6 +1,7 @@
 import re
 import time
 import logging
+import unicodedata
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from flask import redirect, url_for, session
@@ -26,6 +27,47 @@ TEXTO_COMENTARIO_MAX = 1000
 # sublinhado. `\w` em str já cobre Unicode; nada de <, >, aspas, &, barras etc.
 _RE_USERNAME = re.compile(r"^[\w .-]+$", re.UNICODE)
 _RE_CONTROLE = re.compile(r"[\x00-\x1f\x7f]")
+
+_TERMOS_IMPROPRIOS = (
+    "porra", "caralho", "merda", "puta", "putaria", "putinha", "putas", "putona",
+    "viado", "gay", "gays", "idiota",
+    "imbecil", "burro", "jumento", "desgraça", "vagabundo", "vaca",
+    "vacas", "safado", "canalha", "corno", "arrombado", "foda", "filho da puta",
+    # Grafias comuns e erros de digitação de "foder".
+    "foder", "fuder", "fode", "fude", "fodr", "fudr", "fueder", "fudder",
+)
+# Exigem limite também no fim para não bloquear palavras legítimas que os
+# contenham como prefixo (por exemplo, "computador", "disputa" e "vacância").
+_TERMOS_IMPROPRIOS_EXATOS = {"gay", "puta", "vaca"}
+_MAPA_LEET = str.maketrans({"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t"})
+
+
+def _normalizar_texto_improprio(texto):
+    texto = unicodedata.normalize("NFKD", texto.casefold())
+    texto = "".join(caractere for caractere in texto if not unicodedata.combining(caractere))
+    return texto.translate(_MAPA_LEET)
+
+
+def _compilar_padrao_improprio(termo):
+    termo_normalizado = _normalizar_texto_improprio(termo)
+    caracteres = [caractere for caractere in termo_normalizado if caractere.isalnum()]
+    if not caracteres:
+        return None
+
+    corpo = r"[\W_]{0,3}".join(re.escape(caractere) + "+" for caractere in caracteres)
+    termo_compacto = "".join(caracteres)
+    exige_fim_de_palavra = (
+        termo_compacto in _TERMOS_IMPROPRIOS_EXATOS or " " in termo_normalizado
+    )
+    limite_final = r"(?!\w)" if exige_fim_de_palavra else ""
+    return re.compile(r"(?<!\w)" + corpo + limite_final)
+
+
+_PADROES_IMPROPRIOS = tuple(
+    padrao
+    for padrao in map(_compilar_padrao_improprio, _TERMOS_IMPROPRIOS)
+    if padrao is not None
+)
 
 
 def validar_username(username):
@@ -100,18 +142,9 @@ def verificar_texto_improprio(texto):
     if not texto:
         return True, ""
 
-    BLOCKLIST = [
-        "porra", "caralho", "merda", "puta", "viado", "gay", "idiota", 
-        "imbecil", "burro", "jumento", "desgraça", "vagabundo", "vaca", 
-        "safado", "canalha", "corno", "arrombado", "foda", "filho da puta"
-    ]
-    
-    texto_limpo = texto.lower()
-    texto_normalizado = re.sub(r'[\.\-\_]', '', texto_limpo)
-
-    for palavra in BLOCKLIST:
-        if palavra in texto_limpo or palavra in texto_normalizado:
-            return False, "Seu comentário contém termos que violam as diretrizes da comunidade. Por favor, mantenha o respeito."
+    texto_normalizado = _normalizar_texto_improprio(texto)
+    if any(padrao.search(texto_normalizado) for padrao in _PADROES_IMPROPRIOS):
+        return False, "Seu comentário contém termos que violam as diretrizes da comunidade. Por favor, mantenha o respeito."
 
     # Moderação sem IA (decisão de produto): a blocklist local acima é a
     # primeira barreira; a segunda é a denúncia humana (🚩 em cada comentário,

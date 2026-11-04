@@ -16,8 +16,11 @@
 
     <!-- Custom Premium CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/auth_premium.css') }}?v=4.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/electron_titlebar.css') }}">
+    <script src="{{ url_for('static', filename='js/electron_titlebar.js') }}" defer></script>
 </head>
 <body>
+    {% include 'components/electron_titlebar.html' %}
     <div class="login-screen">
         <div class="bg-decor">
             <div class="blob-1"></div>

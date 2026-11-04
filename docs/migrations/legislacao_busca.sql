@@ -135,14 +135,18 @@ as $$
         where tsq.q_and is null
            or l.search_tsv @@ tsq.q_and
            or l.search_tsv @@ qor.q_or
+    ),
+    melhor_escopo as (
+        -- Escopo estrito: tópico > matéria > FTS global. Se houver acerto no
+        -- tópico, não mistura trechos de outros tópicos da mesma matéria.
+        select max(pont_estrutura) as pont_estrutura
+        from candidatos
     )
-    -- Precisão primeiro: se há qualquer acerto na taxonomia da questão,
-    -- descarta acertos "genéricos" fora dela; senão, cai para o FTS.
     select c.id, c.referencia, c.texto, c.vigencia_de, c.vigencia_ate,
            (c.pont_estrutura + c.forca + c.rk)::real as relevancia
     from candidatos c
-    where c.pont_estrutura > 0
-       or not exists (select 1 from candidatos c2 where c2.pont_estrutura > 0)
+    cross join melhor_escopo e
+    where c.pont_estrutura = e.pont_estrutura
     order by c.pont_estrutura desc, c.forca desc, c.rk desc, c.id
     limit least(greatest(coalesce(p_limite, 5), 1), 10)
 $$;

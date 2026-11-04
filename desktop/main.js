@@ -39,11 +39,21 @@ try {
 
 const HOST = '127.0.0.1';
 const PORTA = 5000;
+const TITLEBAR_HEIGHT = 36;
+const TEM_TITLEBAR_OVERLAY = process.platform === 'win32' || process.platform === 'linux';
+const COR_HEX_RE = /^#[0-9a-f]{6}$/i;
 
 const ehDev = !app.isPackaged;
 
 let backend = null;
 let janela = null;
+
+ipcMain.on('set-titlebar-colors', (event, color, symbolColor) => {
+  if (!TEM_TITLEBAR_OVERLAY || !COR_HEX_RE.test(color) || !COR_HEX_RE.test(symbolColor)) return;
+  const janelaOrigem = BrowserWindow.fromWebContents(event.sender);
+  if (!janelaOrigem || typeof janelaOrigem.setTitleBarOverlay !== 'function') return;
+  janelaOrigem.setTitleBarOverlay({ color, symbolColor, height: TITLEBAR_HEIGHT });
+});
 
 // Sessões que sobrevivem ao fechar/abrir: a secret key é gerada 1x e fica em
 // app.getPath('userData')/secret.key — o login do Auth é lembrado entre boots.
@@ -131,7 +141,15 @@ async function criarJanela() {
     show: false,
     autoHideMenuBar: true,
     title: 'Gabaritei Aluno',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#f1f5f9',
+    ...(TEM_TITLEBAR_OVERLAY ? {
+      titleBarStyle: 'hidden',
+      titleBarOverlay: {
+        color: '#f1f5f9',
+        symbolColor: '#475569',
+        height: TITLEBAR_HEIGHT,
+      },
+    } : {}),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,

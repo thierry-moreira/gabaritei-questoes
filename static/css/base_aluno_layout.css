@@ -705,6 +705,52 @@ header {
     color: #fff;
 }
 
+/* Modais de reporte: alinham popup e campos ao tema escuro do app. */
+[data-bs-theme="dark"] .report-form-popup.swal2-popup {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--texto-principal);
+}
+
+[data-bs-theme="dark"] .report-form-popup .swal2-title {
+    color: var(--texto-principal) !important;
+}
+
+[data-bs-theme="dark"] .report-form-popup .swal2-html-container {
+    color: var(--texto-secundario);
+}
+
+[data-bs-theme="dark"] .report-form-popup .form-control,
+[data-bs-theme="dark"] .report-form-popup .form-select,
+[data-bs-theme="dark"] .report-form-popup .swal2-select {
+    background-color: var(--card-bg-elevated);
+    border-color: var(--border-color);
+    color: var(--texto-principal);
+    color-scheme: dark;
+}
+
+[data-bs-theme="dark"] .report-form-popup .form-control::placeholder {
+    color: var(--texto-secundario);
+    opacity: 1;
+}
+
+[data-bs-theme="dark"] .report-form-popup .form-control:focus,
+[data-bs-theme="dark"] .report-form-popup .form-select:focus,
+[data-bs-theme="dark"] .report-form-popup .swal2-select:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 0.25rem var(--accent-soft);
+}
+
+[data-bs-theme="dark"] .report-form-popup .form-select option,
+[data-bs-theme="dark"] .report-form-popup .swal2-select option {
+    background-color: var(--card-bg);
+    color: var(--texto-principal);
+}
+
+[data-bs-theme="dark"] .report-form-popup .report-ia-confirm.swal2-confirm {
+    background-color: var(--primary-color) !important;
+}
+
 footer {
     background-color: var(--main-bg) !important;
     border-top: 1px solid var(--border-color) !important;

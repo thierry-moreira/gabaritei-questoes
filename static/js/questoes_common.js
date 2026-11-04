@@ -392,6 +392,9 @@ function initQuestoes() {
         Swal.fire({
             title: 'Denunciar comentário',
             text: 'Ajude a manter a comunidade respeitosa. A denúncia será registrada para análise.',
+            customClass: {
+                popup: 'report-form-popup'
+            },
             input: 'select',
             inputOptions: {
                 'Conteúdo ofensivo ou desrespeitoso': 'Conteúdo ofensivo ou desrespeitoso',

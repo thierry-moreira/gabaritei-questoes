@@ -9,6 +9,7 @@ from utils import (
     slugify,
     validar_username,
     validar_texto_comentario,
+    verificar_texto_improprio,
     USERNAME_MAX,
     TEXTO_COMENTARIO_MAX,
 )
@@ -75,6 +76,40 @@ class TestUtils(unittest.TestCase):
             validar_texto_comentario("x" * (TEXTO_COMENTARIO_MAX + 1))[0]
         )
         self.assertIsNone(validar_texto_comentario("texto\x01controle")[0])
+
+    # -------------------------------------------------------------------------
+    # Moderação local de comentários
+    # -------------------------------------------------------------------------
+    def test_verificar_texto_improprio_bloqueia_variantes_e_erros_de_digitacao(self):
+        textos = (
+            "Vai se fuder",
+            "Vai se FODER!",
+            "Vai se fuderrr",
+            "Vai se f.u.d.e.r",
+            "Vai se f u d e r",
+            "Vai se f0d3r",
+            "Vai se fudr",
+            "Vai se fueder",
+            "filho da puta",
+            "Isso é uma merda.",
+        )
+
+        for texto in textos:
+            with self.subTest(texto=texto):
+                permitido, mensagem = verificar_texto_improprio(texto)
+                self.assertFalse(permitido)
+                self.assertTrue(mensagem)
+
+    def test_verificar_texto_improprio_nao_bloqueia_substrings_de_palavras_normais(self):
+        textos = (
+            "Usei o computador para resolver a questão.",
+            "A disputa entre as teses foi interessante.",
+            "A vacância do cargo está prevista em lei.",
+        )
+
+        for texto in textos:
+            with self.subTest(texto=texto):
+                self.assertEqual(verificar_texto_improprio(texto), (True, ""))
 
 if __name__ == '__main__':
     unittest.main()
