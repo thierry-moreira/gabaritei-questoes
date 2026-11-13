@@ -1,0 +1,152 @@
+/**
+ * Dashboard Detalhado do Aluno
+ * Estilos para Calendário de Metas e Componentes Premium
+ */
+
+:root {
+    --cal-bg: #ffffff;
+    --cal-text: #212529;
+    --cal-border: rgba(0,0,0,0.08);
+    --cal-weekday: #6e7781;
+    --cal-btn-bg: #f6f8fa;
+    --cal-btn-border: #d0d7de;
+    --cal-other-month: #afb8c1;
+    --rev-orange: #ff9800;
+}
+
+[data-bs-theme="dark"] {
+    --cal-bg: #161b22;
+    --cal-text: #e6edf3;
+    --cal-border: rgba(255,255,255,0.1);
+    --cal-weekday: #8b949e;
+    --cal-btn-bg: #21262d;
+    --cal-btn-border: #30363d;
+    --cal-other-month: #484f58;
+    --rev-orange: #f97316;
+}
+
+.calendar-card {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--cal-bg) !important;
+    color: var(--cal-text) !important;
+    border: 1px solid var(--cal-border) !important;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    text-align: center;
+}
+
+.weekday {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--cal-weekday);
+    padding-bottom: 5px;
+}
+
+.day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: default;
+    border-radius: 50%;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.day.other-month { 
+    color: var(--cal-other-month); 
+}
+
+.day.today {
+    background-color: #d39ed3 !important; /* Rosa da identidade visual */
+    color: #161b22 !important;
+}
+
+.day.goal-met {
+    background-color: #238636; /* Verde GitHub/Consistência */
+    color: #fff;
+    box-shadow: 0 0 12px rgba(35, 134, 54, 0.3);
+}
+
+.day.goal-met.today {
+    box-shadow: 0 0 0 2px var(--cal-bg), 0 0 12px rgba(35, 134, 54, 0.5);
+}
+
+.btn-meta-control {
+    background: var(--cal-btn-bg);
+    border: 1px solid var(--cal-btn-border);
+    color: var(--cal-text);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.btn-meta-control:hover { 
+    background: var(--cal-btn-border); 
+}
+
+.btn-premium-gradient {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    border: none;
+    color: white;
+    border-radius: 10px;
+    transition: all 0.2s;
+}
+
+.btn-premium-gradient:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+    color: white;
+}
+
+.bg-orange-rev {
+    background-color: var(--rev-orange) !important;
+    color: white !important;
+}
+
+/* RESPONSIVIDADE DO CABEÇALHO */
+@media (max-width: 768px) {
+    .header-title-mobile {
+        font-size: 1.4rem !important;
+    }
+    
+    .small-mobile {
+        font-size: 0.85rem !important;
+    }
+    
+    .w-mobile-100 {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+}
+
+/* AJUSTE EXCLUSIVO PARA TABLET (Resoluções entre Celular e Desktop) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .btn-premium-outline {
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+}
+
+.chart-container-premium {
+    position: relative; 
+    height: 350px; 
+    width: 100%;
+}
+
+@media (max-width: 1024px) {
+    .chart-container-premium {
+        height: 420px !important;
+    }
+}

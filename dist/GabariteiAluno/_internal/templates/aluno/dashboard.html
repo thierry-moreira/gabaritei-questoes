@@ -1,0 +1,335 @@
+{% extends 'base_aluno.html' %}
+{% import 'components/stat_card.html' as sc %}
+
+{% block title %}Painel de Estudos | Gabaritei{% endblock %}
+{% block content_class %}content-dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard_minimal.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dash-page">
+
+    <header class="dash-welcome">
+        <div class="dash-welcome-text">
+            <h1 class="dash-title">Olá, {{ current_user.username }}!</h1>
+            {% set evolucao = evolucao_percentual|default(0) %}
+            <p class="dash-subtitle">
+                Seu volume de estudos está
+                <span class="dash-highlight">{{ evolucao|abs }}% {{ 'maior' if evolucao >= 0 else 'menor' }}</span>
+                que na semana passada.
+            </p>
+        </div>
+
+        <div class="dash-actions">
+            <a href="/aluno/dashboard_detalhado" class="btn-dash btn-dash-ghost">
+                <i class="bi bi-bar-chart-line"></i>
+                <span>Raio-X Completo</span>
+            </a>
+            <a href="/aluno/questoes" class="btn-dash btn-dash-primary">
+                <i class="bi bi-plus-lg"></i>
+                <span>Resolver Questões</span>
+            </a>
+        </div>
+    </header>
+
+    <section class="row dash-metrics" aria-label="Métricas de estudo">
+        {{ sc.render_stat_card(variant='count', title='Questões Resolvidas', value=total_resolvidas|default(0), icon='bi-check2-circle', badge='+' ~ (hoje_resolvidas|default(0)) ~ ' hoje') }}
+        {{ sc.render_stat_card(variant='progress', title='Taxa de Acerto', percentage=taxa_acerto|default(0), p_label=performance_nivel|default('Precisa de Foco')) }}
+        {{ sc.render_stat_card(variant='streak', title='Ofensiva Ativa', value=streak_count|default(0), icon='bi-fire', description='Dias de estudo constante', footer=('Mantenha o ritmo!' if (streak_count|default(0)) > 0 else 'Complete 1 questão hoje para iniciar!')) }}
+    </section>
+
+    <section class="chart-card" aria-labelledby="titulo-frequencia">
+        <div class="chart-card-head">
+            <div>
+                <h2 class="chart-title" id="titulo-frequencia">Frequência de Estudos</h2>
+                <p class="chart-subtitle">Acompanhamento diário de resolução</p>
+            </div>
+
+            <div class="chart-range" role="tablist" aria-label="Período do gráfico">
+                <button type="button" class="chart-range-btn is-active" data-dias="7" role="tab"
+                    aria-selected="true" aria-label="Últimos 7 dias">7 dias</button>
+                <button type="button" class="chart-range-btn" data-dias="15" role="tab" aria-selected="false"
+                    aria-label="Últimos 15 dias">15 dias</button>
+                <button type="button" class="chart-range-btn" data-dias="30" role="tab" aria-selected="false"
+                    aria-label="Últimos 30 dias">30 dias</button>
+            </div>
+        </div>
+
+        <div class="chart-card-body">
+            <div class="chart-canvas-wrap">
+                <canvas id="graficoDesempenho" aria-label="Gráfico de frequência de estudos"
+                    role="img"></canvas>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    (function () {
+        const labelsCompletos = {{ labels_grafico | tojson }};
+        const acertosCompletos = {{ dados_acertos | tojson }};
+        const errosCompletos = {{ dados_erros | tojson }};
+        const totaisCompletos = acertosCompletos.map((acertos, i) => acertos + (errosCompletos[i] || 0));
+
+        const canvasElement = document.getElementById('graficoDesempenho');
+        if (!canvasElement) return;
+
+        const root = document.documentElement;
+        const isDarkMode = () => root.getAttribute('data-bs-theme') === 'dark';
+
+        const palette = () => isDarkMode() ? {
+            accent: '#5E6AD2',
+            lineStart: '#38BDF8',
+            lineEnd: '#818CF8',
+            point: '#818CF8',
+            pointBorder: '#08090D',
+            halo: 'rgba(94, 106, 210, 0.25)',
+            areaTop: 'rgba(94, 106, 210, 0.35)',
+            areaMid: 'rgba(94, 106, 210, 0.05)',
+            areaMidStop: 0.6,
+            areaBottom: 'rgba(94, 106, 210, 0)',
+            grid: 'rgba(255, 255, 255, 0.05)',
+            tick: '#64748B',
+            tickX: '#94A3B8',
+            axisBorder: 'rgba(255, 255, 255, 0.06)',
+            tooltipBg: '#141822',
+            tooltipText: '#E2E8F0',
+            tooltipBorder: 'rgba(255, 255, 255, 0.1)'
+        } : {
+            accent: '#3D5A80',
+            lineStart: '#5A7BA6',
+            lineEnd: '#4B6B94',
+            point: '#4B6B94',
+            pointBorder: '#FFFFFF',
+            halo: 'rgba(61, 90, 128, 0.15)',
+            areaTop: 'rgba(75, 107, 148, 0.22)',
+            areaMid: 'rgba(75, 107, 148, 0.04)',
+            areaMidStop: 0.7,
+            areaBottom: 'rgba(75, 107, 148, 0)',
+            grid: 'rgba(38, 43, 39, 0.07)',
+            tick: '#8C918C',
+            tickX: '#5F6661',
+            axisBorder: '#E2DDD3',
+            tooltipBg: '#FFFFFF',
+            tooltipText: '#262B27',
+            tooltipBorder: '#E5E0D5'
+        };
+
+        const ultimos = (lista, dias) => lista.slice(-dias);
+
+        function areaGradient(context) {
+            const { chart } = context;
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return 'transparent';
+
+            const cores = palette();
+            const gradiente = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+            gradiente.addColorStop(0, cores.areaTop);
+            gradiente.addColorStop(cores.areaMidStop, cores.areaMid);
+            gradiente.addColorStop(1, cores.areaBottom);
+            return gradiente;
+        }
+
+        function lineGradient(context) {
+            const { chart } = context;
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return palette().accent;
+
+            const cores = palette();
+            const gradiente = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+            gradiente.addColorStop(0, cores.lineStart);
+            gradiente.addColorStop(0.5, cores.accent);
+            gradiente.addColorStop(1, cores.lineEnd);
+            return gradiente;
+        }
+
+        let diasAtivos = 7;
+
+        function topoEixoY() {
+            const valores = ultimos(totaisCompletos, diasAtivos);
+            const pico = valores.length ? Math.max(...valores) : 0;
+            return Math.max(4, Math.ceil(pico / 4) * 4);
+        }
+
+        function aplicarEscalaY(chart) {
+            const topo = topoEixoY();
+            chart.options.scales.y.suggestedMax = topo;
+            chart.options.scales.y.ticks.stepSize = topo / 4;
+        }
+
+        function indicePico() {
+            const valores = ultimos(totaisCompletos, diasAtivos);
+            const pico = valores.length ? Math.max(...valores) : 0;
+            return pico > 0 ? valores.indexOf(pico) : -1;
+        }
+
+        function ehPico(context) {
+            return context.dataIndex === indicePico();
+        }
+
+        const haloPico = {
+            id: 'haloPico',
+            afterDatasetsDraw(chart) {
+                const indice = indicePico();
+                if (indice < 0) return;
+
+                const ponto = chart.getDatasetMeta(0).data[indice];
+                if (!ponto) return;
+
+                const ctx = chart.ctx;
+                const cores = palette();
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.fillStyle = cores.halo;
+                ctx.arc(ponto.x, ponto.y, 7.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.fillStyle = '#FFFFFF';
+                ctx.arc(ponto.x, ponto.y, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = cores.accent;
+                ctx.stroke();
+                ctx.restore();
+            }
+        };
+
+        function montarDataset() {
+            return {
+                label: 'Questões Resolvidas',
+                data: ultimos(totaisCompletos, diasAtivos),
+                borderColor: lineGradient,
+                backgroundColor: areaGradient,
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: (context) => (ehPico(context) ? 4.5 : 3.5),
+                pointHoverRadius: 6,
+                pointHitRadius: 18,
+                pointBackgroundColor: (context) => (ehPico(context) ? '#FFFFFF' : palette().point),
+                pointBorderColor: (context) => (ehPico(context) ? palette().accent : palette().pointBorder),
+                pointBorderWidth: 2
+            };
+        }
+
+        const escalaInicial = topoEixoY();
+
+        const meuGrafico = new Chart(canvasElement.getContext('2d'), {
+            type: 'line',
+            plugins: [haloPico],
+            data: {
+                labels: ultimos(labelsCompletos, diasAtivos),
+                datasets: [montarDataset()]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 650,
+                    easing: 'easeOutQuart'
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: palette().tooltipBg,
+                        titleColor: palette().tooltipText,
+                        bodyColor: palette().tooltipText,
+                        borderColor: palette().tooltipBorder,
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: false,
+                        callbacks: {
+                            label: (context) => ` ${context.parsed.y} questões`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: escalaInicial,
+                        grid: {
+                            color: () => palette().grid,
+                            drawTicks: false
+                        },
+                        border: { display: false },
+                        ticks: {
+                            color: () => palette().tick,
+                            stepSize: escalaInicial / 4,
+                            padding: 8,
+                            font: { size: 10, family: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' }
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        border: {
+                            display: true,
+                            color: palette().axisBorder
+                        },
+                        ticks: {
+                            color: (context) => ((context.tick && context.tick.index === indicePico()) ? palette().accent : palette().tickX),
+                            padding: 10,
+                            font: (context) => ({
+                                size: 11,
+                                family: 'Inter, sans-serif',
+                                weight: (context.tick && context.tick.index === indicePico()) ? '600' : '500'
+                            })
+                        }
+                    }
+                }
+            }
+        });
+
+        // Alternancia entre 7, 15 e 30 dias
+        const botoesPeriodo = document.querySelectorAll('.chart-range-btn');
+        botoesPeriodo.forEach((botao) => {
+            botao.addEventListener('click', () => {
+                diasAtivos = parseInt(botao.dataset.dias, 10) || 7;
+
+                botoesPeriodo.forEach((outro) => {
+                    const ativo = outro === botao;
+                    outro.classList.toggle('is-active', ativo);
+                    outro.setAttribute('aria-selected', ativo ? 'true' : 'false');
+                });
+
+                meuGrafico.data.labels = ultimos(labelsCompletos, diasAtivos);
+                meuGrafico.data.datasets[0] = montarDataset();
+                aplicarEscalaY(meuGrafico);
+                meuGrafico.update();
+            });
+        });
+
+        // Reaplica as cores quando o tema muda
+        function sincronizarTema() {
+            const cores = palette();
+            const tooltip = meuGrafico.options.plugins.tooltip;
+            tooltip.backgroundColor = cores.tooltipBg;
+            tooltip.titleColor = cores.tooltipText;
+            tooltip.bodyColor = cores.tooltipText;
+            tooltip.borderColor = cores.tooltipBorder;
+            meuGrafico.options.scales.x.border.color = cores.axisBorder;
+            meuGrafico.update();
+        }
+
+        new MutationObserver(sincronizarTema).observe(root, {
+            attributes: true,
+            attributeFilter: ['data-bs-theme']
+        });
+
+        window.addEventListener('themeChanged', sincronizarTema);
+    })();
+</script>
+{% endblock %}

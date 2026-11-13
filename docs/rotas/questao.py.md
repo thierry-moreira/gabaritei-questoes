@@ -26,11 +26,12 @@ $$\text{Streak}_{\text{hoje}} = \begin{cases} \text{Streak}_{\text{ontem}} + 1 &
 *   **Filtros combinados**: matéria, tópico, subtópico, banca, órgão, ano, nível, cargo e tipo são aplicados via `.in_`/`.eq` sobre a view `view_questoes_completa`, sempre restrita a `status='publicada'`.
 
 ### 4. Ecossistema Pedagógico de IA (Gabi IA)
-*   **`ia_explica`**: Gera explicações hiper-pedagógicas em tempo real (`/api/ia_explica`) para usuários autenticados, com a **própria chave do aluno (BYOK)**. Integra prompts de sistema altamente restritivos para evitar alucinações de lei, injeta o **contexto legislativo curado** recuperado pela RPC `buscar_legislacao` (RAG leve, com evidência gravada em `explicacoes_ia.contexto_legislacao`) e suporta **visão computacional** enviando as imagens do enunciado/alternativas ao provedor. Detalhes em [docs/ia.md](../ia.md).
+*   **`ia_explica`**: Gera explicações hiper-pedagógicas em tempo real (`/api/ia_explica`) para usuários autenticados, com a **própria chave do aluno (BYOK)**. Integra prompts de sistema altamente restritivos para evitar alucinações de lei, injeta o **contexto legislativo curado** recuperado pela RPC `buscar_legislacao` (RAG leve, com evidência gravada em `explicacoes_ia.contexto_legislacao`) e suporta **visão computacional** enviando as imagens do enunciado/alternativas ao provedor. O cache global é gravado pela Edge Function `secure-global-write` (operação `cache_explanation`); falha no cache não impede a explicação de ser devolvida. Detalhes em [docs/ia.md](../ia.md).
 *   **`ia_gerar_estudo`**: Endpoint unificado (`/api/ia/gerar_estudo`) que extrai a teoria subjacente à questão para gerar resumos ou flashcards permanentes:
-    *   **Resumos**: Gravados no caderno de resumos do aluno (`resumos_estudo`).
-    *   **Flashcards**: Pergunta e resposta estruturadas para memorização ativa (Frente/Verso), salvas automaticamente no respectivo baralho da matéria (`flashcards` e `flashcard_categorias`).
-*   **`feedback_ia`**: Reporte anônimo de problema em qualquer resposta gerada (explicação, resumo ou flashcard) pelo botão 🚩 (`POST /api/feedback_ia`): o motivo é validado contra o catálogo fechado `MOTIVOS_FEEDBACK_IA`, o relato passa pela blocklist local e é gravado em `feedbacks_ia` para triagem humana no painel admin (seção "Respostas da IA"), que pode **invalidar o cache** para o conteúdo ser regerado com o contexto atual.
+    *   **Resumos**: Gravados no caderno de resumos do aluno (`resumos_estudo`) e no cache global `ia_cache_estudo`.
+    *   **Flashcards**: Pergunta e resposta estruturadas para memorização ativa (Frente/Verso), salvas automaticamente no respectivo baralho da matéria (`flashcards` e `flashcard_categorias`) e no cache global `ia_cache_estudo`.
+    *   **Cache global**: gravado pela Edge Function `secure-global-write` (operação `cache_study`), sempre depois de o material do aluno ser salvo; falha no cache (ex.: rate limit) não desfaz o resumo/flashcard.
+*   **`feedback_ia`**: Reporte anônimo de problema em qualquer resposta gerada (explicação, resumo ou flashcard) pelo botão 🚩 (`POST /api/feedback_ia`): o motivo é validado contra o catálogo fechado `MOTIVOS_FEEDBACK_IA`, o relato passa pela blocklist local e é enviado à Edge Function `secure-global-write` (operação `feedback_ai`), que valida JWT, questão publicada e rate limit antes de gravar em `feedbacks_ia` com `service_role`. A triagem é humana no painel admin (seção "Respostas da IA"), que pode **invalidar o cache** para o conteúdo ser regerado com o contexto atual.
 
 ---
 
@@ -74,7 +75,7 @@ graph TD
     F -->|Não: MISS| H0[Recupera contexto legislativo — RPC buscar_legislacao]
     H0 --> H[Camada BYOK: provedores_ia.chamar_ia]
     H -->|Aplica Prompts e Visão Computacional| I[Sanitiza LaTeX e Tags HTML <b>]
-    I -->|Salva Cache Global + evidência contexto_legislacao| J[(Tabela: explicacoes_ia)]
+    I -->|Envia cache_explanation + evidência contexto_legislacao| J[Edge secure-global-write → explicacoes_ia]
     J --> G
     
     %% ia_gerar_estudo
@@ -86,7 +87,7 @@ graph TD
     M -->|Não: MISS Global| O[Busca Explicação Base + Prompt da Matéria]
     O --> P[Camada BYOK: provedores_ia.chamar_ia]
     P --> Q[Gera JSON / Estrutura Frente-Verso ou Resumo]
-    Q -->|Salva Cache Global| R[(Tabela: ia_cache_estudo)]
+    Q -->|Envia cache_study| R[Edge secure-global-write → ia_cache_estudo]
     R --> N
     
     N --> S{Tipo de Estudo?}
@@ -129,11 +130,11 @@ O motor generativo adota uma política de **tolerância zero contra alucinaçõe
 *   **Proteção Contra IDOR**:
     *   A deleção física de questões (`excluir_questao`) migrou para o ambiente administrativo (`rotas/admin_api.py`, blindada por `@admin_required` com trava de dispositivo único — ver `docs/rotas/admin.md` no repositório do painel administrativo). O blueprint de questões do aluno não expõe nenhuma rota destrutiva.
     *   A inserção de resumos e flashcards sempre resolve e força a propriedade ao UUID autenticado do aluno (`current_user.id`), inviabilizando qualquer injeção ou tentativa de alteração cruzada de dados por IDs arbitrários.
-*   **Feedback de questões**: o relato de problema na questão (modal do formulário de feedback → `POST /api/feedback`) grava em `feedbacks_questoes` como `"[tipo] descrição"`, para triagem humana no painel admin (página de feedbacks).
+*   **Feedback de questões**: o relato de problema na questão (modal do formulário de feedback → `POST /api/feedback`) valida `id_questao`, o catálogo fechado de `tipo_erro` e o tamanho da descrição, e envia a gravação à Edge Function `secure-global-write` (operação `feedback_question`). A função confirma aluno, questão publicada e rate limit (10/hora) antes de inserir em `feedbacks_questoes` com `service_role`, no formato `"[tipo] descrição"`, para triagem humana no painel admin. `anon`/`authenticated` não têm INSERT direto na tabela.
 *   **Feed público de comentários (F-07)**: `GET /api/comentarios/<id_questao>` consulta somente `view_comentarios_publicos` e seleciona/projeta `id_comentario`, `nome_usuario`, `texto_comentario` e `criado_em` — nunca `id_usuario`. A rota limita a **20 comentários por página**, ordena por data e UUID para paginação estável, busca um registro extra para retornar `tem_mais`, rejeita páginas inválidas e limita o offset a 10.000. A interface oferece “Carregar comentários anteriores”; o endpoint tem rate limit de **60/minuto** por IP. Não exige login; a view do F-01 filtra para questões publicadas.
 *   **Moderação sem IA (blocklist + denúncia humana)**: o salvamento de novos comentários passa pela blocklist local (`verificar_texto_improprio`) — a antiga moderação por API de IA foi removida. A segunda barreira é a **denúncia** (`POST /api/comentarios/<id_comentario>/reportar`, botão 🚩 em cada comentário): grava em `reports_comentarios` (no máximo 1 por comentário/aluno → `409` duplicado amigável; uuid validado; comentário inexistente → `404`) e a triagem é **humana**, no painel do admin (repo separado) — seção "Denúncias de Comentários" da página de feedbacks, com exclusão do comentário denunciado (FK CASCADE encerra as denúncias) ou descarte da denúncia.
 *   **XSS armazenado em comentários (F-11)**: `salvar_comentario` valida `id_questao` inteiro e o texto com `utils.validar_texto_comentario` (1–1000 caracteres, sem controles) antes de consultar o banco; o `username` do perfil passa por `utils.validar_username` e um valor legado fora do formato vira `"Concurseiro"`. A defesa principal é na saída: `static/js/questoes_common.js` monta o card com `createElement`/`textContent`/`createTextNode` — nome, texto e id nunca são interpolados em `innerHTML`. No banco, as CHECKs `usuarios_username_formato`, `comentarios_nome_usuario_formato` e `comentarios_texto_valido` (migration `comentarios_username_xss`) bloqueiam INSERT direto via PostgREST com HTML, texto vazio/longo ou caractere de controle (`23514`). O CSP mantém `'unsafe-inline'` em `script-src` por causa dos scripts inline legados; `object-src 'none'`, `base-uri 'self'`, `frame-ancestors 'self'` e `form-action 'self'` foram adicionados. Testes: `tests/test_utils.py`, `tests/test_aluno_questoes.py`, `tests/test_conta.py`, `tests/test_auth.py`, `tests/test_app_security.py` (CSP), `static/js/__tests__/questoes_common.test.js` e `docs/migrations/test_f11.sql` (8 asserções).
-*   **IA com BYOK**: `/api/ia_explica` e `/api/ia/gerar_estudo` chamam a camada `provedores_ia.chamar_ia()` com a **própria chave do aluno** (OpenAI, Google Gemini ou Anthropic), guardada apenas localmente (SQLite + DPAPI). Os prompts e parâmetros calibrados permanecem idênticos; os caches (`explicacoes_ia`, `ia_cache_estudo`) e a gravação no banco seguem inalterados. Detalhes em [docs/ia.md](../ia.md).
+*   **IA com BYOK**: `/api/ia_explica` e `/api/ia/gerar_estudo` chamam a camada `provedores_ia.chamar_ia()` com a **própria chave do aluno** (OpenAI, Google Gemini ou Anthropic), guardada apenas localmente (SQLite + DPAPI). Os prompts e parâmetros calibrados permanecem idênticos; a gravação dos caches globais (`explicacoes_ia`, `ia_cache_estudo`) passa pela Edge Function `secure-global-write`, com falha degradada (o conteúdo gerado é entregue mesmo sem cache). Detalhes em [docs/ia.md](../ia.md).
 
 ---
 > [!NOTE]

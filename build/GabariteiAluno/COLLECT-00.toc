@@ -1,0 +1,950 @@
+([('GabariteiAluno.exe',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\build\\GabariteiAluno\\GabariteiAluno.exe',
+   'EXECUTABLE'),
+  ('VCRUNTIME140.dll',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\VCRUNTIME140.dll',
+   'BINARY'),
+  ('VCRUNTIME140_1.dll',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\VCRUNTIME140_1.dll',
+   'BINARY'),
+  ('_asyncio.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_asyncio.pyd',
+   'EXTENSION'),
+  ('_brotli.cp315-win_amd64.pyd',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\_brotli.cp315-win_amd64.pyd',
+   'EXTENSION'),
+  ('_bz2.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_bz2.pyd',
+   'EXTENSION'),
+  ('_cffi_backend.cp315-win_amd64.pyd',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\_cffi_backend.cp315-win_amd64.pyd',
+   'EXTENSION'),
+  ('_ctypes.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_ctypes.pyd',
+   'EXTENSION'),
+  ('_decimal.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_decimal.pyd',
+   'EXTENSION'),
+  ('_hashlib.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_hashlib.pyd',
+   'EXTENSION'),
+  ('_lzma.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_lzma.pyd',
+   'EXTENSION'),
+  ('_multiprocessing.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_multiprocessing.pyd',
+   'EXTENSION'),
+  ('_overlapped.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_overlapped.pyd',
+   'EXTENSION'),
+  ('_queue.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_queue.pyd',
+   'EXTENSION'),
+  ('_socket.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_socket.pyd',
+   'EXTENSION'),
+  ('_sqlite3.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_sqlite3.pyd',
+   'EXTENSION'),
+  ('_ssl.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_ssl.pyd',
+   'EXTENSION'),
+  ('_uuid.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_uuid.pyd',
+   'EXTENSION'),
+  ('_wmi.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_wmi.pyd',
+   'EXTENSION'),
+  ('_zoneinfo.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_zoneinfo.pyd',
+   'EXTENSION'),
+  ('_zstd.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\_zstd.pyd',
+   'EXTENSION'),
+  ('api-ms-win-core-console-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-console-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-datetime-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-datetime-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-debug-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-debug-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-errorhandling-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-errorhandling-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-fibers-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-fibers-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-fibers-l1-1-1.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-fibers-l1-1-1.dll',
+   'BINARY'),
+  ('api-ms-win-core-file-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-file-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-file-l1-2-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-file-l1-2-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-file-l2-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-file-l2-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-handle-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-handle-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-heap-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-heap-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-interlocked-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-interlocked-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-kernel32-legacy-l1-1-1.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-kernel32-legacy-l1-1-1.dll',
+   'BINARY'),
+  ('api-ms-win-core-libraryloader-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-libraryloader-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-localization-l1-2-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-localization-l1-2-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-memory-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-memory-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-namedpipe-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-namedpipe-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-processenvironment-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-processenvironment-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-processthreads-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-processthreads-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-processthreads-l1-1-1.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-processthreads-l1-1-1.dll',
+   'BINARY'),
+  ('api-ms-win-core-profile-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-profile-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-rtlsupport-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-rtlsupport-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-string-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-string-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-synch-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-synch-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-synch-l1-2-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-synch-l1-2-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-sysinfo-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-sysinfo-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-sysinfo-l1-2-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-sysinfo-l1-2-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-timezone-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-timezone-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-core-util-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-core-util-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-conio-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-crt-conio-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-convert-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-crt-convert-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-environment-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-crt-environment-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-filesystem-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-crt-filesystem-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-heap-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-crt-heap-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-locale-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-crt-locale-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-math-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-crt-math-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-process-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-crt-process-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-runtime-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-crt-runtime-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-stdio-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-crt-stdio-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-string-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-crt-string-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-time-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-crt-time-l1-1-0.dll',
+   'BINARY'),
+  ('api-ms-win-crt-utility-l1-1-0.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\api-ms-win-crt-utility-l1-1-0.dll',
+   'BINARY'),
+  ('base_library.zip',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\build\\GabariteiAluno\\base_library.zip',
+   'DATA'),
+  ('certifi\\cacert.pem',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\certifi\\cacert.pem',
+   'DATA'),
+  ('certifi\\py.typed',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\certifi\\py.typed',
+   'DATA'),
+  ('charset_normalizer\\cd.cp315-win_amd64.pyd',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\charset_normalizer\\cd.cp315-win_amd64.pyd',
+   'EXTENSION'),
+  ('charset_normalizer\\md.cp315-win_amd64.pyd',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\charset_normalizer\\md.cp315-win_amd64.pyd',
+   'EXTENSION'),
+  ('click-8.5.0.dist-info\\INSTALLER',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\click-8.5.0.dist-info\\INSTALLER',
+   'DATA'),
+  ('click-8.5.0.dist-info\\METADATA',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\click-8.5.0.dist-info\\METADATA',
+   'DATA'),
+  ('click-8.5.0.dist-info\\RECORD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\click-8.5.0.dist-info\\RECORD',
+   'DATA'),
+  ('click-8.5.0.dist-info\\WHEEL',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\click-8.5.0.dist-info\\WHEEL',
+   'DATA'),
+  ('click-8.5.0.dist-info\\licenses\\LICENSE.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\click-8.5.0.dist-info\\licenses\\LICENSE.txt',
+   'DATA'),
+  ('cryptography-50.0.2.dist-info\\INSTALLER',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\cryptography-50.0.2.dist-info\\INSTALLER',
+   'DATA'),
+  ('cryptography-50.0.2.dist-info\\METADATA',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\cryptography-50.0.2.dist-info\\METADATA',
+   'DATA'),
+  ('cryptography-50.0.2.dist-info\\RECORD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\cryptography-50.0.2.dist-info\\RECORD',
+   'DATA'),
+  ('cryptography-50.0.2.dist-info\\WHEEL',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\cryptography-50.0.2.dist-info\\WHEEL',
+   'DATA'),
+  ('cryptography-50.0.2.dist-info\\licenses\\LICENSE',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\cryptography-50.0.2.dist-info\\licenses\\LICENSE',
+   'DATA'),
+  ('cryptography-50.0.2.dist-info\\licenses\\LICENSE.APACHE',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\cryptography-50.0.2.dist-info\\licenses\\LICENSE.APACHE',
+   'DATA'),
+  ('cryptography-50.0.2.dist-info\\licenses\\LICENSE.BSD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\cryptography-50.0.2.dist-info\\licenses\\LICENSE.BSD',
+   'DATA'),
+  ('cryptography-50.0.2.dist-info\\sboms\\cryptography-rust.cyclonedx.json',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\cryptography-50.0.2.dist-info\\sboms\\cryptography-rust.cyclonedx.json',
+   'DATA'),
+  ('cryptography-50.0.2.dist-info\\sboms\\sbom.json',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\cryptography-50.0.2.dist-info\\sboms\\sbom.json',
+   'DATA'),
+  ('cryptography\\hazmat\\bindings\\_rust.pyd',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\cryptography\\hazmat\\bindings\\_rust.pyd',
+   'EXTENSION'),
+  ('flask-3.1.3.dist-info\\INSTALLER',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask-3.1.3.dist-info\\INSTALLER',
+   'DATA'),
+  ('flask-3.1.3.dist-info\\METADATA',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask-3.1.3.dist-info\\METADATA',
+   'DATA'),
+  ('flask-3.1.3.dist-info\\RECORD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask-3.1.3.dist-info\\RECORD',
+   'DATA'),
+  ('flask-3.1.3.dist-info\\REQUESTED',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask-3.1.3.dist-info\\REQUESTED',
+   'DATA'),
+  ('flask-3.1.3.dist-info\\WHEEL',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask-3.1.3.dist-info\\WHEEL',
+   'DATA'),
+  ('flask-3.1.3.dist-info\\entry_points.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask-3.1.3.dist-info\\entry_points.txt',
+   'DATA'),
+  ('flask-3.1.3.dist-info\\licenses\\LICENSE.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask-3.1.3.dist-info\\licenses\\LICENSE.txt',
+   'DATA'),
+  ('flask_compress-1.25.dist-info\\INSTALLER',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask_compress-1.25.dist-info\\INSTALLER',
+   'DATA'),
+  ('flask_compress-1.25.dist-info\\METADATA',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask_compress-1.25.dist-info\\METADATA',
+   'DATA'),
+  ('flask_compress-1.25.dist-info\\RECORD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask_compress-1.25.dist-info\\RECORD',
+   'DATA'),
+  ('flask_compress-1.25.dist-info\\REQUESTED',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask_compress-1.25.dist-info\\REQUESTED',
+   'DATA'),
+  ('flask_compress-1.25.dist-info\\WHEEL',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask_compress-1.25.dist-info\\WHEEL',
+   'DATA'),
+  ('flask_compress-1.25.dist-info\\licenses\\LICENSE.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask_compress-1.25.dist-info\\licenses\\LICENSE.txt',
+   'DATA'),
+  ('flask_compress-1.25.dist-info\\top_level.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\flask_compress-1.25.dist-info\\top_level.txt',
+   'DATA'),
+  ('h2-4.4.1.dist-info\\INSTALLER',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\h2-4.4.1.dist-info\\INSTALLER',
+   'DATA'),
+  ('h2-4.4.1.dist-info\\METADATA',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\h2-4.4.1.dist-info\\METADATA',
+   'DATA'),
+  ('h2-4.4.1.dist-info\\RECORD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\h2-4.4.1.dist-info\\RECORD',
+   'DATA'),
+  ('h2-4.4.1.dist-info\\WHEEL',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\h2-4.4.1.dist-info\\WHEEL',
+   'DATA'),
+  ('h2-4.4.1.dist-info\\licenses\\LICENSE',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\h2-4.4.1.dist-info\\licenses\\LICENSE',
+   'DATA'),
+  ('h2-4.4.1.dist-info\\top_level.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\h2-4.4.1.dist-info\\top_level.txt',
+   'DATA'),
+  ('httpcore2-2.16.0.dist-info\\INSTALLER',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\httpcore2-2.16.0.dist-info\\INSTALLER',
+   'DATA'),
+  ('httpcore2-2.16.0.dist-info\\METADATA',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\httpcore2-2.16.0.dist-info\\METADATA',
+   'DATA'),
+  ('httpcore2-2.16.0.dist-info\\RECORD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\httpcore2-2.16.0.dist-info\\RECORD',
+   'DATA'),
+  ('httpcore2-2.16.0.dist-info\\WHEEL',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\httpcore2-2.16.0.dist-info\\WHEEL',
+   'DATA'),
+  ('httpcore2-2.16.0.dist-info\\licenses\\LICENSE.md',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\httpcore2-2.16.0.dist-info\\licenses\\LICENSE.md',
+   'DATA'),
+  ('httpx2-2.16.0.dist-info\\INSTALLER',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\httpx2-2.16.0.dist-info\\INSTALLER',
+   'DATA'),
+  ('httpx2-2.16.0.dist-info\\METADATA',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\httpx2-2.16.0.dist-info\\METADATA',
+   'DATA'),
+  ('httpx2-2.16.0.dist-info\\RECORD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\httpx2-2.16.0.dist-info\\RECORD',
+   'DATA'),
+  ('httpx2-2.16.0.dist-info\\WHEEL',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\httpx2-2.16.0.dist-info\\WHEEL',
+   'DATA'),
+  ('httpx2-2.16.0.dist-info\\entry_points.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\httpx2-2.16.0.dist-info\\entry_points.txt',
+   'DATA'),
+  ('httpx2-2.16.0.dist-info\\licenses\\LICENSE.md',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\httpx2-2.16.0.dist-info\\licenses\\LICENSE.md',
+   'DATA'),
+  ('itsdangerous-2.2.0.dist-info\\INSTALLER',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\itsdangerous-2.2.0.dist-info\\INSTALLER',
+   'DATA'),
+  ('itsdangerous-2.2.0.dist-info\\LICENSE.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\itsdangerous-2.2.0.dist-info\\LICENSE.txt',
+   'DATA'),
+  ('itsdangerous-2.2.0.dist-info\\METADATA',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\itsdangerous-2.2.0.dist-info\\METADATA',
+   'DATA'),
+  ('itsdangerous-2.2.0.dist-info\\RECORD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\itsdangerous-2.2.0.dist-info\\RECORD',
+   'DATA'),
+  ('itsdangerous-2.2.0.dist-info\\WHEEL',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\itsdangerous-2.2.0.dist-info\\WHEEL',
+   'DATA'),
+  ('jiter\\jiter.cp315-win_amd64.pyd',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\jiter\\jiter.cp315-win_amd64.pyd',
+   'EXTENSION'),
+  ('libcrypto-3.dll',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\libcrypto-3.dll',
+   'BINARY'),
+  ('libffi-8.dll',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\libffi-8.dll',
+   'BINARY'),
+  ('libssl-3.dll',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\libssl-3.dll',
+   'BINARY'),
+  ('limits\\_version.pyi',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\limits\\_version.pyi',
+   'DATA'),
+  ('limits\\py.typed',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\limits\\py.typed',
+   'DATA'),
+  ('limits\\resources\\redis\\lua_scripts\\acquire_moving_window.lua',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\limits\\resources\\redis\\lua_scripts\\acquire_moving_window.lua',
+   'DATA'),
+  ('limits\\resources\\redis\\lua_scripts\\acquire_sliding_window.lua',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\limits\\resources\\redis\\lua_scripts\\acquire_sliding_window.lua',
+   'DATA'),
+  ('limits\\resources\\redis\\lua_scripts\\clear_keys.lua',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\limits\\resources\\redis\\lua_scripts\\clear_keys.lua',
+   'DATA'),
+  ('limits\\resources\\redis\\lua_scripts\\incr_expire.lua',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\limits\\resources\\redis\\lua_scripts\\incr_expire.lua',
+   'DATA'),
+  ('limits\\resources\\redis\\lua_scripts\\moving_window.lua',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\limits\\resources\\redis\\lua_scripts\\moving_window.lua',
+   'DATA'),
+  ('limits\\resources\\redis\\lua_scripts\\sliding_window.lua',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\limits\\resources\\redis\\lua_scripts\\sliding_window.lua',
+   'DATA'),
+  ('markupsafe-3.0.4.dist-info\\INSTALLER',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\markupsafe-3.0.4.dist-info\\INSTALLER',
+   'DATA'),
+  ('markupsafe-3.0.4.dist-info\\METADATA',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\markupsafe-3.0.4.dist-info\\METADATA',
+   'DATA'),
+  ('markupsafe-3.0.4.dist-info\\RECORD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\markupsafe-3.0.4.dist-info\\RECORD',
+   'DATA'),
+  ('markupsafe-3.0.4.dist-info\\WHEEL',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\markupsafe-3.0.4.dist-info\\WHEEL',
+   'DATA'),
+  ('markupsafe-3.0.4.dist-info\\licenses\\LICENSE.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\markupsafe-3.0.4.dist-info\\licenses\\LICENSE.txt',
+   'DATA'),
+  ('markupsafe-3.0.4.dist-info\\top_level.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\markupsafe-3.0.4.dist-info\\top_level.txt',
+   'DATA'),
+  ('markupsafe\\_speedups.cp315-win_amd64.pyd',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\markupsafe\\_speedups.cp315-win_amd64.pyd',
+   'EXTENSION'),
+  ('multidict\\_multidict.cp315-win_amd64.pyd',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\multidict\\_multidict.cp315-win_amd64.pyd',
+   'EXTENSION'),
+  ('propcache\\_helpers_c.cp315-win_amd64.pyd',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\propcache\\_helpers_c.cp315-win_amd64.pyd',
+   'EXTENSION'),
+  ('pydantic-2.14.1.dist-info\\INSTALLER',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\pydantic-2.14.1.dist-info\\INSTALLER',
+   'DATA'),
+  ('pydantic-2.14.1.dist-info\\METADATA',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\pydantic-2.14.1.dist-info\\METADATA',
+   'DATA'),
+  ('pydantic-2.14.1.dist-info\\RECORD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\pydantic-2.14.1.dist-info\\RECORD',
+   'DATA'),
+  ('pydantic-2.14.1.dist-info\\WHEEL',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\pydantic-2.14.1.dist-info\\WHEEL',
+   'DATA'),
+  ('pydantic-2.14.1.dist-info\\licenses\\LICENSE',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\pydantic-2.14.1.dist-info\\licenses\\LICENSE',
+   'DATA'),
+  ('pydantic_core\\_pydantic_core.cp315-win_amd64.pyd',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\pydantic_core\\_pydantic_core.cp315-win_amd64.pyd',
+   'EXTENSION'),
+  ('pyexpat.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\pyexpat.pyd',
+   'EXTENSION'),
+  ('python315.dll',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\python315.dll',
+   'BINARY'),
+  ('python3t.dll',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\abi3t-compat\\python3t.dll',
+   'BINARY'),
+  ('select.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\select.pyd',
+   'EXTENSION'),
+  ('setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\INSTALLER',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\INSTALLER',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\METADATA',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\METADATA',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\RECORD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\RECORD',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\REQUESTED',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\REQUESTED',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\WHEEL',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\WHEEL',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\licenses\\LICENSE',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\licenses\\LICENSE',
+   'DATA'),
+  ('setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\top_level.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\setuptools\\_vendor\\importlib_metadata-8.7.1.dist-info\\top_level.txt',
+   'DATA'),
+  ('setuptools\\_vendor\\jaraco\\text\\Lorem ipsum.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\setuptools\\_vendor\\jaraco\\text\\Lorem '
+   'ipsum.txt',
+   'DATA'),
+  ('sqlite3.dll',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\sqlite3.dll',
+   'BINARY'),
+  ('static\\css\\aluno_cadernos.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\aluno_cadernos.css',
+   'DATA'),
+  ('static\\css\\aluno_conta.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\aluno_conta.css',
+   'DATA'),
+  ('static\\css\\aluno_editais.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\aluno_editais.css',
+   'DATA'),
+  ('static\\css\\aluno_questoes.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\aluno_questoes.css',
+   'DATA'),
+  ('static\\css\\aluno_simulados.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\aluno_simulados.css',
+   'DATA'),
+  ('static\\css\\auth_premium.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\auth_premium.css',
+   'DATA'),
+  ('static\\css\\base_aluno_layout.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\base_aluno_layout.css',
+   'DATA'),
+  ('static\\css\\components.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\components.css',
+   'DATA'),
+  ('static\\css\\dashboard_detalhado.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\dashboard_detalhado.css',
+   'DATA'),
+  ('static\\css\\dashboard_minimal.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\dashboard_minimal.css',
+   'DATA'),
+  ('static\\css\\flashcards.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\flashcards.css',
+   'DATA'),
+  ('static\\css\\pdf_style.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\pdf_style.css',
+   'DATA'),
+  ('static\\css\\question_header.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\question_header.css',
+   'DATA'),
+  ('static\\css\\resumos.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\resumos.css',
+   'DATA'),
+  ('static\\css\\shared_premium.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\shared_premium.css',
+   'DATA'),
+  ('static\\css\\tailwind.input.css',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\css\\tailwind.input.css',
+   'DATA'),
+  ('static\\icone.ico',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\icone.ico',
+   'DATA'),
+  ('static\\icone.webp',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\icone.webp',
+   'DATA'),
+  ('static\\imagens\\index\\painel_aluno_fiel.webp',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\imagens\\index\\painel_aluno_fiel.webp',
+   'DATA'),
+  ('static\\index.png',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\index.png',
+   'DATA'),
+  ('static\\js\\__tests__\\dashboard_detalhado.test.js',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\js\\__tests__\\dashboard_detalhado.test.js',
+   'DATA'),
+  ('static\\js\\__tests__\\questoes_common.test.js',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\js\\__tests__\\questoes_common.test.js',
+   'DATA'),
+  ('static\\js\\aluno_estudar_edital.js',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\js\\aluno_estudar_edital.js',
+   'DATA'),
+  ('static\\js\\aluno_simulados.js',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\js\\aluno_simulados.js',
+   'DATA'),
+  ('static\\js\\dashboard_detalhado.js',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\js\\dashboard_detalhado.js',
+   'DATA'),
+  ('static\\js\\edital_premium.js',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\js\\edital_premium.js',
+   'DATA'),
+  ('static\\js\\feedback_ia.js',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\js\\feedback_ia.js',
+   'DATA'),
+  ('static\\js\\imprimir_ou_pdf.js',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\js\\imprimir_ou_pdf.js',
+   'DATA'),
+  ('static\\js\\meus_cadernos.js',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\js\\meus_cadernos.js',
+   'DATA'),
+  ('static\\js\\questoes_common.js',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\js\\questoes_common.js',
+   'DATA'),
+  ('static\\logo.webp',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\static\\logo.webp',
+   'DATA'),
+  ('templates\\aluno\\conta.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\aluno\\conta.html',
+   'DATA'),
+  ('templates\\aluno\\dashboard.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\aluno\\dashboard.html',
+   'DATA'),
+  ('templates\\aluno\\estatisticas.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\aluno\\estatisticas.html',
+   'DATA'),
+  ('templates\\aluno\\tutoriais.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\aluno\\tutoriais.html',
+   'DATA'),
+  ('templates\\auth\\login.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\auth\\login.html',
+   'DATA'),
+  ('templates\\base_aluno.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\base_aluno.html',
+   'DATA'),
+  ('templates\\components\\ai_atoms.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\components\\ai_atoms.html',
+   'DATA'),
+  ('templates\\components\\card_questao.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\components\\card_questao.html',
+   'DATA'),
+  ('templates\\components\\edital_components.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\components\\edital_components.html',
+   'DATA'),
+  ('templates\\components\\modais_questao.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\components\\modais_questao.html',
+   'DATA'),
+  ('templates\\components\\modal_edital.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\components\\modal_edital.html',
+   'DATA'),
+  ('templates\\components\\modal_simulado.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\components\\modal_simulado.html',
+   'DATA'),
+  ('templates\\components\\pagination.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\components\\pagination.html',
+   'DATA'),
+  ('templates\\components\\performance_card.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\components\\performance_card.html',
+   'DATA'),
+  ('templates\\components\\question_atoms.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\components\\question_atoms.html',
+   'DATA'),
+  ('templates\\components\\question_header.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\components\\question_header.html',
+   'DATA'),
+  ('templates\\components\\sidebar_filtros.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\components\\sidebar_filtros.html',
+   'DATA'),
+  ('templates\\components\\stat_card.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\components\\stat_card.html',
+   'DATA'),
+  ('templates\\editais\\dashboard.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\editais\\dashboard.html',
+   'DATA'),
+  ('templates\\editais\\estudar.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\editais\\estudar.html',
+   'DATA'),
+  ('templates\\editais\\index.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\editais\\index.html',
+   'DATA'),
+  ('templates\\flashcards\\estudar.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\flashcards\\estudar.html',
+   'DATA'),
+  ('templates\\flashcards\\gerenciar.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\flashcards\\gerenciar.html',
+   'DATA'),
+  ('templates\\flashcards\\index.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\flashcards\\index.html',
+   'DATA'),
+  ('templates\\macros\\ui_components.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\macros\\ui_components.html',
+   'DATA'),
+  ('templates\\questoes\\cadernos.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\questoes\\cadernos.html',
+   'DATA'),
+  ('templates\\questoes\\resolver.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\questoes\\resolver.html',
+   'DATA'),
+  ('templates\\questoes\\visualizar.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\questoes\\visualizar.html',
+   'DATA'),
+  ('templates\\questoes\\visualizar_individual.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\questoes\\visualizar_individual.html',
+   'DATA'),
+  ('templates\\resumos\\index.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\resumos\\index.html',
+   'DATA'),
+  ('templates\\resumos\\ver_materia.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\resumos\\ver_materia.html',
+   'DATA'),
+  ('templates\\simulados\\_pdf_corpo.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\simulados\\_pdf_corpo.html',
+   'DATA'),
+  ('templates\\simulados\\fazer.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\simulados\\fazer.html',
+   'DATA'),
+  ('templates\\simulados\\index.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\simulados\\index.html',
+   'DATA'),
+  ('templates\\simulados\\pdf_preview.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\simulados\\pdf_preview.html',
+   'DATA'),
+  ('templates\\simulados\\ranking.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\simulados\\ranking.html',
+   'DATA'),
+  ('templates\\simulados\\resultado.html',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\templates\\simulados\\resultado.html',
+   'DATA'),
+  ('ucrtbase.dll',
+   'C:\\Program Files\\Eclipse '
+   'Adoptium\\jdk-21.0.12.101-hotspot\\bin\\ucrtbase.dll',
+   'BINARY'),
+  ('unicodedata.pyd',
+   'C:\\Users\\Thierry\\AppData\\Local\\Programs\\Python\\Python315\\DLLs\\unicodedata.pyd',
+   'EXTENSION'),
+  ('websockets-15.0.1.dist-info\\INSTALLER',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\websockets-15.0.1.dist-info\\INSTALLER',
+   'DATA'),
+  ('websockets-15.0.1.dist-info\\LICENSE',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\websockets-15.0.1.dist-info\\LICENSE',
+   'DATA'),
+  ('websockets-15.0.1.dist-info\\METADATA',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\websockets-15.0.1.dist-info\\METADATA',
+   'DATA'),
+  ('websockets-15.0.1.dist-info\\RECORD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\websockets-15.0.1.dist-info\\RECORD',
+   'DATA'),
+  ('websockets-15.0.1.dist-info\\WHEEL',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\websockets-15.0.1.dist-info\\WHEEL',
+   'DATA'),
+  ('websockets-15.0.1.dist-info\\entry_points.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\websockets-15.0.1.dist-info\\entry_points.txt',
+   'DATA'),
+  ('websockets-15.0.1.dist-info\\top_level.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\websockets-15.0.1.dist-info\\top_level.txt',
+   'DATA'),
+  ('werkzeug-3.1.9.dist-info\\INSTALLER',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\werkzeug-3.1.9.dist-info\\INSTALLER',
+   'DATA'),
+  ('werkzeug-3.1.9.dist-info\\METADATA',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\werkzeug-3.1.9.dist-info\\METADATA',
+   'DATA'),
+  ('werkzeug-3.1.9.dist-info\\RECORD',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\werkzeug-3.1.9.dist-info\\RECORD',
+   'DATA'),
+  ('werkzeug-3.1.9.dist-info\\REQUESTED',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\werkzeug-3.1.9.dist-info\\REQUESTED',
+   'DATA'),
+  ('werkzeug-3.1.9.dist-info\\WHEEL',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\werkzeug-3.1.9.dist-info\\WHEEL',
+   'DATA'),
+  ('werkzeug-3.1.9.dist-info\\licenses\\LICENSE.txt',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\werkzeug-3.1.9.dist-info\\licenses\\LICENSE.txt',
+   'DATA'),
+  ('wrapt\\_wrappers.cp315-win_amd64.pyd',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\wrapt\\_wrappers.cp315-win_amd64.pyd',
+   'EXTENSION'),
+  ('yarl\\_quoting_c.cp315-win_amd64.pyd',
+   'C:\\Users\\Thierry\\Downloads\\Projetos Antigravity\\Projetos '
+   'Antigravity\\gabaritei-questoes\\venv\\Lib\\site-packages\\yarl\\_quoting_c.cp315-win_amd64.pyd',
+   'EXTENSION')],)

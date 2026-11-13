@@ -145,7 +145,7 @@ não insere em `simulados_resultados` e não chama `ranking_simulado`.
 
 ### 6. Ranking (`/aluno/simulados/ranking/<id_simulado>`)
 *   **Método**: `GET`
-*   **Segurança (F-05)**: chama `_simulado_do_usuario_ou_none(id_simulado)` antes da RPC. Simulado privado de outro aluno e simulado inexistente recebem a mesma resposta (flash + redirect), sem consultar ranking/resultados; o guard também compara `id_criador` caso a tabela devolva indevidamente a linha. A RPC `ranking_simulado` repete a validação no banco (público: authenticated; privado: criador) e devolve somente username + métricas. Regressão: `test_ranking_privado_alheio_bloqueia_mesmo_se_consulta_devolver_linha`.
+*   **Segurança (F-05)**: chama `_simulado_do_usuario_ou_none(id_simulado)` antes da RPC. Simulado privado de outro aluno e simulado inexistente recebem a mesma resposta (flash + redirect), sem consultar ranking/resultados; o guard também compara `id_criador` caso a tabela devolva indevidamente a linha. A RPC `ranking_simulado` repete a validação no banco (público: authenticated; privado: criador) e devolve somente username + métricas. Desde a migration `ranking_simulado_private_wrapper` (lint 0029), o nome público é um wrapper `SECURITY INVOKER`; a lógica privilegiada fica em `private.ranking_simulado`, fora do schema exposto pela API. Regressão: `test_ranking_privado_alheio_bloqueia_mesmo_se_consulta_devolver_linha`.
 
 ---
 

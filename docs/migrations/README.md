@@ -20,6 +20,14 @@ com `list_migrations` (MCP) ou no dashboard.
 Depois de aplicar uma migration que mexa em RLS/grants, rode os advisors de
 segurança (`get_advisors` tipo `security`) e o teste correspondente.
 
+> **Nota (2026-11):** a migration `secure_global_writes` removeu
+> `public.eh_app_aluno()` e o requisito do header `x-app-token`. As seções
+> históricas abaixo (F-03/F-04 e a policy de `usuarios`) ainda mencionam o
+> token porque descrevem o estado da época; nas policies atuais a escrita do
+> aluno exige apenas a identidade do dono (`auth.uid() = auth_id` /
+> `eh_dono_do_aluno(...)`). Scripts de teste antigos que leem o token de
+> `eh_app_aluno()` precisam de ajuste antes de reexecutar.
+
 ## F-01 — RLS owner-only + conteúdo público
 
 Arquivos:
@@ -44,9 +52,13 @@ Arquivos:
 - **Conteúdo público separado:** `view_comentarios_publicos`,
   `view_simulados_publicos`, `view_simulados_questoes_publicas` e a RPC
   `ranking_simulado(uuid)` expõem somente colunas/filtros públicos — nunca
-  `id_usuario`, `id_criador`, `auth_id` ou e-mail. As views rodam como
-  `postgres` (`security_invoker = false`) para atravessar o RLS owner-only;
-  a segurança está no filtro e na lista explícita de colunas.
+  `id_usuario`, `id_criador`, `auth_id` ou e-mail. A lógica privilegiada que
+  atravessa o RLS owner-only vive nas views `private.view_*` e em
+  `private.ranking_simulado(uuid)`; em `public` ficam apenas wrappers
+  `security_invoker` (views e função) com a mesma projeção (ver as seções
+  **Lint 0010** e **Lint 0029** abaixo, que substituem o desenho original
+  `security_invoker = false`/`SECURITY DEFINER`). A segurança está no filtro e
+  na lista explícita de colunas.
 - **Defesa em profundidade:** `TRUNCATE` revogado de `anon` e `authenticated`
   (RLS não cobre TRUNCATE) e `INSERT/UPDATE/DELETE` revogados de `anon` nas
   tabelas de dados do aluno (escrita sempre sai com JWT).
@@ -74,11 +86,147 @@ A migration é idempotente e não apaga dados de alunos. Se precisar reverter as
 views/RPC públicas, remova os grants e os objetos criados no final do arquivo;
 as policies owner-only devem permanecer (são o estado seguro esperado).
 
+## Lint 0010 — Security Definer View nas projeções públicas
+
+Arquivos:
+
+| Arquivo | Papel |
+|---|---|
+| `security_invoker_views_publicas.sql` | Migration aplicada em produção (versão `20261109170050`). Cria o schema `private`, move para lá a lógica privilegiada das três views e recria os nomes públicos como wrappers `security_invoker = true`. |
+| `test_security_invoker_views.sql` | Teste transacional (rollback): metadados dos wrappers/views internas, grants e consultas reais como `anon`/`authenticated`. 26 asserções. |
+
+### O que a migration garante
+
+- **Lint 0010 zerado:** os wrappers `public.view_comentarios_publicos`,
+  `public.view_simulados_publicos` e `public.view_simulados_questoes_publicas`
+  usam `security_invoker = true` (e `security_barrier = true`), então o
+  advisor não os reporta mais como `security_definer_view`.
+- **Lógica privilegiada isolada:** as definições que precisam atravessar o
+  RLS owner-only vivem em `private.view_*` (`security_invoker = false`). O
+  schema `private` não está em `pgrst.db_schemas` e não tem rota `/rest/v1`
+  nem GraphQL; os grants são apenas `USAGE` no schema e `SELECT` nas views,
+  para os papéis que passam pelo wrapper.
+- **Mesma projeção pública:** os wrappers expõem exatamente as colunas de
+  antes — comentários sem `id_usuario`/`auth_id`; simulados sem
+  `id_criador`/e-mail (com `eh_meu` calculado a partir do `auth.uid()`);
+  vínculos apenas `(id_simulado, id_questao)`. Nenhuma rota do app mudou.
+- **Filtros preservados:** comentários somente de questões
+  `status = 'publicada'`; simulados e vínculos somente `eh_privado = false`.
+- **Grants preservados:** `anon` só lê o wrapper de comentários;
+  `authenticated` lê os três; `service_role` mantém acesso às views internas.
+- **F-04 intacto:** a policy de `simulados_resultados` continua consultando
+  `public.view_simulados_publicos` (agora wrapper), então o `WITH CHECK`
+  segue barrando resultado em simulado privado alheio (`42501`).
+
+### Como rodar o teste
+
+1. Confirme que existem pelo menos **duas** questões com
+   `status = 'publicada'`.
+2. Execute `test_security_invoker_views.sql` no SQL Editor ou via MCP
+   `execute_sql`.
+3. Resultado esperado:
+
+```json
+{ "passou": true, "total": 26, "falhas": 0, "resultados": [ ... ] }
+```
+
+O script cria dois alunos, simulados públicos/privados e comentários dentro de
+uma transação, confere os `reloptions` das views, os grants e o comportamento
+como `anon`/A/B, e termina com `ROLLBACK` — nada fica no banco.
+
+## Lint 0029 — Security Definer Function no ranking
+
+Arquivos:
+
+| Arquivo | Papel |
+|---|---|
+| `ranking_simulado_private_wrapper.sql` | Migration aplicada em produção (versão `20261109171200`). Move a lógica `SECURITY DEFINER` para `private.ranking_simulado` e recria `public.ranking_simulado` como wrapper `SECURITY INVOKER` com a mesma assinatura. |
+| `test_ranking_invoker.sql` | Teste transacional (rollback): metadados, grants e ranking público/privado como A/B/anon. 11 asserções. |
+
+### O que a migration garante
+
+- **Lint 0029 zerado:** `public.ranking_simulado(uuid)` deixou de ser
+  `SECURITY DEFINER`; o advisor não reporta mais função definer executável
+  por `authenticated` ou `anon` em `public`.
+- **Lógica privilegiada isolada:** a leitura cross-tenant de
+  `simulados_resultados` (necessária para o ranking) fica em
+  `private.ranking_simulado`, `SECURITY DEFINER` com `search_path = ''`. O
+  schema `private` não está em `pgrst.db_schemas` e não tem rota
+  `/rest/v1` nem GraphQL.
+- **F-05 preservado:** a função interna continua exigindo `auth.uid()`,
+  liberando ranking de simulado público para qualquer autenticado e o privado
+  apenas para o criador; devolve somente username + métricas, nunca
+  `id_usuario`.
+- **App inalterado:** o cliente continua chamando
+  `rpc('ranking_simulado', { p_id_simulado })`; o wrapper em `public` tem a
+  mesma assinatura e o mesmo formato de retorno.
+- **Grants:** `authenticated` executa o wrapper; `anon` não executa nem o
+  wrapper nem a função interna (`42501`).
+
+### Como rodar o teste
+
+1. Execute `test_ranking_invoker.sql` no SQL Editor ou via MCP
+   `execute_sql`. Não depende de questões publicadas.
+2. Resultado esperado:
+
+```json
+{ "passou": true, "total": 11, "falhas": 0, "resultados": [ ... ] }
+```
+
+O script cria dois alunos, um simulado público e um privado, resultados dos
+dois alunos, e confere o ranking como criador, como outro aluno e como `anon`;
+termina com `ROLLBACK` — nada fica no banco.
+
+## Lint 0006 — Multiple Permissive Policies no UPDATE de usuarios
+
+Arquivos:
+
+| Arquivo | Papel |
+|---|---|
+| `usuarios_update_policy_consolidada.sql` | Migration aplicada em produção (versão `20261109171733`). Substitui `anon_atualiza_dados_aluno` + `relink_perfil_legado` por uma única policy `usuarios_update_proprio_ou_relink` em `public.usuarios`. |
+| `test_usuarios_update_consolidada.sql` | Teste transacional (rollback): relink por e-mail, isolamento entre alunos, bloqueio sem `x-app-token`/`anon` e contagem de policies. 10 asserções. |
+
+### O que a migration garante
+
+- **Lint 0006 zerado:** `public.usuarios` passa a ter **uma** policy
+  permissiva de UPDATE para `authenticated` (e `anon`); o advisor de
+  performance não reporta mais `multiple_permissive_policies`.
+- **Relink preservado:** o `USING` da policy única aceita o próprio perfil
+  (`auth.uid() = auth_id`) **ou** uma linha legada (`auth_id IS NULL`) cujo
+  e-mail confirmado do JWT (`auth.jwt()->>'email'`, comparado com `lower()`)
+  bate com o e-mail da linha. O app continua fazendo
+  `UPDATE ... WHERE auth_id IS NULL` no 1º login pós-Auth.
+- **Sem escalada de privilégio:** o `WITH CHECK` exige
+  `auth.uid() = auth_id` (o `eh_app_aluno()` foi removido depois pela
+  migration `secure_global_writes`), então o resultado do UPDATE precisa ficar
+  vinculado ao próprio usuário — ninguém adota a linha para
+  terceiros nem troca o `auth_id` alheio (tentativa falha com `42501`).
+- **Defesa em profundidade mantida:** `anon` continua sem grant de UPDATE e a
+  policy não amplia privilégio nenhum; o JWT do dono é a fronteira.
+- **Sem mudança no app:** `_relinkar_perfil_legado` e `_criar_perfil` não
+  precisaram de alteração de código.
+
+### Como rodar o teste
+
+1. Execute `test_usuarios_update_consolidada.sql` no SQL Editor ou via MCP
+   `execute_sql`. Não depende de questões publicadas.
+2. Resultado esperado:
+
+```json
+{ "passou": true, "total": 10, "falhas": 0, "resultados": [ ... ] }
+```
+
+O script cria dois perfis legados e um aluno com `auth_id`, adota apenas a
+linha de mesmo e-mail como aluno A, confere que a linha de B e o segundo
+legado ficam intactos e termina com `ROLLBACK` — nada fica no banco.
+
 ## F-07 — Feed público de comentários sem UUID do autor
 
 Não exige migration adicional: o endpoint usa `view_comentarios_publicos`,
-criada pela migration F-01 (`rls_owner_only_e_conteudo_publico.sql`), cuja
-projeção não inclui `id_usuario`/`auth_id` e filtra questões publicadas. Em
+criada pela migration F-01 (`rls_owner_only_e_conteudo_publico.sql`) e
+convertida em wrapper `security_invoker` pela migration
+`security_invoker_views_publicas`, cuja projeção não inclui
+`id_usuario`/`auth_id` e filtra questões publicadas. Em
 `rotas/questao.py`, o `GET /api/comentarios/<id_questao>` seleciona e serializa
 somente `id_comentario`, `nome_usuario`, `texto_comentario` e `criado_em`,
 entrega 20 comentários por página (`?page=1`, `?page=2`, ...), rejeita offsets
@@ -171,7 +319,8 @@ Arquivos:
   `simulados` com `eh_dono_do_aluno(id_criador)` (privado do próprio aluno).
   Um INSERT/UPDATE cross-tenant via PostgREST/JWT falha com `42501`, mesmo
   que o cliente spoofe `id_usuario`.
-- **Ranking:** a RPC `ranking_simulado` já libera o privado apenas para o
+- **Ranking:** a RPC `ranking_simulado` (wrapper público `SECURITY INVOKER`
+  sobre `private.ranking_simulado`) já libera o privado apenas para o
   criador; o guard da rota e a policy de `simulados_resultados` fecham as
   pontas de leitura e escrita. Isso cobre também os achados F-05 (ranking) e
   F-06 (PDF), que usam o mesmo guard.

@@ -158,6 +158,12 @@ from anon;
 --    Views rodam como o dono (postgres) e, por definição, não aplicam o RLS
 --    das tabelas-base. Por isso cada uma expõe apenas colunas públicas e
 --    filtra explicitamente o que é público. Grants são apenas SELECT.
+--
+--    ATENÇÃO (lint 0010): este desenho original criava views SECURITY DEFINER
+--    no schema exposto pela API. A migration security_invoker_views_publicas
+--    move a lógica privilegiada para private.view_* e mantém em public apenas
+--    wrappers security_invoker=true. Se este arquivo for reaplicado, rode
+--    aquela migration em seguida.
 -- ----------------------------------------------------------------------------
 
 -- Comentários de questão: o feed é público por desenho (a rota Flask
@@ -233,6 +239,12 @@ comment on view public.view_simulados_questoes_publicas is
 -- auth.uid(). Libera ranking de simulado público para qualquer autenticado e
 -- ranking de simulado privado apenas para o criador. Devolve somente o
 -- username (nome de exibição) e as métricas do ranking — nunca id_usuario.
+--
+-- ATENÇÃO (lint 0029): este desenho original mantinha a função SECURITY
+-- DEFINER no schema exposto. A migration ranking_simulado_private_wrapper move
+-- a lógica para private.ranking_simulado e deixa em public apenas um wrapper
+-- SECURITY INVOKER. Se este arquivo for reaplicado, rode aquela migration em
+-- seguida.
 create or replace function public.ranking_simulado(p_id_simulado uuid)
 returns table (
     nome_usuario text,

@@ -1,0 +1,253 @@
+/*
+   Gabaritei - Painel Minimalista
+   Estilos exclusivos do dashboard do aluno (tema claro eye-care e tema escuro).
+   Depende dos tokens definidos em base_aluno_layout.css.
+*/
+
+.dash-page {
+    width: 100%;
+}
+
+/* 1. Cabecalho de boas-vindas */
+.dash-welcome {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.dash-title {
+    margin: 0;
+    font-size: clamp(1.5rem, 1.15rem + 1.1vw, 1.875rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--texto-principal);
+}
+
+.dash-subtitle {
+    margin: 0.35rem 0 0;
+    font-size: 0.8125rem;
+    color: var(--texto-secundario);
+}
+
+.dash-highlight {
+    font-weight: 600;
+    color: var(--primary-color);
+    text-decoration: underline;
+    text-decoration-color: var(--primary-border);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+}
+
+@media (min-width: 768px) {
+    .dash-subtitle {
+        font-size: 0.875rem;
+    }
+}
+
+/* 2. Acoes do cabecalho */
+.dash-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.btn-dash {
+    height: 34px;
+    padding: 0 1rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+
+}
+
+.btn-dash i {
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
+.btn-dash-ghost {
+    background: var(--card-bg);
+    border-color: var(--border-color);
+    color: var(--texto-principal);
+    box-shadow: 0 1px 2px rgba(38, 43, 39, 0.04);
+}
+
+.btn-dash-ghost i {
+    color: var(--primary-color);
+}
+
+.btn-dash-ghost:hover {
+    background: var(--card-bg-elevated);
+    border-color: var(--primary-border);
+    color: var(--texto-principal);
+}
+
+.btn-dash-primary {
+    background: var(--primary-color);
+    color: #ffffff;
+    box-shadow: 0 1px 2px rgba(38, 43, 39, 0.08);
+}
+
+.btn-dash-primary:hover {
+    background: var(--primary-hover);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.btn-dash-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-dash:focus-visible,
+.chart-range-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* 3. Grade de metricas */
+.dash-metrics {
+    --bs-gutter-x: 1.25rem;
+    --bs-gutter-y: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+/* 4. Card do grafico */
+.chart-card {
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(38, 43, 39, 0.03), 0 4px 12px rgba(38, 43, 39, 0.02);
+}
+
+[data-bs-theme="dark"] .chart-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.chart-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.chart-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--texto-principal);
+}
+
+.chart-subtitle {
+    margin: 0.15rem 0 0;
+    font-size: 0.75rem;
+    color: var(--texto-secundario);
+}
+
+.chart-range {
+    display: inline-flex;
+    gap: 2px;
+    padding: 0.25rem;
+    background: var(--card-bg-elevated);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+[data-bs-theme="dark"] .chart-range {
+    background: #090c12;
+}
+
+.chart-range-btn {
+    padding: 0.3rem 0.75rem;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--texto-secundario);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.2;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chart-range-btn:hover {
+    color: var(--texto-principal);
+}
+
+.chart-range-btn.is-active {
+    background: var(--card-bg);
+    color: var(--texto-principal);
+    box-shadow: 0 1px 2px rgba(38, 43, 39, 0.08);
+}
+
+[data-bs-theme="dark"] .chart-range-btn.is-active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    box-shadow: none;
+}
+
+.chart-card-body {
+    padding-top: 1.25rem;
+}
+
+.chart-canvas-wrap {
+    position: relative;
+    width: 100%;
+    height: 300px;
+}
+
+/* 5. Responsivo */
+@media (max-width: 767px) {
+    .dash-welcome {
+        align-items: stretch;
+    }
+
+    .dash-actions {
+        width: 100%;
+    }
+
+    .btn-dash {
+        flex: 1 1 0;
+    }
+
+    .chart-card {
+        padding: 1.25rem;
+    }
+
+    .chart-canvas-wrap {
+        height: 230px;
+    }
+}
+
+@media (max-width: 359px) {
+    .dash-actions {
+        flex-direction: column;
+    }
+
+    .btn-dash {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn-dash,
+    .chart-range-btn {
+        transition: none;
+    }
+}

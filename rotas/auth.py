@@ -56,10 +56,11 @@ def _relinkar_perfil_legado():
     """Adota o perfil legado (auth_id NULL) de mesmo e-mail — 1º login pós-Auth.
 
     Alunos do sistema antigo (web/passwordless) ficaram sem auth_id. A policy
-    `relink_perfil_legado` (migration relink_perfil_legado_usuarios) só deixa
-    o UPDATE passar quando o e-mail CONFIRMADO do JWT bate com o e-mail da
-    linha — o filtro de e-mail é feito pelo próprio RLS (case-insensitive);
-    aqui só restringimos a linhas ainda sem vínculo (auth_id IS NULL).
+    `usuarios_update_proprio_ou_relink` (migrations relink_perfil_legado_usuarios
+    + usuarios_update_policy_consolidada) só deixa o UPDATE passar quando o
+    e-mail CONFIRMADO do JWT bate com o e-mail da linha — o filtro de e-mail é
+    feito pelo próprio RLS (case-insensitive); aqui só restringimos a linhas
+    ainda sem vínculo (auth_id IS NULL).
     """
     s = sessao_atual()
     if not s or not s.user:

@@ -78,40 +78,9 @@ document.addEventListener("DOMContentLoaded", function() {
     const btnProx = document.getElementById('btnProximaQuestao');
     if (btnProx) btnProx.addEventListener('click', () => location.reload());
 
-    // --- FUNÇÃO REPORTAR ---
-    const formFeedback = document.getElementById('form-feedback');
-    if (formFeedback) {
-        formFeedback.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btn-enviar-feedback');
-            btn.disabled = true;
-
-            const idQuestao = document.getElementById('feedback-questao-id').value;
-            const tipoErro = document.getElementById('feedback-tipo').value;
-            const descricao = document.getElementById('feedback-descricao').value;
-
-            fetch('/api/feedback', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({
-                    id_questao: idQuestao,
-                    tipo_erro: tipoErro,
-                    descricao: descricao
-                })
-            }).then(() => {
-                alert('Reporte enviado!');
-                const modalEl = document.getElementById('modalFeedback');
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                if (modal) modal.hide();
-            }).catch(err => {
-                console.error("Erro ao enviar feedback:", err);
-                alert("Erro ao enviar reporte.");
-            }).finally(() => btn.disabled = false);
-        });
-    }
+    // O envio do modal de feedback é centralizado em questoes_common.js
+    // (initQuestoes). Registrar outro handler aqui duplicaria o POST e criaria
+    // dois relatos para o mesmo clique.
 });
 
 /**
@@ -188,14 +157,3 @@ async function chamarIA(btn) {
         resultDiv.innerHTML = '<p class="text-danger">Erro ao conectar com a IA.</p>';
     }
 }
-
-/**
- * Função global chamada pelo botão Reportar para preencher o ID no modal
- * @param {string|number} id 
- */
-window.prepararFeedback = function(id) {
-    const inputId = document.getElementById('feedback-questao-id');
-    const form = document.getElementById('form-feedback');
-    if (inputId) inputId.value = id;
-    if (form) form.reset();
-};

@@ -16,7 +16,7 @@ desktop/main.js (shell Electron)
 
 ## Segurança do bundle
 - A `SUPABASE_ANON_KEY` é **pública por design** e embutida no `main.js` — protegida pelas policies RLS (`rls_policies_aluno` + `security_hardening_p1`). A **service_role jamais entra no bundle**: o app do aluno importa exclusivamente `banco_dados_aluno.py`.
-- O `APP_TOKEN` (header `x-app-token` exigido pelas policies de ESCRITA — migration `rls_header_app_aluno`) fica em `desktop/token.local.js` (gitignored; template em `desktop/token.example.js`) e é injetado no env do processo spawnado — nunca no git.
+- O `APP_TOKEN` (header legado `x-app-token`, não mais exigido pelas policies após a migration `secure_global_writes`) fica em `desktop/token.local.js` (gitignored; template em `desktop/token.example.js`) e é injetado no env do processo spawnado — nunca no git. Ele é inócuo no estado atual do banco e pode ser removido do pipeline numa limpeza futura.
 - As credenciais chegam ao backend via **variáveis de ambiente do processo spawnado** (não via `.env` no pacote) — `load_dotenv()` não sobrescreve variáveis existentes, então o que o shell passa vence.
 - `FLASK_SECRET_KEY` é persistente (`userData/secret.key`, gerada 1x na primeira execução): a sessão Flask sobrevive entre execuções — necessária porque o login do Auth é lembrado via refresh token. Não há segredo estático no binário (a chave nasce na máquina do usuário).
 - A janela roda com `contextIsolation: true`, `sandbox: true` e `nodeIntegration: false`. A única ponte com o renderer é `preload.js`, que expõe via `contextBridge` apenas `electronAPI.printToPDF()` e `electronAPI.isElectron`.

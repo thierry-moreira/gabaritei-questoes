@@ -1,0 +1,397 @@
+{% extends 'base_aluno.html' %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/aluno_conta.css') }}">
+
+<div class="container mt-4 mb-5 animate-fade-in" style="max-width: 850px;">
+    <div class="account-card-premium">
+        <!-- Header de Perfil -->
+        <div class="profile-header-premium text-center">
+            <div class="d-flex flex-column align-items-center">
+                <div class="avatar-circle">
+                    {{ current_user.username[0].upper() }}
+                </div>
+                <h2 class="fw-bold mb-1">{{ current_user.username }}</h2>
+                <p class="text-muted mb-0"><i class="bi bi-envelope-at me-1"></i> {{ current_user.email or '' }}</p>
+                <div class="mt-3">
+                    <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary px-3 py-2">
+                        <i class="bi bi-shield-check me-1"></i> Aluno Verificado
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="mb-5">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
+                            <i class="bi bi-person-badge fs-4"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0">Informações de Identidade</h5>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="premium-label">NOME DE USUÁRIO</label>
+                            <input type="text" name="username" class="premium-input w-100"
+                                value="{{ current_user.username }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="premium-label">E-MAIL CADASTRADO</label>
+                            <input type="email" name="email" class="premium-input w-100"
+                                value="{{ current_user.email or '' }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-divider"></div>
+
+
+                
+
+
+                <div class="pt-3">
+                    <button type="submit" class="btn-premium-save w-100 w-md-auto">
+                        <i class="bi bi-cloud-upload me-2 text-white-50"></i> SALVAR ALTERAÇÕES
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Seção: Inteligência Artificial (BYOK — o aluno usa a própria chave) -->
+    <div class="account-card-premium mt-4">
+        <div class="card-body p-4 p-md-5">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3 text-primary">
+                    <i class="bi bi-robot fs-4"></i>
+                </div>
+                <h5 class="fw-bold mb-0">Inteligência Artificial</h5>
+                <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary ms-3 px-3 py-2 small fw-bold">SUA CHAVE, SEU CONTROLE</span>
+            </div>
+
+            {% if ia_status %}
+            <div class="alert alert-success d-flex align-items-center rounded-4 border-0" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <div>
+                    Ativa: <b>{{ ia_status.nome_provedor }}</b> · modelo <code>{{ ia_status.modelo }}</code> · chave
+                    <code>{{ ia_status.mascara }}</code>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info rounded-4 border-0" role="alert">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Configure sua chave abaixo para gerar explicações de questões, resumos e flashcards com IA.
+            </div>
+            {% endif %}
+
+            <form id="form-config-ia">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="premium-label" for="ia-provedor">PROVEDOR</label>
+                        <select id="ia-provedor" class="premium-input w-100">
+                            {% for slug, dados in provedores_ia.items() %}
+                            <option value="{{ slug }}">{{ dados.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="premium-label" for="ia-modelo">MODELO</label>
+                        <select id="ia-modelo" class="premium-input w-100"></select>
+                        <div id="ia-modelo-custom-wrap" class="mt-2 d-none">
+                            <input type="text" id="ia-modelo-custom" class="premium-input w-100"
+                                placeholder="Digite o ID do modelo" autocomplete="off" spellcheck="false">
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="premium-label" for="ia-chave">CHAVE DE API</label>
+                        <input type="password" id="ia-chave" class="premium-input w-100"
+                            placeholder="Cole sua chave de API aqui" autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+
+                <div id="ia-feedback" class="mt-3 small"></div>
+
+                <div class="d-flex flex-column flex-md-row gap-2 pt-3">
+                    <button type="submit" class="btn-premium-save" id="ia-btn-salvar">
+                        <i class="bi bi-cloud-upload me-2 text-white-50"></i> SALVAR E TESTAR
+                    </button>
+                    <button type="button" class="btn-danger-soft" id="ia-btn-remover">
+                        <i class="bi bi-trash3 me-1"></i> REMOVER CHAVE
+                    </button>
+                </div>
+            </form>
+
+            <div class="section-divider my-4"></div>
+
+            <p class="small text-muted mb-2">
+                <i class="bi bi-shield-lock-fill me-1"></i>
+                <b>Privacidade:</b> sua chave fica salva <b>apenas neste dispositivo</b>, em um banco local
+                cifrado com a DPAPI do Windows — nunca vai para o Supabase nem para nossos servidores.
+            </p>
+            <p class="small text-muted mb-0">
+                <i class="bi bi-box-arrow-up-right me-1"></i>
+                Como obter uma chave:
+                {% for slug, dados in provedores_ia.items() %}
+                <a href="{{ dados.link_chave }}" target="_blank" rel="noopener">{{ dados.nome }}</a>{{ ", " if not loop.last }}
+                {% endfor %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Seção: Resetar Dados de Estudo -->
+    <div class="mt-4">
+        <div class="danger-zone-premium" style="border-color: rgba(234, 179, 8, 0.3);">
+            <div
+                class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4 text-center text-md-start">
+                <div>
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-3 mb-md-2">
+                        <span
+                            class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-1 fw-bold small mb-2">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> ZERAR DADOS
+                        </span>
+                    </div>
+                    <h5 class="fw-bold text-warning mb-2">Resetar Dados de Estudo</h5>
+                    <p class="text-muted small mb-0" style="max-width: 500px;">
+                        Esta ação irá zerar todo o seu progresso: questões resolvidas, cadernos, flashcards,
+                        simulados, editais e contadores de uso. Sua conta permanece ativa.
+                    </p>
+                </div>
+
+                <button class="btn-warning-soft" data-bs-toggle="modal" data-bs-target="#modalResetarDados">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i> Resetar Dados
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção: Excluir Conta -->
+    <div class="mt-4">
+        <div class="danger-zone-premium">
+            <div
+                class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-4 text-center text-md-start">
+                <div>
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-3 mb-md-2">
+                        <span
+                            class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-1 fw-bold small mb-2">
+                            <i class="bi bi-exclamation-octagon me-1"></i> ZONA DE RISCO
+                        </span>
+                    </div>
+                    <h5 class="fw-bold text-danger mb-2">Encerrar Minha Conta</h5>
+                    <p class="text-muted small mb-0" style="max-width: 500px;">
+                        Esta ação removerá permanentemente todos os seus dados de desempenho, simulados e progresso nos
+                        editais.
+                    </p>
+                </div>
+
+                <button class="btn-danger-soft" data-bs-toggle="modal" data-bs-target="#modalExcluirConta">
+                    <i class="bi bi-trash3-fill me-2"></i> Excluir Conta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Resetar Dados -->
+<div class="modal fade" id="modalResetarDados" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg overflow-hidden" style="border-radius: 28px;">
+            <div class="modal-body p-5 text-center">
+                <div class="bg-warning bg-opacity-10 p-4 rounded-circle d-inline-block mb-4"
+                    style="width: 100px; height: 100px;">
+                    <i class="bi bi-arrow-counterclockwise display-4 text-warning"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Zerar todos os dados?</h4>
+                <p class="text-muted mb-4 px-3">
+                    <b>{{ current_user.username }}</b>, ao confirmar, todo o seu progresso de estudos será perdido:
+                </p>
+                <ul class="text-start text-muted small mb-4 px-3" style="list-style: none;">
+                    <li><i class="bi bi-x-circle text-warning me-2"></i> Questões resolvidas e histórico de
+                        acertos/erros</li>
+                    <li><i class="bi bi-x-circle text-warning me-2"></i> Cadernos de questões e filtros salvos</li>
+                    <li><i class="bi bi-x-circle text-warning me-2"></i> Flashcards e categorias</li>
+                    <li><i class="bi bi-x-circle text-warning me-2"></i> Simulados criados e resultados</li>
+                    <li><i class="bi bi-x-circle text-warning me-2"></i> Editais e progresso nos ciclos de estudo</li>
+                    <li><i class="bi bi-x-circle text-warning me-2"></i> Contadores de uso (IA, questões diárias)</li>
+                    <li><i class="bi bi-check-circle text-success me-2"></i> <b>Sua conta permanece ativa</b></li>
+                </ul>
+
+                <div class="d-grid gap-2">
+                    <form action="/aluno/conta/resetar-dados" method="POST" class="m-0">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                        <!-- Campo de confirmação textual -->
+                        <div class="mb-4 text-start">
+                            <label class="premium-label small">CONFIRMAÇÃO <span class="text-danger">*</span></label>
+                            <input type="text" name="texto_confirmacao_reset" class="premium-input w-100"
+                                placeholder="Digite: RESETAR MEUS DADOS" autocomplete="off">
+                            <p class="small text-muted mt-1 mb-0"><i class="bi bi-info-circle me-1"></i> Digite
+                                exatamente <code>RESETAR MEUS DADOS</code> para confirmar.</p>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning w-100 py-3 fw-bold rounded-4 shadow-sm mb-2">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i> SIM, RESETAR MEUS DADOS
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-light w-100 py-3 fw-bold rounded-4" data-bs-dismiss="modal">
+                        NÃO, CANCELAR
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- [VULN-07 CORRIGIDO] Modal de Exclusão com verificação de senha e confirmação textual -->
+<div class="modal fade" id="modalExcluirConta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg overflow-hidden" style="border-radius: 28px;">
+            <div class="modal-body p-5 text-center">
+                <div class="bg-danger bg-opacity-10 p-4 rounded-circle d-inline-block mb-4"
+                    style="width: 100px; height: 100px;">
+                    <i class="bi bi-exclamation-triangle display-4 text-danger"></i>
+                </div>
+                <h4 class="fw-bold mb-3">Você tem certeza disso?</h4>
+                <p class="text-muted mb-4 px-3">
+                    Adeus, <b>{{ current_user.username }}</b>. Ao confirmar, todos os seus dados serão apagados e não
+                    poderão ser recuperados.
+                </p>
+
+                <div class="d-grid gap-2">
+                    <form action="/aluno/conta/excluir" method="POST" class="m-0">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+
+                        <!-- Campo de confirmação textual -->
+                        <div class="mb-4 text-start">
+                            <label class="premium-label small">CONFIRMAÇÃO <span class="text-danger">*</span></label>
+                            <input type="text" name="texto_confirmacao" class="premium-input w-100"
+                                placeholder="Digite: EXCLUIR MINHA CONTA" autocomplete="off">
+                            <p class="small text-muted mt-1 mb-0"><i class="bi bi-info-circle me-1"></i> Digite
+                                exatamente <code>EXCLUIR MINHA CONTA</code> para confirmar.</p>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger w-100 py-3 fw-bold rounded-4 shadow-sm mb-2">
+                            SIM, EXCLUIR DEFINITIVAMENTE
+                        </button>
+                    </form>
+                    <button type="button" class="btn btn-light w-100 py-3 fw-bold rounded-4" data-bs-dismiss="modal">
+                        NÃO, MUDEI DE IDEIA!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dados de provedores/modelos para o card de IA (BYOK) -->
+<script id="ia-dados-provedores" type="application/json">{{ provedores_ia | tojson }}</script>
+
+<script>
+    (function () {
+        const form = document.getElementById('form-config-ia');
+        if (!form) return;
+
+        const dadosProvedores = JSON.parse(document.getElementById('ia-dados-provedores').textContent);
+        const selProvedor = document.getElementById('ia-provedor');
+        const selModelo = document.getElementById('ia-modelo');
+        const customWrap = document.getElementById('ia-modelo-custom-wrap');
+        const customInput = document.getElementById('ia-modelo-custom');
+        const inpChave = document.getElementById('ia-chave');
+        const feedback = document.getElementById('ia-feedback');
+        const btnSalvar = document.getElementById('ia-btn-salvar');
+        const btnRemover = document.getElementById('ia-btn-remover');
+        const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        function popularModelos() {
+            const dados = dadosProvedores[selProvedor.value] || {};
+            selModelo.innerHTML = '';
+            (dados.modelos || []).forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m;
+                if (m === dados.modelo_padrao) opt.selected = true;
+                selModelo.appendChild(opt);
+            });
+            const optCustom = document.createElement('option');
+            optCustom.value = '__custom__';
+            optCustom.textContent = 'Outro (personalizado)';
+            selModelo.appendChild(optCustom);
+            customWrap.classList.add('d-none');
+        }
+
+        selProvedor.addEventListener('change', popularModelos);
+
+        selModelo.addEventListener('change', () => {
+            if (selModelo.value === '__custom__') {
+                customWrap.classList.remove('d-none');
+                customInput.focus();
+            } else {
+                customWrap.classList.add('d-none');
+            }
+        });
+
+        function mostrar(msg, ok) {
+            feedback.innerHTML = msg;
+            feedback.className = 'mt-3 small ' + (ok ? 'text-success' : 'text-danger');
+        }
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            let modelo = selModelo.value;
+            if (modelo === '__custom__') modelo = customInput.value.trim();
+            const chave = inpChave.value.trim();
+            if (!chave) { mostrar('Cole sua chave de API antes de salvar.', false); return; }
+
+            btnSalvar.disabled = true;
+            btnSalvar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> VALIDANDO...';
+
+            fetch('/api/ia/config', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
+                body: JSON.stringify({ provedor: selProvedor.value, modelo: modelo, chave: chave })
+            })
+                .then(r => r.json().then(d => ({ ok: r.ok, d })))
+                .then(({ d }) => {
+                    if (d.success) {
+                        mostrar('<i class="bi bi-check-circle-fill me-1"></i> Chave validada e salva neste dispositivo! Recarregando...', true);
+                        inpChave.value = '';
+                        setTimeout(() => window.location.reload(), 900);
+                    } else {
+                        mostrar(d.error || 'Não foi possível salvar a configuração.', false);
+                    }
+                })
+                .catch(() => mostrar('Erro de conexão ao validar a chave.', false))
+                .finally(() => {
+                    btnSalvar.disabled = false;
+                    btnSalvar.innerHTML = '<i class="bi bi-cloud-upload me-2 text-white-50"></i> SALVAR E TESTAR';
+                });
+        });
+
+        btnRemover.addEventListener('click', function () {
+            confirmarAcao({
+                tipo: 'danger',
+                title: 'Remover chave de IA?',
+                text: 'A chave salva neste dispositivo será apagada. A geração de conteúdo novo fica indisponível até salvar outra chave.',
+                confirmButtonText: 'Sim, remover'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+                btnRemover.disabled = true;
+                fetch('/api/ia/config/remover', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrf() }
+                })
+                    .then(r => r.json())
+                    .then(d => { if (d.success) window.location.reload(); })
+                    .catch(() => mostrar('Erro de conexão ao remover.', false))
+                    .finally(() => { btnRemover.disabled = false; });
+            });
+        });
+
+        popularModelos();
+    })();
+</script>
+{% endblock %}

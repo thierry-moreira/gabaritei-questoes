@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ simulado.titulo }} - Gabaritei Questões</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pdf_style.css') }}">
+    <style>
+        /* Tela: moldura de folha A4 centralizada; impressão: só o documento */
+        body { background: #e9ecef; margin: 0; }
+        .barra-acoes { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; display: flex; justify-content: center; align-items: center; gap: 12px; padding: 14px; background: rgba(255, 255, 255, 0.97); border-bottom: 1px solid #dee2e6; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10); }
+        .btn-preview { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 10px; font-weight: 700; font-size: 15px; text-decoration: none; border: 1px solid #ced4da; color: #495057; background: #fff; cursor: pointer; font-family: system-ui, sans-serif; }
+        .btn-preview:hover { background: #f1f3f5; }
+        .btn-preview-primario { background: #4f46e5; border-color: #4f46e5; color: #fff; }
+        .btn-preview-primario:hover { background: #4338ca; }
+        .btn-preview:disabled { opacity: 0.6; cursor: wait; }
+        .folha-preview { background: #fff; max-width: 210mm; margin: 88px auto 56px; padding: 22px 26px; box-shadow: 0 6px 28px rgba(0, 0, 0, 0.16); }
+        @media print {
+            body { background: #fff; }
+            .barra-acoes { display: none !important; }
+            .folha-preview { max-width: none; margin: 0; padding: 0; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="barra-acoes">
+        <a href="/aluno/simulados" class="btn-preview">← Voltar para Simulados</a>
+        <button onclick="imprimirOuPDF(this)" class="btn-preview btn-preview-primario">🖨️ Imprimir / Salvar PDF</button>
+    </div>
+
+    <div class="folha-preview">
+        {% include 'simulados/_pdf_corpo.html' %}
+    </div>
+
+    <script src="{{ url_for('static', filename='js/imprimir_ou_pdf.js') }}"></script>
+</body>
+</html>

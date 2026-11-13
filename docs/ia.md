@@ -17,7 +17,7 @@ O app do aluno **não tem chave de IA própria**: cada aluno usa a **própria ch
 - **System prompts** byte a byte — continuam definidos nas rotas. Exceção **condicional**: com contexto legislativo recuperado (seção abaixo), um bloco é *anexado* ao system prompt da `/api/ia_explica`; sem contexto, o prompt é literalmente o congelado.
 - `/api/ia_explica`: `temperature=0.0, top_p=0.1, presence_penalty=0.0, frequency_penalty=0.0`.
 - `/api/ia/gerar_estudo`: `TEMPERATURE_GPT = 0.3`.
-- Caches e persistência no Supabase intactos: `explicacoes_ia` (global por questão), `ia_cache_estudo` (global por questão+tipo), `resumos_estudo`/`flashcards` (por aluno).
+- Caches e persistência no Supabase preservados: `explicacoes_ia` (global por questão), `ia_cache_estudo` (global por questão+tipo), `resumos_estudo`/`flashcards` (por aluno). A gravação dos caches globais passa pela Edge Function `secure-global-write` (ver `docs/banco_dados.md`), que valida o JWT do aluno e o rate limit; uma falha no cache nunca impede a entrega do conteúdo gerado.
 
 ## Contexto legislativo (RAG leve)
 
@@ -26,14 +26,14 @@ Para o modelo não alucinar (nem citar revogados) dispositivos legais, a `/api/i
 - **Recuperação**: `legislacao.recuperar_legislacao(enunciado, id_subtopico=...)` → RPC `buscar_legislacao` — busca **lexical/estruturada** (FTS em português em duas passadas — AND e fallback OR ranqueado — + escopo estrito de recuperação: tópico > matéria > FTS global, resolvido a partir do `id_subtopico` da questão), **sem embeddings**: legislação é altamente lexical ("art. 117 Lei 8.112") e a camada BYOK não tem API de embeddings compatível entre OpenAI, Gemini e Anthropic. Máx. 5 trechos × 1.500 caracteres; enunciado limpo de HTML antes da busca.
 - **Fail-open**: qualquer falha (RPC inexistente, rede, enunciado curto demais) devolve lista vazia e a geração segue **idêntica** ao fluxo sem RAG — uma chamada única, sem retry, propositadamente (o contrato é enriquecimento, não dependência).
 - **Prompt**: com contexto, o bloco `CONTEXTO LEGISLATIVO OFICIAL` é anexado ao system prompt (regras: citar **apenas** dispositivos transcritos no contexto; o `textos_base` da banca prevalece; `VIGÊNCIA ENCERRADA` mantém o Alerta de Desatualização) e os trechos entram no prompt do usuário sob "Contexto legislativo oficial". Sem contexto, prompts permanecem os congelados.
-- **Auditoria**: IDs/referências dos trechos usados são gravados em `explicacoes_ia.contexto_legislacao` (jsonb) junto do cache global. Linhas antigas ficam `NULL` (geradas sem contexto); para regerar uma com RAG, o painel apaga a linha e o próximo aluno com chave gera de novo.
+- **Auditoria**: IDs/referências dos trechos usados são enviados junto do cache global (`explicacoes_ia.contexto_legislacao`, jsonb, gravação via Edge Function `secure-global-write`). Linhas antigas ficam `NULL` (geradas sem contexto); para regerar uma com RAG, o painel apaga a linha e o próximo aluno com chave gera de novo.
 - **Custo**: o retrieval é **uma única query PostgREST por geração inédita**, amortizada pelo cache global — paga por 1 aluno, servida a todos.
-- **Migração pendente**: se `contexto_legislacao` ainda não existir no Supabase (42703), o cache é gravado sem a evidência — a explicação já gerada não se perde.
+- **Falha no cache**: se a Edge Function não conseguir gravar (rate limit, schema antigo, indisponibilidade), o cache é apenas ignorado — a explicação já gerada é devolvida normalmente ao aluno.
 - **Ingestão**: exclusiva do painel administrativo (service_role) — ver `docs/migrations/legislacao_busca.sql`; o app do aluno só consulta.
 
 ## Feedback das respostas da IA (triagem humana)
 
-Toda resposta gerada (explicação, resumo ou flashcard) tem um botão 🚩 que abre o reporte de problema (`POST /api/feedback_ia` → tabela `feedbacks_ia`, relato anônimo com blocklist local). A triagem acontece no painel admin, na seção "Respostas da IA" da página de feedbacks, com a ação-chave **Invalidar cache**: apaga a resposta cacheada (`explicacoes_ia`/`ia_cache_estudo`) para a próxima geração recriar o conteúdo do zero — a correção do conteúdo é sempre regenerar, nunca editar o cache à mão. Motivos aceitos: `conteudo_incorreto`, `citacao_legal`, `desatualizado`, `formatacao`, `outro`.
+Toda resposta gerada (explicação, resumo ou flashcard) tem um botão 🚩 que abre o reporte de problema (`POST /api/feedback_ia` → tabela `feedbacks_ia`, relato anônimo com blocklist local). A gravação passa pela Edge Function `secure-global-write` (operação `feedback_ai`), que valida o JWT do aluno, o motivo, a questão publicada e o rate limit de 10 feedbacks/hora antes de inserir com `service_role` — `anon`/`authenticated` não têm INSERT direto na tabela. A triagem acontece no painel admin, na seção "Respostas da IA" da página de feedbacks, com a ação-chave **Invalidar cache**: apaga a resposta cacheada (`explicacoes_ia`/`ia_cache_estudo`) para a próxima geração recriar o conteúdo do zero — a correção do conteúdo é sempre regenerar, nunca editar o cache à mão. Motivos aceitos: `conteudo_incorreto`, `citacao_legal`, `desatualizado`, `formatacao`, `outro`.
 
 ## Modelos pré-configurados (`PROVEDORES`)
 

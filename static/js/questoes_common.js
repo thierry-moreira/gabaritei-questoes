@@ -626,18 +626,32 @@ function initQuestoes() {
                     descricao: descricao
                 })
             })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Muito obrigado! Seu reporte foi enviado.');
-                        const modalEl = document.getElementById('modalFeedback');
-                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                        if (modalInstance) modalInstance.hide();
-                    } else {
-                        alert('Erro ao enviar reporte: ' + data.error);
+                .then(async res => {
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok || !data.success) {
+                        throw new Error(data.error || 'Não foi possível enviar o reporte.');
                     }
+                    return data;
                 })
-                .catch(err => alert('Erro na conexão ao enviar reporte.'))
+                .then(() => {
+                    const modalEl = document.getElementById('modalFeedback');
+                    const modalInstance = modalEl ? bootstrap.Modal.getInstance(modalEl) : null;
+                    if (modalInstance) modalInstance.hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Reporte enviado',
+                        text: 'Muito obrigado! Seu reporte foi enviado para análise.',
+                        timer: 2200,
+                        showConfirmButton: false
+                    });
+                })
+                .catch(err => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro ao enviar reporte',
+                        text: err.message || 'Erro na conexão ao enviar reporte.'
+                    });
+                })
                 .finally(() => {
                     btn.disabled = false;
                     btn.innerHTML = 'Enviar Reporte <i class="bi bi-send ms-1"></i>';

@@ -1,0 +1,97 @@
+/* 
+   Gabaritei - Edital Specific Styles
+   Apenas ajustes exclusivos para a página de editais e modal de ciclo.
+*/
+
+:root {
+    --edital-accent: var(--accent-color);
+    --edital-accent-soft: var(--accent-soft);
+}
+
+/* Ações Específicas do Edital */
+.btn-edital-play {
+    background: var(--edital-accent);
+    color: white !important;
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-edital-play:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 8px 20px var(--edital-accent-soft);
+    transform: scale(1.02);
+}
+
+/* Modal Configurator (Especifico do Wizard) */
+.modal-edital-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+}
+
+.bloco-materia-premium {
+    background: rgba(var(--bs-body-bg-rgb), 0.3);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    transition: all 0.3s;
+}
+
+.bloco-materia-premium:focus-within {
+    border-color: var(--edital-accent);
+    box-shadow: 0 0 0 4px var(--edital-accent-soft);
+}
+
+.premium-label-small {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--texto-secundario);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.premium-input-style {
+    background: rgba(var(--bs-body-bg-rgb), 0.5) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    padding: 0.65rem 1rem !important;
+    font-weight: 500;
+}
+
+.dropdown-edital-menu {
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    border-radius: 16px;
+    padding: 10px;
+    background: var(--card-bg) !important;
+    max-height: 300px;
+}
+
+.btn-add-materia {
+    background: var(--edital-accent-soft);
+    border: 2px dashed var(--edital-accent);
+    color: var(--edital-accent);
+    border-radius: 18px;
+    padding: 1.25rem;
+    width: 100%;
+    font-weight: 700;
+    transition: all 0.3s;
+}
+
+.item-filtro-edital {
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid var(--border-color);
+}

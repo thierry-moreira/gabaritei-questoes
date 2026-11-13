@@ -1,0 +1,179 @@
+<div class="modal fade" id="modalCriarSimulado" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            <div class="premium-modal-header d-flex justify-content-between align-items-center">
+                <h5 class="modal-title fw-bold"><i class="bi bi-magic me-2"></i> Gerador de Simulado Premium</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            
+            <form method="POST" action="/aluno/simulados/gerar" id="formGerarSimulado">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="modal-body p-4" style="background: var(--main-bg);">
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-12">
+                            <label class="premium-label">TÍTULO DO SIMULADO *</label>
+                            <input type="text" name="titulo" class="form-control premium-input" placeholder="Ex: Simulado PC-SP Final" required>
+                        </div>
+                        
+                        <div class="col-lg-6">
+                            <label class="premium-label">VISIBILIDADE *</label>
+                            <select name="privacidade" class="form-select premium-select" required>
+                                <option value="publico">🌍 Público (Com Ranking)</option>
+                                <option value="privado">🔒 Privado (Só para mim)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <label class="premium-label">ESCOLARIDADE DA PROVA</label>
+                            <select name="id_nivel" class="form-select premium-select">
+                                <option value="">Qualquer nível</option>
+                                {% for e in escolaridades %}
+                                <option value="{{ e.id_nivel }}">{{ e.descritivo_nivel }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-funnel-fill"></i> Filtros de Questões (Opcional)
+                    </h6>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-lg-3">
+                            <div class="premium-filter-card">
+                                <label class="premium-label">BANCA</label>
+                                <div class="premium-filter-list">
+                                    {% for b in bancas %}
+                                    <div class="form-check item-filtro rounded px-2 py-1">
+                                        <input class="form-check-input" type="checkbox" name="bancas[]" value="{{ b.id_banca }}" id="sim_b{{ b.id_banca }}">
+                                        <label class="form-check-label small d-block" for="sim_b{{ b.id_banca }}">{{ b.nome_banca }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="premium-filter-card">
+                                <label class="premium-label">ÓRGÃO / CARGO</label>
+                                <div class="premium-filter-list">
+                                    {% for o in orgaos %}
+                                    <div class="mb-2 border-bottom pb-2" style="border-color: var(--border-color) !important;">
+                                        <div class="form-check item-filtro rounded px-2 py-1 mb-1">
+                                            <input class="form-check-input check-orgao-pai-sim" type="checkbox" name="orgaos[]" value="{{ o.id_orgao }}" id="sim_o{{ o.id_orgao }}">
+                                            <label class="form-check-label small fw-bold text-truncate d-block" for="sim_o{{ o.id_orgao }}">{{ o.nome_orgao }}</label>
+                                        </div>
+                                        {% if o.cargos %}
+                                        <div class="ms-2 border-start ps-2" style="border-color: var(--premium-accent-soft) !important;">
+                                            {% for c in o.cargos %}
+                                            <div class="form-check item-filtro rounded px-2 py-1">
+                                                <input class="form-check-input check-cargo-filho-sim" type="checkbox" name="cargos[]" value="{{ c.id_cargo }}" id="sim_c{{ c.id_cargo }}" data-pai="{{ o.id_orgao }}">
+                                                <label class="form-check-label small text-muted d-block" for="sim_c{{ c.id_cargo }}">{{ c.nome_cargo }}</label>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="premium-filter-card">
+                                <label class="premium-label">ANO</label>
+                                <div class="premium-filter-list">
+                                    {% for a in anos %}
+                                    <div class="form-check item-filtro rounded px-2 py-1">
+                                        <input class="form-check-input" type="checkbox" name="anos[]" value="{{ a }}" id="sim_a{{ a }}">
+                                        <label class="form-check-label small d-block" for="sim_a{{ a }}">{{ a }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="premium-filter-card">
+                                <label class="premium-label">TIPO</label>
+                                <div class="premium-filter-list">
+                                    <div class="form-check item-filtro rounded px-2 py-2">
+                                        <input class="form-check-input" type="checkbox" name="tipos_questao[]" value="multipla_escolha" id="sim_tipoME">
+                                        <label class="form-check-label small d-block" for="sim_tipoME">Múltipla Escolha</label>
+                                    </div>
+                                    <div class="form-check item-filtro rounded px-2 py-2 mt-2">
+                                        <input class="form-check-input" type="checkbox" name="tipos_questao[]" value="certo_errado" id="sim_tipoCE">
+                                        <label class="form-check-label small d-block" for="sim_tipoCE">Certo / Errado</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-primary mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-stack"></i> Composição da Prova
+                    </h6>
+                    
+                    <div id="container-materias">
+                        <div class="row g-2 bloco-materia align-items-center mb-3">
+                            <div class="col-lg-4">
+                                <label class="premium-label">DISCIPLINA</label>
+                                <select name="materias[]" class="form-select premium-select select-materia" onchange="carregarTopicosSimulado(this)">
+                                    <option value="" selected>Qualquer matéria (Geral)</option>
+                                    {% for m in materias %}
+                                    <option value="{{ m.id_materia }}">{{ m.nome_materia }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-lg-4">
+                                <label class="premium-label">ASSUNTOS ESPECÍFICOS</label>
+                                <input type="hidden" name="topicos[]" class="hidden-topicos" value="">
+                                
+                                <div class="dropdown">
+                                    <button class="btn premium-input w-100 text-start dropdown-toggle text-truncate btn-topicos" type="button" data-bs-toggle="dropdown" aria-expanded="false" disabled>
+                                        Todos os assuntos
+                                    </button>
+                                    <ul class="dropdown-menu w-100 p-2 dropdown-edital-menu menu-topicos shadow-lg border-0" 
+                                        style="max-height: 250px; overflow-y: auto;" onclick="event.stopPropagation()">
+                                        <li><span class="text-muted small px-2">Selecione uma matéria para filtrar assuntos.</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-3">
+                                <label class="premium-label">QUANTIDADE</label>
+                                <div class="input-group">
+                                    <input type="number" name="quantidades[]" class="form-control premium-input text-center fw-bold" min="1" max="500" value="5" required>
+                                    <span class="input-group-text bg-transparent border-0 text-muted small px-1">Questões</span>
+                                </div>
+                            </div>
+                            <div class="col-lg-1 text-end">
+                                <label class="premium-label">&nbsp;</label>
+                                <button type="button" class="btn btn-outline-danger btn-sm border-0 btn-remover" disabled onclick="removerMateria(this)" style="padding-top: 10px;">
+                                    <i class="bi bi-trash-fill fs-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-primary btn-sm w-100 py-3 mt-2 fw-bold" 
+                            style="border-radius: 14px; border-style: dashed; background: var(--premium-accent-soft); color: var(--premium-accent);"
+                            onclick="adicionarMateria()">
+                        <i class="bi bi-plus-circle-fill me-2 fs-5"></i> ADICIONAR NOVA DISCIPLINA AO SIMULADO
+                    </button>
+
+                </div>
+                <div class="modal-footer border-0 p-4 pt-2" style="background: var(--main-bg);">
+                    <button type="button" class="btn btn-link text-muted text-decoration-none fw-bold me-auto" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-5 py-2 border-0 shadow" 
+                            id="btnGerar" onclick="mostrarCarregando()"
+                            style="border-radius: 12px; font-weight: 700; background: var(--premium-accent);">
+                        <i class="bi bi-lightning-charge-fill me-2"></i> GERAR PROVA AGORA
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

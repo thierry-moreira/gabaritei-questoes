@@ -1,0 +1,92 @@
+{% extends 'base_aluno.html' %}
+{% import 'macros/ui_components.html' as ui %}
+
+{% block content %}
+<!-- CSS Específico apenas para ajustes pontuais -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/aluno_editais.css') }}">
+
+<div class="container py-4">
+    <!-- Cabeçalho Principal -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3 animate-premium-up">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--texto-principal);">
+                <i class="bi bi-bullseye text-primary me-2"></i> Edital em Questão
+            </h2>
+            <p class="text-muted small mb-0">
+                Monte seu ciclo automatizado e estude com inteligência.
+                <a href="/aluno/tutoriais#content-manual" class="ms-2 text-primary text-decoration-none fw-bold">
+                    <i class="bi bi-info-circle me-1"></i> Ver Guia do Edital
+                </a>
+            </p>
+        </div>
+        
+        {# Botão persistente para facilitar a criação de novos ciclos a qualquer momento #}
+        <button class="btn btn-primary d-flex align-items-center gap-2 px-4 py-2 shadow-sm border-0" 
+                style="border-radius: 12px; font-weight: 700; background: var(--premium-accent);" 
+                data-bs-toggle="modal" data-bs-target="#modalCriarEdital">
+            <i class="bi bi-plus-lg fs-5"></i> Criar Novo Edital
+        </button>
+    </div>
+
+    <!-- Seção de Editais Ativos -->
+    <div class="premium-grid">
+        {% if editais %}
+            {% for e in editais %}
+                {% call ui.render_card_base(
+                    title=e.titulo,
+                    meta='Criado em: ' ~ e.criado_em[:10],
+                    delay=loop.index0
+                ) %}
+                    <div class="premium-tool-group">
+                        <a href="{{ url_for('edital.estudar_edital', id_edital=e.id_edital) }}" class="btn-premium-action flex-grow-1 text-decoration-none">
+                            <i class="bi bi-play-fill"></i> Continuar Ciclo
+                        </a>
+                        
+                        <a href="{{ url_for('edital.dashboard_edital', id_edital=e.id_edital) }}" class="premium-btn-icon" title="Estatísticas">
+                            <i class="bi bi-bar-chart-fill"></i>
+                        </a>
+
+                        <form method="POST" action="{{ url_for('edital.excluir_edital', id_edital=e.id_edital) }}" class="m-0">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="button" class="premium-btn-icon premium-btn-danger border-0" 
+                                    title="Excluir" onclick="verificarExclusaoEdital(this)">
+                                <i class="bi bi-trash-fill"></i>
+                            </button>
+                        </form>
+                    </div>
+                {% endcall %}
+            {% endfor %}
+        {% else %}
+            {# Removido o botão de configuração daqui para evitar redundância com o topo #}
+            {{ ui.render_empty_state(
+                icon='bullseye',
+                title='Nenhum edital ativo',
+                description='Você ainda não configurou seu plano de estudos. Selecione os assuntos do edital e deixe o Gabaritei organizar seu ciclo.'
+            ) }}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Modularizado -->
+{% include 'components/modal_edital.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<!-- Script de Lógica do Edital (Original Recuperado) -->
+<script src="{{ url_for('static', filename='js/edital_premium.js') }}"></script>
+<script>
+    function verificarExclusaoEdital(btn) {
+        confirmarAcao({
+            title: 'Excluir Edital?',
+            text: 'Tem certeza que deseja apagar este ciclo de estudos?',
+            tipo: 'danger',
+            confirmButtonText: 'Sim, excluir'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                btn.closest('form').submit();
+            }
+        });
+    }
+</script>
+{% endblock %}

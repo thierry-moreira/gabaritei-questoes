@@ -7,6 +7,7 @@ from typing import Any
 from postgrest import CountMethod, ReturnMethod
 
 from banco_dados_aluno import supabase
+from escrita_global import ErroEscritaGlobal, escrever_global
 from extensoes import limiter
 from utils import (
     safe_execute,
@@ -37,6 +38,32 @@ COLUNAS_COMENTARIO_PUBLICO = (
     "criado_em",
 )
 MAX_ID_HISTORICO = 2_147_483_647
+MAX_ID_QUESTAO = 9_007_199_254_740_991
+
+# Catálogo fechado também validado pela Edge Function secure-global-write.
+TIPOS_ERRO_QUESTAO = {
+    'Gabarito Errado',
+    'Questão Desatualizada',
+    'Erro de Digitação/Formatação',
+    'Falta de Alternativa Correta',
+    'Outro',
+}
+
+
+def _id_questao_positivo(valor):
+    """Normaliza o id da questão para o inteiro positivo aceito pela Edge."""
+    if isinstance(valor, bool) or not isinstance(valor, (int, str)):
+        return None
+    try:
+        valor = int(valor)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return valor if 0 < valor <= MAX_ID_QUESTAO else None
+
+
+def _texto_recebido(valor):
+    """Normaliza campos de texto opcionais sem transformar None em 'None'."""
+    return valor.strip() if isinstance(valor, str) else ""
 
 
 def _id_historico_positivo(valor):
@@ -518,22 +545,41 @@ def reportar_comentario(id_comentario):
 @aluno_required
 @limiter.exempt
 def salvar_feedback():
-    dados = request.get_json()
-    tipo = dados.get('tipo_erro', 'Não informado')
-    texto_digitado = dados.get('descricao', '')
-    id_questao = dados.get('id_questao')
-    
-    relato_completo = f"[{tipo}] {texto_digitado}"
-    query_feedback = supabase.table("feedbacks_questoes").insert({
-        "id_questao": id_questao,
-        "relato": relato_completo
-    })
+    dados = request.get_json(silent=True) or {}
+    id_questao = _id_questao_positivo(dados.get('id_questao'))
+    tipo = _texto_recebido(dados.get('tipo_erro'))
+    descricao = _texto_recebido(dados.get('descricao'))
+
+    if id_questao is None:
+        return jsonify({"success": False, "error": "Questão inválida."}), 400
+    if tipo not in TIPOS_ERRO_QUESTAO:
+        return jsonify({"success": False, "error": "Selecione o tipo de erro."}), 400
+    if len(descricao) > 4000:
+        return jsonify({
+            "success": False,
+            "error": "A descrição deve ter no máximo 4000 caracteres."
+        }), 400
+
     try:
-        safe_execute(query_feedback)
+        # A migration secure_global_writes bloqueia INSERT direto na fila de
+        # feedback; a Edge Function valida aluno, questão e rate limit e grava
+        # com service_role.
+        escrever_global(
+            "feedback_question",
+            id_questao=id_questao,
+            tipo_erro=tipo,
+            descricao=descricao,
+        )
         return jsonify({"success": True})
+    except ErroEscritaGlobal as e:
+        print(f"❌ Erro ao enviar feedback da questão {id_questao}: {e}")
+        return jsonify({"success": False, "error": e.mensagem}), e.status
     except Exception as e:
-        print(f"❌ Erro ao salvar feedback da questão {id_questao}: {e}")
-        return jsonify({"success": False, "error": "Não foi possível enviar o feedback no momento."}), 500
+        print(f"❌ Erro inesperado ao enviar feedback da questão {id_questao}: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Não foi possível enviar o feedback no momento."
+        }), 500
 
 
 # Motivos aceitos no reporte de respostas da IA (catálogo fechado da UI —
@@ -554,13 +600,13 @@ def salvar_feedback_ia():
     """Reporte anônimo de problema em resposta gerada pela IA (explicação,
     resumo ou flashcard). O relato chega à triagem do painel admin, que pode
     invalidar o cache para a resposta ser regerada."""
-    dados = request.get_json() or {}
-    id_questao = dados.get('id_questao')
-    tipo = dados.get('tipo')
-    motivo = (dados.get('motivo') or '').strip()
-    relato = (dados.get('relato') or '').strip()
+    dados = request.get_json(silent=True) or {}
+    id_questao = _id_questao_positivo(dados.get('id_questao'))
+    tipo = _texto_recebido(dados.get('tipo'))
+    motivo = _texto_recebido(dados.get('motivo'))
+    relato = _texto_recebido(dados.get('relato'))
 
-    if not id_questao or tipo not in ('explicacao', 'resumo', 'flashcard'):
+    if id_questao is None or tipo not in ('explicacao', 'resumo', 'flashcard'):
         return jsonify({"success": False, "error": "Dados incompletos."}), 400
     if motivo not in MOTIVOS_FEEDBACK_IA:
         return jsonify({"success": False, "error": "Motivo inválido."}), 400
@@ -571,16 +617,23 @@ def salvar_feedback_ia():
         return jsonify({"success": False, "error": msg_erro}), 400
 
     try:
-        safe_execute(supabase.table("feedbacks_ia").insert({
-            "id_questao": id_questao,
-            "tipo": tipo,
-            "motivo": motivo,
-            "relato": relato[:1000] or None
-        }))
+        escrever_global(
+            "feedback_ai",
+            id_questao=id_questao,
+            tipo=tipo,
+            motivo=motivo,
+            relato=relato[:1000] or None,
+        )
         return jsonify({"success": True})
+    except ErroEscritaGlobal as e:
+        print(f"❌ Erro ao enviar feedback de IA da questão {id_questao}: {e}")
+        return jsonify({"success": False, "error": e.mensagem}), e.status
     except Exception as e:
-        print(f"❌ Erro ao salvar feedback de IA da questão {id_questao}: {e}")
-        return jsonify({"success": False, "error": "Não foi possível enviar o feedback no momento."}), 500
+        print(f"❌ Erro inesperado ao enviar feedback de IA da questão {id_questao}: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Não foi possível enviar o feedback no momento."
+        }), 500
 
 
 def sanitizar_latex(texto):
@@ -591,8 +644,10 @@ def sanitizar_latex(texto):
 @limiter.exempt
 @aluno_required
 def ia_explica():
-    dados = request.json
-    id_q = dados.get('id_questao')
+    dados = request.get_json(silent=True) or {}
+    id_q = _id_questao_positivo(dados.get('id_questao'))
+    if id_q is None:
+        return jsonify({"explicacao": "Questão inválida."}), 400
 
     try:
         # Cache global primeiro: explicação já gerada (por qualquer aluno) é
@@ -722,22 +777,22 @@ def ia_explica():
         explicacao_final = re.sub(r' +', r' ', explicacao_final)
 
         # Evidência do RAG junto do cache global (auditoria: quais trechos
-        # fundamentaram esta explicação). Se a coluna contexto_legislacao
-        # ainda não existir no Supabase (migration pendente), grava sem a
-        # evidência — a explicação já gerada não se perde.
-        payload_cache: dict[str, Any] = {"id_questao": id_q, "conteudo_explicacao": explicacao_final}
+        # fundamentaram esta explicação). A gravação passa pela Edge Function
+        # (secure_global_writes); se o cache falhar, a explicação já gerada
+        # ainda é devolvida ao aluno.
+        payload_cache: dict[str, Any] = {
+            "id_questao": id_q,
+            "conteudo_explicacao": explicacao_final,
+        }
         evidencia_leg = montar_evidencia(trechos_leg)
         if evidencia_leg:
             payload_cache["contexto_legislacao"] = evidencia_leg
         try:
-            safe_execute(supabase.table("explicacoes_ia").insert(payload_cache))
+            escrever_global("cache_explanation", **payload_cache)
         except Exception as e:
-            if not evidencia_leg or ("contexto_legislacao" not in str(e) and "42703" not in str(e)):
-                raise
-            print(f"⚠️ Coluna contexto_legislacao ausente (migration pendente) — salvando sem evidência: {e}")
-            safe_execute(supabase.table("explicacoes_ia").insert(
-                {"id_questao": id_q, "conteudo_explicacao": explicacao_final}
-            ))
+            # Cache é otimização: a explicação gerada deve chegar ao aluno
+            # mesmo se a Edge Function estiver indisponível ou limitar o envio.
+            print(f"⚠️ Não foi possível salvar a explicação no cache global: {e}")
 
         return jsonify({"explicacao": explicacao_final})
     except Exception as e:
@@ -749,11 +804,11 @@ def ia_explica():
 @limiter.exempt
 @aluno_required
 def ia_gerar_estudo():
-    dados = request.json
-    id_q = dados.get('id_questao')
-    tipo = dados.get('tipo')
+    dados = request.get_json(silent=True) or {}
+    id_q = _id_questao_positivo(dados.get('id_questao'))
+    tipo = _texto_recebido(dados.get('tipo'))
 
-    if not id_q or not tipo:
+    if id_q is None or tipo not in ('resumo', 'flashcard'):
         return jsonify({"success": False, "error": "Dados incompletos."}), 400
 
     try:
@@ -929,12 +984,17 @@ def ia_gerar_estudo():
                 verso_final = v_match.group(1).strip() if v_match else conteudo_gerado
                 conteudo_ia = {"frente": frente_final, "verso": verso_final}
 
-            safe_execute(supabase.table("ia_cache_estudo").insert({
-                "id_questao": id_q,
-                "id_materia": id_mat,
-                "tipo": tipo,
-                "conteudo_json": conteudo_ia
-            }))
+            try:
+                escrever_global(
+                    "cache_study",
+                    id_questao=id_q,
+                    tipo=tipo,
+                    conteudo_json=conteudo_ia,
+                )
+            except Exception as e:
+                # O material do aluno é salvo normalmente mesmo se o cache
+                # global não puder ser atualizado (ex.: rate limit).
+                print(f"⚠️ Não foi possível salvar o cache global de estudo: {e}")
             print(f"💾 CACHE GLOBAL SALVO: {tipo} para questão {id_q}")
 
         user_id = str(current_user.id)

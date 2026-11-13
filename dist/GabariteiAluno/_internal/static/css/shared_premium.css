@@ -1,0 +1,204 @@
+/* 
+   Gabaritei Design System - Shared Premium Core
+   Centraliza os estilos base para cards, progressos e animações.
+   Tokens de cores agora são herdados do base_aluno_layout.css
+*/
+
+:root {
+    --premium-accent: var(--accent-color);
+    --premium-accent-soft: var(--accent-soft);
+    --premium-card-radius: 20px;
+    --premium-shadow: var(--premium-shadow);
+}
+
+/* --- ANIMAÇÕES --- */
+@keyframes premiumFadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-premium-up {
+    animation: premiumFadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: calc(var(--delay, 0) * 0.1s);
+    opacity: 0;
+}
+
+/* --- GRID UNIVERSAL --- */
+.premium-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+/* --- CARDS PREMIUM (GLASSMORPISM BASE) --- */
+.premium-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--premium-card-radius);
+    padding: 1.5rem;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100%;
+}
+
+.premium-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--premium-accent);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.12);
+}
+
+[data-bs-theme="dark"] .premium-card:hover {
+    box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.5);
+    background: rgba(30, 41, 59, 0.4);
+}
+
+/* --- PROGRESSO PREMIUM --- */
+.premium-progress-container {
+    margin: 1rem 0;
+}
+
+.premium-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--texto-principal);
+}
+
+.premium-progress-bar-wrapper {
+    height: 10px;
+    background: rgba(var(--bs-body-color-rgb), 0.05);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.premium-progress-fill {
+    height: 100%;
+    border-radius: 20px;
+    width: calc(var(--progress, 0) * 1%);
+    transition: width 1s ease-in-out;
+}
+
+/* --- BOTÕES DE FERRAMENTA (TOOL ICONS) --- */
+.premium-tool-group {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.premium-btn-icon {
+    width: 42px;
+    height: 42px;
+    background: rgba(var(--bs-body-color-rgb), 0.04);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--texto-principal);
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.premium-btn-icon:hover {
+    background: var(--premium-accent-soft);
+    color: var(--premium-accent);
+    border-color: var(--premium-accent);
+    transform: scale(1.05);
+}
+
+.premium-btn-danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* --- COMPONENTES DE FORMULÁRIO PREMIUM --- */
+.premium-input,
+.premium-select {
+    background: rgba(var(--bs-body-bg-rgb), 0.5) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 12px !important;
+    padding: 0.65rem 1rem !important;
+    font-weight: 500;
+    color: var(--texto-principal) !important;
+    transition: all 0.3s;
+}
+
+.premium-input:focus,
+.premium-select:focus {
+    border-color: var(--premium-accent) !important;
+    background: var(--card-bg) !important;
+    box-shadow: 0 0 0 4px var(--premium-accent-soft) !important;
+}
+
+/* Ajuste Crítico para a estética Premium: Cor do fundo das opções do seletor no Modo Escuro */
+[data-bs-theme="dark"] .premium-input option,
+[data-bs-theme="dark"] .premium-select option,
+[data-bs-theme="dark"] .premium-input-style option {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+}
+
+.premium-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--texto-secundario);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+/* Cabeçalho de Modal Premium */
+.premium-modal-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 20px 20px 0 0;
+}
+
+/* Filter Card (Usado em seleções múltiplas) */
+.premium-filter-card {
+    background: rgba(var(--bs-body-color-rgb), 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 1rem;
+    height: 100%;
+}
+
+.premium-filter-list {
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.premium-filter-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.premium-filter-list::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 10px;
+}
+
+/* --- EMPTY STATE GLOBAL --- */
+.premium-empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--card-bg);
+    border-radius: 24px;
+    border: 2px dashed var(--border-color);
+}

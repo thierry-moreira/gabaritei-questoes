@@ -1,0 +1,75 @@
+{% macro render_study_header(materia, topico, feitas, meta) %}
+<div class="card shadow-sm border-0 bg-primary text-white mb-4 rounded-4">
+    <div class="card-body p-4 d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge bg-light text-primary mb-2"><i class="bi bi-arrow-repeat"></i> Ciclo Ativo</span>
+            <h3 class="fw-bold mb-1">{{ materia }}</h3>
+            <h6 class="mb-0 text-white-50"><i class="bi bi-tag-fill me-1"></i> Assunto: {{ topico }}</h6>
+        </div>
+        <div class="text-end text-center bg-white bg-opacity-10 rounded-4 p-3 border border-white border-opacity-25">
+            <p class="small text-white-50 mb-1 fw-bold">META DO TÓPICO</p>
+            <h2 class="fw-bold mb-0">{{ feitas }} <span class="fs-5 text-white-50">/ {{ meta }}</span></h2>
+            <p class="small text-white-50 mt-1 mb-0">questões resolvidas</p>
+        </div>
+    </div>
+    <div class="progress rounded-0 rounded-bottom-4" style="height: 6px; background-color: rgba(255,255,255,0.2);">
+        {% set pct_progresso = ((feitas / meta) * 100) | round | int if (meta and meta > 0) else 0 %}
+        <div class="progress-bar bg-warning" role="progressbar" style="--progress-width: {{ pct_progresso }}%; width: var(--progress-width);"></div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_performance_accordion(materias) %}
+<div class="accordion shadow-sm rounded-4" id="accordionMaterias">
+    {% for m in materias %}
+    <div class="accordion-item border-0 border-bottom">
+        <h2 class="accordion-header" id="heading{{ m.id_edital_materia }}">
+            <button class="accordion-button collapsed py-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ m.id_edital_materia }}">
+                <div class="w-100 me-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="fw-bold fs-5 text-dark">{{ m.nome }}</span>
+                        <span class="fw-bold {% if m.taxa_acerto >= 80 %}text-success{% elif m.taxa_acerto >= 60 %}text-warning{% else %}text-danger{% endif %} fs-5">
+                            {{ m.taxa_acerto }}%
+                        </span>
+                    </div>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar {% if m.taxa_acerto >= 80 %}bg-success{% elif m.taxa_acerto >= 60 %}bg-warning{% else %}bg-danger{% endif %}" style="--progress-width: {{ m.taxa_acerto }}%; width: var(--progress-width);"></div>
+                    </div>
+                    <div class="small text-muted mt-1 text-end">{{ m.questoes_resolvidas }} resolvidas</div>
+                </div>
+            </button>
+        </h2>
+        <div id="collapse{{ m.id_edital_materia }}" class="accordion-collapse collapse" data-bs-parent="#accordionMaterias">
+            <div class="accordion-body bg-light p-0">
+                <ul class="list-group list-group-flush">
+                    {% for t in m.editais_topicos %}
+                    <li class="list-group-item bg-transparent px-4 py-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-secondary" style="font-size: 0.9rem;">
+                                {% if t.concluido %}<i class="bi bi-check-circle-fill text-success me-1" title="Assunto Esgotado"></i>{% endif %}
+                                {{ t.nome }}
+                            </span>
+                            <span class="badge {% if t.taxa_acerto >= 80 %}bg-success{% elif t.taxa_acerto >= 60 %}bg-warning text-dark{% else %}bg-danger{% endif %} rounded-pill">
+                                {{ t.taxa_acerto }}%
+                            </span>
+                        </div>
+                        <div class="progress" style="height: 4px;">
+                            <div class="progress-bar bg-secondary opacity-50" style="--progress-width: {{ t.taxa_acerto }}%; width: var(--progress-width);"></div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="text-muted" style="font-size: 0.75rem;">{{ t.questoes_resolvidas }} resolvidas</small>
+                            <a href="{{ url_for('questao.resolver_questoes', id_materia=m.id_materia, id_topico=t.id_topico) }}" 
+                               class="btn btn-outline-primary btn-sm px-2 py-0 fw-bold" style="font-size: 0.75rem;">
+                                <i class="bi bi-play-circle"></i> Treinar
+                            </a>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endmacro %}

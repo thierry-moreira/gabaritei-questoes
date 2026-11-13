@@ -14,9 +14,12 @@
 --   * público (view_simulados_publicos, que só expõe eh_privado=false), ou
 --   * do próprio aluno (tabela simulados sob RLS owner-only).
 --
--- A view é security definer (security_invoker=false) e devolve apenas as
--- colunas públicas; a subconsulta em simulados enxerga somente as linhas do
--- próprio aluno por causa da policy owner-only. Nenhuma função nova é criada.
+-- A view devolve apenas as colunas públicas; desde a migration
+-- security_invoker_views_publicas ela é um wrapper security_invoker=true sobre
+-- private.view_simulados_publicos (a lógica privilegiada que atravessa o RLS
+-- ficou no schema privado). A subconsulta em simulados enxerga somente as
+-- linhas do próprio aluno por causa da policy owner-only. Nenhuma função nova
+-- é criada.
 --
 -- IDEMPOTENTE: pode ser reaplicada. Aplicar via MCP (apply_migration) ou SQL
 -- Editor. Teste transacional: docs/migrations/test_f04.sql.

@@ -36,8 +36,8 @@ function reportarRespostaIA(idQuestao, tipo) {
 
     Swal.fire({
         title: `Reportar problema nesta ${rotulo}`,
-        text: 'O relato é anônimo e será analisado pela equipe. Se confirmado, o conteúdo pode ser regerado.',
         html: `
+            <p class="small text-muted mb-3">O relato é anônimo e será analisado pela equipe. Se confirmado, o conteúdo pode ser regerado.</p>
             <select id="feedback-ia-motivo" class="form-select mb-2">
                 <option value="">Selecione o motivo...</option>
                 ${Object.entries(MOTIVOS_FEEDBACK_IA)
@@ -81,20 +81,28 @@ function reportarRespostaIA(idQuestao, tipo) {
                 relato: result.value.relato
             })
         })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Reporte enviado',
-                        text: 'Obrigado! Vamos analisar e corrigir o conteúdo.',
-                        timer: 2200,
-                        showConfirmButton: false
-                    });
-                } else {
-                    Swal.fire({ icon: 'warning', title: 'Atenção', text: data.error || 'Não foi possível enviar o reporte.' });
+            .then(async res => {
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.success) {
+                    throw new Error(data.error || 'Não foi possível enviar o reporte.');
                 }
+                return data;
             })
-            .catch(() => Swal.fire({ icon: 'error', title: 'Erro', text: 'Erro de conexão ao enviar o reporte.' }));
+            .then(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Reporte enviado',
+                    text: 'Obrigado! Vamos analisar e corrigir o conteúdo.',
+                    timer: 2200,
+                    showConfirmButton: false
+                });
+            })
+            .catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro ao enviar reporte',
+                    text: err.message || 'Erro de conexão ao enviar o reporte.'
+                });
+            });
     });
 }

@@ -1,0 +1,140 @@
+{#
+    Componente: Header de Metadados da Questão
+    Estrutura Tailwind com suporte aos temas claro (eye-care) e escuro.
+    O CSS utilitário é gerado em static/css/question_header.css.
+#}
+{% macro render_question_header(q, ids_acertos=None, ids_erros=None, mode='estudo', loop_index=None, link_numero=True) %}
+{% set acertei = mode == 'estudo' and ids_acertos and q.id_questao in ids_acertos %}
+{% set errei = mode == 'estudo' and ids_erros and q.id_questao in ids_erros %}
+{% set taxa = q.taxa_acerto|float if q.taxa_acerto is defined and q.taxa_acerto is not none else none %}
+{% set link_questao = url_for('questao.visualizar_questao_seo', materia_slug=(q.nome_materia|slugify if q.nome_materia else 'geral'), topico_slug=(q.nome_topico|slugify if q.nome_topico else 'assunto'), id_questao=q.id_questao) %}
+{% set metadados = [] %}
+{% if q.nome_banca %}{% set _ = metadados.append({'tipo': 'banca', 'valor': q.nome_banca}) %}{% endif %}
+{% if q.nome_orgao %}{% set _ = metadados.append({'tipo': 'orgao', 'valor': q.nome_orgao}) %}{% endif %}
+{% if q.nome_cargo %}{% set _ = metadados.append({'tipo': 'cargo', 'valor': q.nome_cargo}) %}{% endif %}
+{% if q.ano %}{% set _ = metadados.append({'tipo': 'ano', 'valor': q.ano}) %}{% endif %}
+{% if q.descritivo_nivel %}{% set _ = metadados.append({'tipo': 'nivel', 'valor': q.descritivo_nivel}) %}{% endif %}
+
+<div class="question-header" role="group" aria-label="Metadados da questão">
+    <div class="w-full min-w-0 flex flex-col gap-2.5 py-2 select-none font-sans">
+
+        {# Linha superior: número, status, dificuldade, disciplina e assunto #}
+        <div class="flex items-center flex-wrap gap-2 text-xs">
+
+            <div class="flex items-center gap-1.5 font-bold tracking-tight text-base sm:text-lg text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                {% if mode == 'prova' and loop_index %}
+                <span>Questão {{ loop_index }}</span>
+                {% if link_numero %}
+                <a href="{{ link_questao }}"
+                    class="text-sm font-normal tracking-normal text-slate-400 hover:text-indigo-600 dark:text-slate-500 dark:hover:text-indigo-300 transition-colors no-underline"
+                    title="Ver questão #{{ q.id_questao }}">#{{ q.id_questao }}</a>
+                {% else %}
+                <span class="text-sm font-normal tracking-normal text-slate-400 dark:text-slate-500">#{{ q.id_questao }}</span>
+                {% endif %}
+                {% elif link_numero %}
+                <a href="{{ link_questao }}"
+                    class="text-slate-900 hover:text-indigo-600 dark:text-slate-100 dark:hover:text-indigo-300 transition-colors no-underline"
+                    title="Ver questão #{{ q.id_questao }}">Questão #{{ q.id_questao }}</a>
+                {% else %}
+                <span class="text-slate-900 dark:text-slate-100">Questão #{{ q.id_questao }}</span>
+                {% endif %}
+
+                {% if acertei %}
+                <span
+                    class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/10 text-emerald-600 border-[1px] border-emerald-500/25 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30"
+                    title="Resolvida / Correta" aria-label="Resolvida / Correta">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                        aria-hidden="true" focusable="false">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                </span>
+                {% elif errei %}
+                <span
+                    class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-rose-500/10 text-rose-600 border-[1px] border-rose-500/25 dark:bg-rose-500/20 dark:text-rose-400 dark:border-rose-500/30"
+                    title="Resolvida / Incorreta" aria-label="Resolvida / Incorreta">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"
+                        aria-hidden="true" focusable="false">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </span>
+                {% endif %}
+            </div>
+
+            <span class="text-slate-300 dark:text-slate-700 hidden sm:inline" aria-hidden="true">•</span>
+
+            {% if taxa is not none %}
+            {% if taxa >= 70 %}
+            <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md whitespace-nowrap text-xs font-medium bg-emerald-500/10 text-emerald-700 border-[1px] border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20"
+                title="Questão Fácil — taxa de acerto de {{ taxa|round|int }}%">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+                Fácil
+                <span class="text-[10px] opacity-70">{{ taxa|round|int }}%</span>
+            </span>
+            {% elif taxa >= 40 %}
+            <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md whitespace-nowrap text-xs font-medium bg-amber-500/10 text-amber-700 border-[1px] border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20"
+                title="Questão Média — taxa de acerto de {{ taxa|round|int }}%">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400"></span>
+                Média
+                <span class="text-[10px] opacity-70">{{ taxa|round|int }}%</span>
+            </span>
+            {% else %}
+            <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md whitespace-nowrap text-xs font-medium bg-rose-500/10 text-rose-700 border-[1px] border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/20"
+                title="Questão Difícil — taxa de acerto de {{ taxa|round|int }}%">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-500 dark:bg-rose-400"></span>
+                Difícil
+                <span class="text-[10px] opacity-70">{{ taxa|round|int }}%</span>
+            </span>
+            {% endif %}
+            {% else %}
+            <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md whitespace-nowrap text-xs font-medium bg-slate-100 text-slate-600 border-[1px] border-slate-200 dark:bg-slate-800/80 dark:text-slate-400 dark:border-slate-700/60"
+                title="Ainda não há respostas suficientes para calcular a dificuldade">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500"></span>
+                Não avaliada
+            </span>
+            {% endif %}
+
+            <span
+                class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border-[1px] border-indigo-200/60 dark:bg-indigo-500/10 dark:text-indigo-300 dark:border-indigo-500/25 whitespace-nowrap">
+                {{ q.nome_materia if q.nome_materia else 'Geral' }}
+            </span>
+
+            <span
+                class="inline-flex max-w-full items-center px-2.5 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-700 border-[1px] border-slate-200 dark:bg-slate-800/80 dark:text-slate-300 dark:border-slate-700/60 sm:max-w-[320px]"
+                title="{{ q.nome_topico if q.nome_topico else 'Assunto Geral' }}">
+                <span class="truncate">{{ q.nome_topico if q.nome_topico else 'Assunto Geral' }}</span>
+            </span>
+        </div>
+
+        {# Linha inferior: banca, órgão, cargo, ano e nível #}
+        {% if metadados %}
+        <div class="flex items-center flex-wrap gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+            {% for item in metadados %}
+            <span class="inline-flex items-center gap-1.5">
+                {% if not loop.first %}
+                <span class="text-slate-300 dark:text-slate-600" aria-hidden="true">•</span>
+                {% endif %}
+                {% if item.tipo == 'banca' %}
+                <span class="font-semibold text-slate-800 dark:text-slate-200">{{ item.valor }}</span>
+                {% elif item.tipo == 'orgao' %}
+                <span class="hover:text-slate-700 dark:hover:text-slate-300 transition-colors">{{ item.valor }}</span>
+                {% elif item.tipo == 'cargo' %}
+                <span class="font-medium text-slate-700 dark:text-slate-300">{{ item.valor }}</span>
+                {% elif item.tipo == 'ano' %}
+                <span>{{ item.valor }}</span>
+                {% elif item.tipo == 'nivel' %}
+                <span
+                    class="px-1.5 py-0.5 rounded-md text-[10px] uppercase tracking-wider font-medium bg-slate-100 text-slate-600 border-[1px] border-slate-200 dark:bg-slate-800/90 dark:text-slate-400 dark:border-slate-700/40 whitespace-nowrap">
+                    {{ item.valor }}
+                </span>
+                {% endif %}
+            </span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}

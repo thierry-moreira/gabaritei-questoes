@@ -2,7 +2,7 @@
 
 > [!IMPORTANT]
 > **Autenticação real por usuário.** Cada aluno tem conta própria (e-mail + senha) no **Supabase Auth** — o progresso fica na nuvem e acompanha o usuário em qualquer máquina.
-> O vínculo é feito por `usuarios.auth_id` (migration `auth_usuario_e_policies`); a escrita no banco exige, além do header `x-app-token`, que o `auth.uid()` do JWT bata com o dono da linha (RLS por dono).
+> O vínculo é feito por `usuarios.auth_id` (migration `auth_usuario_e_policies`); a escrita no banco exige que o `auth.uid()` do JWT bata com o dono da linha (RLS por dono). O antigo header `x-app-token` (`eh_app_aluno()`) foi removido pela migration `secure_global_writes`.
 > O painel administrativo mantém o próprio login (senha + 2FA, tabela `admins`; ver `docs/rotas/admin.md` no repo do painel).
 
 ## Rotas Ativas
@@ -16,7 +16,7 @@
 ### 2. Entrar (`/aluno/entrar`, POST)
 *   **Formulário**: `email` (normalizado para minúsculas) + `senha`.
 *   **Proteção CSRF**: token renderizado no formulário.
-*   **Fluxo**: `entrar_com_senha` (Supabase Auth) → o SDK encadeia o JWT do usuário nas queries; busca a linha do aluno via `usuarios.auth_id`; conta Auth sem perfil (ex.: perfil apagado ou **aluno legado pré-Auth sem vínculo**) dispara `_criar_perfil`: primeiro tenta **adotar a linha legada de mesmo e-mail** (`UPDATE ... WHERE auth_id IS NULL` — migrations `relink_perfil_legado_usuarios` + `relink_visibilidade_select_legado`; o RLS só libera quando o e-mail CONFIRMADO do JWT bate com o da linha) e, só se não houver, cria linha nova — com sufixo `_hex` no username se colidir (padrão do cadastro antigo do site); por fim `login_user` (Flask-Login) e refresh token guardado na sessão.
+*   **Fluxo**: `entrar_com_senha` (Supabase Auth) → o SDK encadeia o JWT do usuário nas queries; busca a linha do aluno via `usuarios.auth_id`; conta Auth sem perfil (ex.: perfil apagado ou **aluno legado pré-Auth sem vínculo**) dispara `_criar_perfil`: primeiro tenta **adotar a linha legada de mesmo e-mail** (`UPDATE ... WHERE auth_id IS NULL` — migrations `relink_perfil_legado_usuarios` + `relink_visibilidade_select_legado`, consolidadas na policy única `usuarios_update_proprio_ou_relink` pela migration `usuarios_update_policy_consolidada`; o RLS só libera quando o e-mail CONFIRMADO do JWT bate com o da linha) e, só se não houver, cria linha nova — com sufixo `_hex` no username se colidir (padrão do cadastro antigo do site); por fim `login_user` (Flask-Login) e refresh token guardado na sessão.
 *   **Username derivado do e-mail (F-11)**: quando a linha nova é criada no login, a sugestão é o prefixo do e-mail. `_criar_perfil` remove caracteres fora da allowlist (ex.: `joao+teste@...` → `joaoteste`), aplica o mínimo de 2 caracteres (fallback `"Estudante"`) e trunca a base antes do sufixo `_hex`, para o username final respeitar o máximo de 30 e a CHECK `usuarios_username_formato`.
 *   **Falha**: credenciais inválidas → flash "E-mail ou senha incorretos."
 

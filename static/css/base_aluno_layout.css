@@ -705,6 +705,29 @@ header {
     color: #fff;
 }
 
+/* SweetAlert2: popups padrão (sucesso, erro, confirmação) seguem o tema escuro. */
+[data-bs-theme="dark"] .swal2-popup {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: var(--texto-principal);
+}
+
+[data-bs-theme="dark"] .swal2-popup .swal2-title {
+    color: var(--texto-principal) !important;
+}
+
+[data-bs-theme="dark"] .swal2-popup .swal2-html-container {
+    color: var(--texto-secundario);
+}
+
+[data-bs-theme="dark"] .swal2-popup .swal2-close {
+    color: var(--texto-secundario);
+}
+
+[data-bs-theme="dark"] .swal2-popup .swal2-close:hover {
+    color: var(--texto-principal);
+}
+
 /* Modais de reporte: alinham popup e campos ao tema escuro do app. */
 [data-bs-theme="dark"] .report-form-popup.swal2-popup {
     background-color: var(--card-bg);

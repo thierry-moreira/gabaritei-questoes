@@ -3,7 +3,7 @@
 #   1. Runtime GTK portatil (WeasyPrint/PDF) - baixa apenas 1x
 #   2. Backend PyInstaller -> dist_backend/GabariteiAluno
 #   3. Copia o GTK para dentro do bundle do backend
-#   4. Instalador NSIS -> desktop/dist/GabariteiAluno-Setup-x.y.z.exe
+#   4. Instalador NSIS -> desktop/dist/Gabaritei.exe
 # Uso:  powershell -ExecutionPolicy Bypass -File desktop\build.ps1
 # ============================================================
 $ErrorActionPreference = 'Stop'
@@ -76,4 +76,4 @@ npm run dist
 Pop-Location
 
 Write-Host ''
-Write-Host '==> PRONTO: desktop\dist\GabariteiAluno-Setup-*.exe (+ win-unpacked portatil)'
+Write-Host '==> PRONTO: desktop\dist\Gabaritei.exe (+ win-unpacked portatil)'

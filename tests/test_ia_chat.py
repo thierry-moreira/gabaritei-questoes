@@ -13,6 +13,7 @@ os.environ['FLASK_ENV'] = 'development'
 os.environ['FLASK_SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'teste-chave-secreta-ia-provisoria')
 
 from app import app
+from escrita_global import ErroEscritaGlobal
 
 class TestIAChatBlueprint(unittest.TestCase):
     
@@ -80,7 +81,8 @@ class TestIAChatBlueprint(unittest.TestCase):
     @patch('rotas.questao.safe_execute')
     @patch('rotas.questao.supabase')
     @patch('rotas.questao.recuperar_legislacao', return_value=[])
-    def test_ia_explica_geracao_sucesso(self, mock_leg, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
+    @patch('rotas.questao.escrever_global')
+    def test_ia_explica_geracao_sucesso(self, mock_escrever, mock_leg, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
         """Garante a geração inédita da explicação via camada BYOK quando não há cache, tratando a limpeza e a gravação."""
         for mock_user in [mock_questao_user, mock_utils_user]:
             mock_user.is_authenticated = True
@@ -107,14 +109,10 @@ class TestIAChatBlueprint(unittest.TestCase):
             {'letra': 'B', 'is_correct': False, 'texto': 'Não, é flexível.'}
         ]
 
-        # 4. Salva no cache final (safe_execute de insert)
-        mock_res_insert = MagicMock()
-
         mock_safe_execute.side_effect = [
             mock_res_cache,
             mock_res_q,
-            mock_res_alt,
-            mock_res_insert
+            mock_res_alt
         ]
 
         # Retorno mock da camada BYOK (texto cru, como o provedor devolve)
@@ -129,6 +127,11 @@ class TestIAChatBlueprint(unittest.TestCase):
         # Garante que limpou o caractere '>' conforme regra sanitizar_latex/back-end safety
         self.assertNotIn("> ", dados.get('explicacao', ''))
         mock_chamar_ia.assert_called_once()
+
+        # Cache global salvo pela Edge Function (gravação direta está bloqueada).
+        mock_escrever.assert_called_once()
+        self.assertEqual(mock_escrever.call_args.args[0], 'cache_explanation')
+        self.assertEqual(mock_escrever.call_args.kwargs['id_questao'], 500)
 
         # Parâmetros calibrados CONGELADOS (regressão da configuração oficial):
         # temperature=0.0, top_p=0.1, presence/frequency_penalty=0.0
@@ -145,7 +148,8 @@ class TestIAChatBlueprint(unittest.TestCase):
     @patch('rotas.questao.safe_execute')
     @patch('rotas.questao.supabase')
     @patch('rotas.questao.recuperar_legislacao')
-    def test_ia_explica_com_contexto_legislativo(self, mock_leg, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
+    @patch('rotas.questao.escrever_global')
+    def test_ia_explica_com_contexto_legislativo(self, mock_escrever, mock_leg, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
         """RAG leve: trechos curados entram no system prompt, no prompt do
         usuário e a evidência é gravada no cache (contexto_legislacao)."""
         for mock_user in [mock_questao_user, mock_utils_user]:
@@ -173,8 +177,7 @@ class TestIAChatBlueprint(unittest.TestCase):
             {'letra': 'A', 'is_correct': False, 'texto': 'Sim, em qualquer hipótese.'},
             {'letra': 'B', 'is_correct': True, 'texto': 'Não, é terminantemente vedado.'}
         ]
-        mock_res_insert = MagicMock()
-        mock_safe_execute.side_effect = [mock_res_cache, mock_res_q, mock_res_alt, mock_res_insert]
+        mock_safe_execute.side_effect = [mock_res_cache, mock_res_q, mock_res_alt]
         mock_chamar_ia.return_value = "Não, é terminantemente vedado ao servidor."
 
         response = self.client.post('/api/ia_explica', json={'id_questao': 500})
@@ -195,7 +198,7 @@ class TestIAChatBlueprint(unittest.TestCase):
         self.assertIn('Aceitar, direta ou indiretamente, propina', prompt_usuario)
 
         # Evidência gravada junto do cache global (auditoria)
-        payload = mock_supabase.table.return_value.insert.call_args.args[0]
+        payload = mock_escrever.call_args.kwargs
         self.assertEqual(
             payload.get('contexto_legislacao'),
             [{'id': 42, 'referencia': 'Lei nº 8.112/1990 — art. 117, inciso IX'}]
@@ -208,9 +211,12 @@ class TestIAChatBlueprint(unittest.TestCase):
     @patch('rotas.questao.safe_execute')
     @patch('rotas.questao.supabase')
     @patch('rotas.questao.recuperar_legislacao')
-    def test_ia_explica_cache_sem_coluna_evidencia(self, mock_leg, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
-        """Migration da coluna contexto_legislacao pendente (42703) → o cache é
-        gravado SEM a evidência e a explicação gerada não se perde."""
+    @patch('rotas.questao.escrever_global', side_effect=ErroEscritaGlobal(
+        'Não foi possível salvar o feedback no momento.', 503
+    ))
+    def test_ia_explica_falha_no_cache_nao_perde_explicacao(self, mock_escrever, mock_leg, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
+        """Falha na gravação do cache global não impede a explicação de ser
+        devolvida ao aluno (a geração já foi concluída)."""
         for mock_user in [mock_questao_user, mock_utils_user]:
             mock_user.is_authenticated = True
             mock_user.id = '12345'
@@ -227,23 +233,14 @@ class TestIAChatBlueprint(unittest.TestCase):
         mock_res_q.data = {'id_questao': 500, 'enunciado': 'Processo administrativo observa legalidade?', 'url_imagem': None}
         mock_res_alt = MagicMock()
         mock_res_alt.data = [{'letra': 'C', 'is_correct': True, 'texto': 'Sim.'}]
-        mock_res_insert = MagicMock()
 
-        erro_coluna = Exception('42703 column "contexto_legislacao" of relation "explicacoes_ia" does not exist')
-        mock_safe_execute.side_effect = [
-            mock_res_cache, mock_res_q, mock_res_alt, erro_coluna, mock_res_insert
-        ]
+        mock_safe_execute.side_effect = [mock_res_cache, mock_res_q, mock_res_alt]
         mock_chamar_ia.return_value = "Sim, critério de legalidade."
 
         response = self.client.post('/api/ia_explica', json={'id_questao': 500})
         self.assertEqual(response.status_code, 200)
         self.assertIn("legalidade", response.get_json().get('explicacao', ''))
-
-        # Dois inserts: o 1º com evidência falhou, o 2º sem a coluna passou
-        payloads = [c.args[0] for c in mock_supabase.table.return_value.insert.call_args_list]
-        self.assertEqual(len(payloads), 2)
-        self.assertIn('contexto_legislacao', payloads[0])
-        self.assertNotIn('contexto_legislacao', payloads[1])
+        mock_escrever.assert_called_once()
 
     # -------------------------------------------------------------------------
     # Testes do Gerador de Materiais (/api/ia/gerar_estudo)
@@ -329,7 +326,8 @@ class TestIAChatBlueprint(unittest.TestCase):
     @patch('rotas.questao.current_user')
     @patch('rotas.questao.safe_execute')
     @patch('rotas.questao.supabase')
-    def test_ia_gerar_estudo_flashcard_geracao_nova(self, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
+    @patch('rotas.questao.escrever_global')
+    def test_ia_gerar_estudo_flashcard_geracao_nova(self, mock_escrever, mock_supabase, mock_safe_execute, mock_questao_user, mock_chamar_ia, mock_utils_user, mock_ia_conf):
         """Valida a geração inédita de flashcard pela camada BYOK quando não há cache local ou global, salvando no banco."""
         for mock_user in [mock_questao_user, mock_utils_user]:
             mock_user.is_authenticated = True
@@ -361,14 +359,11 @@ class TestIAChatBlueprint(unittest.TestCase):
         mock_res_prompt = MagicMock()
         mock_res_prompt.data = []
 
-        # 7. Salva o flashcard gerado no cache global
-        mock_res_save_global = MagicMock()
-
-        # 8. Busca categoria do flashcard (Simula categoria 'Direito' já existente)
+        # 7. Busca categoria do flashcard (Simula categoria 'Direito' já existente)
         mock_res_cat = MagicMock()
         mock_res_cat.data = [{'id_categoria': 99}]
 
-        # 9. Salva o flashcard gerado no banco do usuário
+        # 8. Salva o flashcard gerado no banco do usuário
         mock_res_save_user = MagicMock()
 
         mock_safe_execute.side_effect = [
@@ -378,7 +373,6 @@ class TestIAChatBlueprint(unittest.TestCase):
             mock_res_exp,
             mock_res_alt,
             mock_res_prompt,
-            mock_res_save_global,
             mock_res_cat,
             mock_res_save_user
         ]
@@ -394,6 +388,12 @@ class TestIAChatBlueprint(unittest.TestCase):
         dados = response.get_json()
         self.assertTrue(dados.get('success'))
         self.assertNotIn("cache", dados)
+
+        # Cache global salvo pela Edge Function, não por INSERT direto.
+        mock_escrever.assert_called_once()
+        self.assertEqual(mock_escrever.call_args.args[0], 'cache_study')
+        self.assertEqual(mock_escrever.call_args.kwargs['id_questao'], 500)
+        self.assertEqual(mock_escrever.call_args.kwargs['tipo'], 'flashcard')
         
         # Garante chamada da camada BYOK e TEMPERATURE_GPT congelada (0.3)
         mock_chamar_ia.assert_called_once()
