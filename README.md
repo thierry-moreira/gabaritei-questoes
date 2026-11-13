@@ -7,7 +7,6 @@
 
 Plataforma de estudos para concursos com inteligência artificial — **questões comentadas, simulados, flashcards, resumos, cadernos e editais**. Software livre e sem paywall: todo aluno cadastrado usa tudo, e o progresso fica na nuvem com a própria conta.
 
-[![Licença: MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](./LICENSE)
 ![Python 3.15](https://img.shields.io/badge/Python-3.15-3776AB?logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-backend-000000?logo=flask&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ECF8E?logo=supabase&logoColor=white)
@@ -139,7 +138,4 @@ São **162 testes** que não exigem um banco real para passar, cobrindo login e 
 
 Issues e pull requests são bem-vindos! Antes de mexer no modelo de dados, leia [docs/banco_dados.md](docs/banco_dados.md) (as policies RLS são o coração da segurança) e rode a suíte de testes — ela não exige banco real nem chaves de API.
 
-<a id="licenca"></a>
-## 📄 Licença
 
-Distribuído sob a licença **MIT** — veja [LICENSE](LICENSE) para detalhes.

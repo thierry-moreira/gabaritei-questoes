@@ -16,7 +16,7 @@ O Gabaritei Questões acelera a aprovação em concursos públicos. Ele dá ao a
 
 ## Positioning
 
-Plataforma de estudos **desktop local, software livre (MIT), com IA** — modelo confirmado pelo dono. O app roda na máquina do aluno (Electron como casca + Flask local em `127.0.0.1:5000`, 100% offline-first no front), enquanto o progresso fica na nuvem vinculado à conta real (Supabase Auth) — o aluno continua de onde parou em qualquer máquina. Vizinhos SaaS não copiam honestamente: código aberto e gratuito, sem muros de paywall (todo usuário autenticado tem acesso completo), e segurança que vive no banco (policies RLS), não na confiança no cliente.
+Plataforma de estudos **desktop local, com IA** — modelo confirmado pelo dono. O app roda na máquina do aluno (Electron como casca + Flask local em `127.0.0.1:5000`, 100% offline-first no front), enquanto o progresso fica na nuvem vinculado à conta real (Supabase Auth) — o aluno continua de onde parou em qualquer máquina. Vizinhos SaaS não copiam honestamente: código aberto e gratuito, sem muros de paywall (todo usuário autenticado tem acesso completo), e segurança que vive no banco (policies RLS), não na confiança no cliente.
 
 ## Operating Context
 
@@ -49,7 +49,6 @@ Restrições técnicas confirmadas:
 - Flask (Python) + templates Jinja2 + Bootstrap 5.3 + Bootstrap Icons + fonte Inter; CSS customizado por área em `static/css/`; JS por área em `static/js/`
 - Shell Electron (`desktop/main.js`) com zero código de produto; build PyInstaller + instalador NSIS já implementado em `desktop/build.ps1` (o script ainda executa a etapa legada de GTK, sem uso pelo PDF client-side)
 - CSP rigorosa via Talisman; gzip automático; rate limiting global; logging estruturado
-- Licença MIT (`LICENSE`) — nota: o `package.json` da raiz ainda declara ISC (divergência menor a corrigir); o `desktop/package.json` já declara MIT
 
 **Fato confirmado de produto:** o modelo é **software livre total** — todo aluno autenticado tem acesso completo, sem paywall, trial ou planos. O legado freemium foi removido do código e da copy: a landing de apresentação foi aposentada (a raiz `/` abre direto o login), as páginas públicas de questões funcionam como vitrine (visitante lê, mas só aluno cadastrado responde — o card mostra "Cadastre-se para responder"), e a flag `is_premium` não existe mais no código. Trabalhos futuros não podem reintroduzir planos, preços, trials ou muros que o produto não tem.
 
@@ -59,7 +58,7 @@ Restrições técnicas confirmadas:
 - Tagline: "Domine as questões, conquiste a vaga."
 - Assets de marca existentes: `static/logo.webp` (logo), `static/icone.webp` (ícone/favicon web) e `static/icone.ico` (ícone do app desktop/instalador)
 - Voz: português do Brasil, motivacional e focada em aprovação
-- Compromissos públicos: software livre MIT; modelo de segurança documentado abertamente (`docs/banco_dados.md`); app do aluno sem nenhum código administrativo
+- Compromissos públicos: modelo de segurança documentado abertamente (`docs/banco_dados.md`); app do aluno sem nenhum código administrativo
 
 ## Evidence on Hand
 
@@ -74,4 +73,4 @@ Restrições técnicas confirmadas:
 2. **Segurança no banco, não no cliente** — a chave ANON é pública por design; toda proteção vive em policies RLS, token de escrita e identidade do dono.
 3. **Liberdade total ao aluno autenticado** — sem paywall, sem limites artificiais: todo usuário tem acesso completo ao produto.
 4. **Ferramentas de estudo de verdade, não vitrine** — questões, SRS, simulados e estatísticas fazem o trabalho pesado; a IA serve o estudo (resumos), não substitui o aluno.
-5. **Transparência de engenharia** — código aberto, docs públicos do modelo de segurança, licença aberta.
+5. **Transparência de engenharia** — código aberto, docs públicos do modelo de segurança.
